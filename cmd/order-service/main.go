@@ -44,6 +44,7 @@ func main() {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr: "localhost:6379",
 	})
+	log.Println("🔗 Connecting to Redis...")
 
 	if err := redisClient.Ping(ctx).Err(); err != nil {
 		log.Fatalf("❌ Failed to connect to Redis: %v", err)
@@ -53,7 +54,7 @@ func main() {
 	dbLayer := &db.DB{Bun: bunDB}
 	redisLock := &rediswrap.Redis{Client: redisClient}
 	kafkaProd := &kafka.Producer{} // NOTE: Stub, implement the actual logic
-
+	log.Println("📦 Initializing Order Service...")
 	service := order.NewOrderService(dbLayer, redisLock, kafkaProd)
 	handler := &api.Handler{OrderService: service}
 
@@ -64,8 +65,6 @@ func main() {
 	r.Get("/api/v1/orders/{orderId}", handler.GetOrder)
 	r.Put("/api/v1/orders/{orderId}", handler.UpdateOrder)
 	r.Delete("/api/v1/orders/{orderId}", handler.DeleteOrder)
-	r.Post("/api/v1/orders/{orderId}/apply-promo", handler.ApplyPromo)
-	r.Post("/api/v1/orders/{orderId}/checkout", handler.CheckoutOrder)
 
 	// --- Start HTTP Server ---
 	server := &http.Server{

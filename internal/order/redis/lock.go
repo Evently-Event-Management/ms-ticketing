@@ -20,7 +20,7 @@ func NewRedisClient(addr, password string, db int) *Redis {
 	return &Redis{Client: rdb}
 }
 
-const lockTTL = 10 * time.Second // expire lock after 10 seconds
+const lockTTL = 10 * time.Second
 
 func (r *Redis) AcquireLock(key string) bool {
 	ctx := context.Background()
