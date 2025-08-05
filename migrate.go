@@ -1,202 +1,209 @@
 package main
 
 import (
-	"context"
 	"database/sql"
+	"fmt"
 	"log"
 	"time"
 
-	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/dialect/pgdialect"
-	"github.com/uptrace/bun/driver/pgdriver"
+	_ "github.com/go-sql-driver/mysql"
 )
 
-// --- Models ---
-
-type User struct {
-	bun.BaseModel `bun:"table:users"`
-	ID            string    `bun:"id,pk"`
-	Email         string    `bun:"email,unique,notnull"`
-	FullName      string    `bun:"full_name,notnull"`
-	CreatedAt     time.Time `bun:"created_at,notnull,default:current_timestamp"`
-}
-
-type Event struct {
-	bun.BaseModel `bun:"table:events"`
-	ID            string    `bun:"id,pk"`
-	Name          string    `bun:"name,notnull"`
-	Description   string    `bun:"description,nullzero"`
-	StartDate     time.Time `bun:"start_date,notnull"`
-	EndDate       time.Time `bun:"end_date,notnull"`
-	CreatedAt     time.Time `bun:"created_at,notnull,default:current_timestamp"`
-}
-
-type Seat struct {
-	bun.BaseModel `bun:"table:seats"`
-	ID            string `bun:"id,pk"`
-	EventID       string `bun:"event_id,notnull"`
-	Label         string `bun:"label,notnull"` // e.g., "A1", "B10"
-	Event         *Event `bun:"rel:belongs-to,join:event_id=id"`
-}
-
-type Promo struct {
-	bun.BaseModel `bun:"table:promos"`
-	ID            string    `bun:"id,pk"`
-	Code          string    `bun:"code,unique,notnull"`
-	Description   string    `bun:"description,nullzero"`
-	Discount      float64   `bun:"discount,notnull"`
-	ValidFrom     time.Time `bun:"valid_from,notnull"`
-	ValidUntil    time.Time `bun:"valid_until,notnull"`
-	CreatedAt     time.Time `bun:"created_at,notnull,default:current_timestamp"`
-}
-
-type Order struct {
-	bun.BaseModel   `bun:"table:orders"`
-	ID              string    `bun:"id,pk"`
-	EventID         string    `bun:"event_id,notnull"`
-	UserID          string    `bun:"user_id,notnull"`
-	SeatID          string    `bun:"seat_id,notnull"`
-	Status          string    `bun:"status,notnull"` // pending, completed, cancelled
-	PromoCode       string    `bun:"promo_code,nullzero"`
-	CreatedAt       time.Time `bun:"created_at,notnull,default:current_timestamp"`
-	UpdatedAt       time.Time `bun:"updated_at,nullzero"`
-	DiscountApplied bool      `bun:"discount_applied,nullzero"`
-
-	// Relations
-	Event *Event `bun:"rel:belongs-to,join:event_id=id"`
-	User  *User  `bun:"rel:belongs-to,join:user_id=id"`
-	Seat  *Seat  `bun:"rel:belongs-to,join:seat_id=id"`
-	Promo *Promo `bun:"rel:belongs-to,join:promo_code=code"`
-}
-
-type Ticket struct {
-	bun.BaseModel `bun:"table:tickets"`
-	ID            string    `bun:"id,pk"`
-	OrderID       string    `bun:"order_id,notnull"`
-	EventID       string    `bun:"event_id,notnull"`
-	SeatID        string    `bun:"seat_id,notnull"`
-	UserID        string    `bun:"user_id,notnull"`
-	IssuedAt      time.Time `bun:"issued_at,notnull,default:current_timestamp"`
-
-	Order *Order `bun:"rel:belongs-to,join:order_id=id"`
-	Seat  *Seat  `bun:"rel:belongs-to,join:seat_id=id"`
-	Event *Event `bun:"rel:belongs-to,join:event_id=id"`
-	User  *User  `bun:"rel:belongs-to,join:user_id=id"`
-}
-
-// --- Main ---
-
 func main() {
-	ctx := context.Background()
+	dsn := "appuser:secretpass@tcp(localhost:3307)/appdb?parseTime=true"
 
-	dsn := "postgres://eventuser:eventpass@localhost:5432/eventdb?sslmode=disable"
-	connector := pgdriver.NewConnector(pgdriver.WithDSN(dsn))
-	sqldb := sql.OpenDB(connector)
-	defer sqldb.Close()
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		log.Fatalf("❌ Failed to open DB: %v", err)
+	}
+	defer db.Close()
 
-	if err := sqldb.PingContext(ctx); err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+	if err := db.Ping(); err != nil {
+		log.Fatalf("❌ Failed to ping DB: %v", err)
 	}
 
-	db := bun.NewDB(sqldb, pgdialect.New())
+	fmt.Println("✅ Connected to MySQL!")
 
-	// Drop tables in reverse dependency order
-	log.Println("Dropping tables...")
-	_ = dropTables(ctx, db)
-
-	// Create tables
-	log.Println("Creating tables...")
-	_ = createTables(ctx, db)
+	// Run migrations
+	if err := migrate(db); err != nil {
+		log.Fatalf("❌ Migration failed: %v", err)
+	}
 
 	// Seed sample data
-	log.Println("Seeding sample data...")
-	_ = seedData(ctx, db)
-
-	log.Println("✅ Done.")
-}
-
-// --- Helper Functions ---
-
-func dropTables(ctx context.Context, db *bun.DB) error {
-	tables := []interface{}{(*Ticket)(nil), (*Order)(nil), (*Promo)(nil), (*Seat)(nil), (*User)(nil), (*Event)(nil)}
-	for _, m := range tables {
-		_, _ = db.NewDropTable().Model(m).IfExists().Cascade().Exec(ctx)
+	if err := seed(db); err != nil {
+		log.Fatalf("❌ Seeding failed: %v", err)
 	}
-	return nil
+
+	fmt.Println("✅ Migration and seeding completed!")
 }
 
-func createTables(ctx context.Context, db *bun.DB) error {
-	tables := []interface{}{(*User)(nil), (*Event)(nil), (*Seat)(nil), (*Promo)(nil), (*Order)(nil), (*Ticket)(nil)}
-	for _, m := range tables {
-		_, err := db.NewCreateTable().Model(m).IfNotExists().Exec(ctx)
-		if err != nil {
-			log.Fatalf("❌ Failed to create table for %T: %v", m, err)
+func migrate(db *sql.DB) error {
+	queries := []string{
+		`DROP TABLE IF EXISTS tickets`,
+		`DROP TABLE IF EXISTS orders`,
+		`DROP TABLE IF EXISTS promos`,
+		`DROP TABLE IF EXISTS seats`,
+		`DROP TABLE IF EXISTS users`,
+		`DROP TABLE IF EXISTS events`,
+
+		`CREATE TABLE users (
+			id VARCHAR(50) PRIMARY KEY,
+			email VARCHAR(100) NOT NULL UNIQUE,
+			full_name VARCHAR(100) NOT NULL,
+			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+		)`,
+
+		`CREATE TABLE events (
+			id VARCHAR(50) PRIMARY KEY,
+			name VARCHAR(100) NOT NULL,
+			description TEXT,
+			start_date DATETIME NOT NULL,
+			end_date DATETIME NOT NULL,
+			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+		)`,
+
+		`CREATE TABLE seats (
+			id VARCHAR(50) PRIMARY KEY,
+			event_id VARCHAR(50) NOT NULL,
+			label VARCHAR(20) NOT NULL,
+			FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
+		)`,
+
+		`CREATE TABLE promos (
+			id VARCHAR(50) PRIMARY KEY,
+			code VARCHAR(50) NOT NULL UNIQUE,
+			description TEXT,
+			discount FLOAT NOT NULL,
+			valid_from DATETIME NOT NULL,
+			valid_until DATETIME NOT NULL,
+			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+		)`,
+
+		`CREATE TABLE orders (
+			id VARCHAR(50) PRIMARY KEY,
+			event_id VARCHAR(50) NOT NULL,
+			user_id VARCHAR(50) NOT NULL,
+			seat_id VARCHAR(50) NOT NULL,
+			status VARCHAR(20) NOT NULL,
+			promo_code VARCHAR(50),
+			discount_applied BOOLEAN DEFAULT FALSE,
+			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME NULL,
+			FOREIGN KEY (event_id) REFERENCES events(id),
+			FOREIGN KEY (user_id) REFERENCES users(id),
+			FOREIGN KEY (seat_id) REFERENCES seats(id),
+			FOREIGN KEY (promo_code) REFERENCES promos(code)
+		)`,
+
+		`CREATE TABLE tickets (
+			id VARCHAR(50) PRIMARY KEY,
+			order_id VARCHAR(50) NOT NULL,
+			event_id VARCHAR(50) NOT NULL,
+			seat_id VARCHAR(50) NOT NULL,
+			user_id VARCHAR(50) NOT NULL,
+			issued_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (order_id) REFERENCES orders(id),
+			FOREIGN KEY (event_id) REFERENCES events(id),
+			FOREIGN KEY (seat_id) REFERENCES seats(id),
+			FOREIGN KEY (user_id) REFERENCES users(id)
+		)`,
+	}
+
+	for _, q := range queries {
+		if _, err := db.Exec(q); err != nil {
+			return fmt.Errorf("query failed: %v, error: %w", q, err)
 		}
 	}
+
 	return nil
 }
 
-func seedData(ctx context.Context, db *bun.DB) error {
-	// Users
-	users := []User{
-		{ID: "user001", Email: "alice@example.com", FullName: "Alice Wonderland", CreatedAt: time.Now()},
-		{ID: "user002", Email: "bob@example.com", FullName: "Bob Builder", CreatedAt: time.Now()},
-	}
-	_, _ = db.NewInsert().Model(&users).Exec(ctx)
+func seed(db *sql.DB) error {
+	now := time.Now().Format("2006-01-02 15:04:05")
 
-	// Event
-	event := Event{
-		ID:          "event001",
-		Name:        "Summer Fest 2025",
-		Description: "Annual summer music festival.",
-		StartDate:   time.Now().AddDate(0, 1, 0),
-		EndDate:     time.Now().AddDate(0, 1, 3),
-		CreatedAt:   time.Now(),
+	// Insert Users
+	users := []struct {
+		id       string
+		email    string
+		fullName string
+	}{
+		{"user001", "alice@example.com", "Alice Wonderland"},
+		{"user002", "bob@example.com", "Bob Builder"},
 	}
-	_, _ = db.NewInsert().Model(&event).Exec(ctx)
+	for _, u := range users {
+		_, err := db.Exec(`INSERT INTO users (id, email, full_name, created_at) VALUES (?, ?, ?, ?)`,
+			u.id, u.email, u.fullName, now)
+		if err != nil {
+			return err
+		}
+	}
 
-	// Seats
-	seats := []Seat{
-		{ID: "seatA1", EventID: "event001", Label: "A1"},
-		{ID: "seatA2", EventID: "event001", Label: "A2"},
+	// Insert Event
+	_, err := db.Exec(`INSERT INTO events (id, name, description, start_date, end_date, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+		"event001",
+		"Summer Fest 2025",
+		"Annual summer music festival.",
+		time.Now().AddDate(0, 1, 0).Format("2006-01-02 15:04:05"),
+		time.Now().AddDate(0, 1, 3).Format("2006-01-02 15:04:05"),
+		now)
+	if err != nil {
+		return err
 	}
-	_, _ = db.NewInsert().Model(&seats).Exec(ctx)
 
-	// Promo
-	promo := Promo{
-		ID:          "promo001",
-		Code:        "SUMMER20",
-		Description: "20% off summer tickets",
-		Discount:    20.0,
-		ValidFrom:   time.Now(),
-		ValidUntil:  time.Now().AddDate(0, 2, 0),
-		CreatedAt:   time.Now(),
+	// Insert Seats
+	seats := []struct {
+		id      string
+		eventID string
+		label   string
+	}{
+		{"seatA1", "event001", "A1"},
+		{"seatA2", "event001", "A2"},
 	}
-	_, _ = db.NewInsert().Model(&promo).Exec(ctx)
+	for _, s := range seats {
+		_, err := db.Exec(`INSERT INTO seats (id, event_id, label) VALUES (?, ?, ?)`, s.id, s.eventID, s.label)
+		if err != nil {
+			return err
+		}
+	}
 
-	// Order
-	order := Order{
-		ID:              "order123",
-		EventID:         "event001",
-		UserID:          "user001",
-		SeatID:          "seatA1",
-		Status:          "completed",
-		CreatedAt:       time.Now(),
-		DiscountApplied: true,
-		PromoCode:       "SUMMER20",
+	// Insert Promo
+	_, err = db.Exec(`INSERT INTO promos (id, code, description, discount, valid_from, valid_until, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		"promo001",
+		"SUMMER20",
+		"20% off summer tickets",
+		20.0,
+		now,
+		time.Now().AddDate(0, 2, 0).Format("2006-01-02 15:04:05"),
+		now)
+	if err != nil {
+		return err
 	}
-	_, _ = db.NewInsert().Model(&order).Exec(ctx)
 
-	// Ticket
-	ticket := Ticket{
-		ID:       "ticket123",
-		OrderID:  "order123",
-		EventID:  "event001",
-		SeatID:   "seatA1",
-		UserID:   "user001",
-		IssuedAt: time.Now(),
+	// Insert Order
+	_, err = db.Exec(`INSERT INTO orders (id, event_id, user_id, seat_id, status, promo_code, discount_applied, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		"order123",
+		"event001",
+		"user001",
+		"seatA1",
+		"completed",
+		"SUMMER20",
+		true,
+		now)
+	if err != nil {
+		return err
 	}
-	_, _ = db.NewInsert().Model(&ticket).Exec(ctx)
+
+	// Insert Ticket
+	_, err = db.Exec(`INSERT INTO tickets (id, order_id, event_id, seat_id, user_id, issued_at) VALUES (?, ?, ?, ?, ?, ?)`,
+		"ticket123",
+		"order123",
+		"event001",
+		"seatA1",
+		"user001",
+		now)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

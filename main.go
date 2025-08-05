@@ -1,48 +1,45 @@
 package main
 
 import (
-	"context"
+	"io"
 	"log"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 
-	"ms-ticketing/internal/order"
-	"ms-ticketing/internal/order/api"
-	_ "ms-ticketing/internal/order/db"
-	"ms-ticketing/internal/order/kafka"
-	"ms-ticketing/internal/order/redis"
-
-	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/dialect/pgdialect"
-	"github.com/uptrace/bun/driver/pgdriver"
+	"github.com/go-chi/chi/v5"
 )
 
 func main() {
-	// PostgreSQL connection
-	dsn := "postgres://postgres:postgres@localhost:5432/orderdb?sslmode=disable"
-	pgConn := pgdriver.NewConnector(pgdriver.WithDSN(dsn))
-	db := bun.NewDB(pgConn, pgdialect.New())
+	r := chi.NewRouter()
 
-	// Redis connection
-	redisClient := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+	// Root handler - shows message on visiting http://localhost:8080/
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		io.WriteString(w, "API Gateway is running! 🚀")
 	})
-	ctx := context.Background()
-	if err := redisClient.Ping(ctx).Err(); err != nil {
-		log.Fatalf("Failed to connect to Redis: %v", err)
+
+	// Mount microservice routes
+	r.Mount("/api/v1/order", proxy("http://order:8001"))
+	r.Mount("/api/v1/seating", proxy("http://seating:8002"))
+	r.Mount("/api/v1/payment", proxy("http://payment:8003"))
+
+	// Health check endpoint
+	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		io.WriteString(w, "OK")
+	})
+
+	log.Println("🌐 API Gateway listening on :8080")
+	err := http.ListenAndServe(":8080", r)
+	if err != nil {
+		log.Fatalf("❌ Gateway failed: %v", err)
+	}
+}
+
+func proxy(target string) http.Handler {
+	remote, err := url.Parse(target)
+	if err != nil {
+		panic("Invalid target URL: " + target)
 	}
 
-	// Kafka Producer (stub for now)
-	kafkaProd := &kafka.Producer{} // TODO: Add real implementation
-
-	// Layer init
-	dbLayer := &db.DB{Bun: db}
-	redisLock := &redis.Redis{Client: redisClient}
-	orderService := order.NewOrderService(dbLayer, redisLock, kafkaProd)
-	handler := &api.Handler{OrderService: orderService}
-
-	// Routes
-	http.HandleFunc("/order", handler.CreateOrder)
-
-	log.Println("Order Service running at :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	return httputil.NewSingleHostReverseProxy(remote)
 }

@@ -44,3 +44,17 @@ func (d *DB) CreateOrder(order Order) error {
 	_, err := d.Bun.NewInsert().Model(&order).Exec(context.Background())
 	return err
 }
+
+func (d *DB) GetOrderBySeatAndEvent(seatID, eventID string) (*Order, error) {
+	var order Order
+	err := d.Bun.NewSelect().
+		Model(&order).
+		Where("event_id = ?", eventID).
+		Where("? = ANY(seat_ids)", seatID).
+		Limit(1).
+		Scan(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	return &order, nil
+}

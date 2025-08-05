@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"database/sql"
-	"github.com/go-redis/redis/v8"
 	"log"
 	"net/http"
 	"os"
@@ -12,9 +11,11 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-redis/redis/v8"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/joho/godotenv"
 	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/dialect/pgdialect"
-	"github.com/uptrace/bun/driver/pgdriver"
+	"github.com/uptrace/bun/dialect/mysqldialect"
 
 	"ms-ticketing/internal/order"
 	"ms-ticketing/internal/order/api"
@@ -23,74 +24,75 @@ import (
 	rediswrap "ms-ticketing/internal/order/redis"
 )
 
-func main() {
-	ctx := context.Background()
-
-	// --- PostgreSQL Setup ---
-	connector := pgdriver.NewConnector(pgdriver.WithDSN("postgres://eventuser:eventpass@localhost:5432/eventdb?sslmode=disable"))
-	sqldb := sql.OpenDB(connector)
-	defer sqldb.Close()
-
+func verifyConnections(ctx context.Context) (*bun.DB, *redis.Client) {
+	dsn := os.Getenv("MYSQL_DSN")
+	if dsn == "" {
+		log.Fatal("[Database] MYSQL_DSN not set")
+	}
+	sqldb, err := sql.Open("mysql", dsn)
+	if err != nil {
+		log.Fatalf("[Database] Failed to open MySQL: %v", err)
+	}
 	if err := sqldb.Ping(); err != nil {
-		log.Fatalf("❌ Failed to connect to Postgres: %v", err)
+		log.Fatalf("[Database] Failed to connect to MySQL: %v", err)
 	}
+	log.Println("[Database] MySQL connection successful")
 
-	bunDB := bun.NewDB(sqldb, pgdialect.New())
+	bunDB := bun.NewDB(sqldb, mysqldialect.New())
+	db.Migrate()
 
-	// Run migrations
-	db.Migrate(bunDB)
-
-	// --- Redis Setup ---
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		log.Fatal("[Database] REDIS_ADDR not set")
+	}
 	redisClient := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+		Addr: redisAddr,
 	})
-	log.Println("🔗 Connecting to Redis...")
-
 	if err := redisClient.Ping(ctx).Err(); err != nil {
-		log.Fatalf("❌ Failed to connect to Redis: %v", err)
+		log.Fatalf("[Database] Redis connection error: %v", err)
 	}
+	log.Println("[Database] Redis connection successful")
 
-	// --- Initialize Dependencies ---
-	dbLayer := &db.DB{Bun: bunDB}
-	redisLock := &rediswrap.Redis{Client: redisClient}
-	kafkaProd := &kafka.Producer{} // NOTE: Stub, implement the actual logic
-	log.Println("📦 Initializing Order Service...")
-	service := order.NewOrderService(dbLayer, redisLock, kafkaProd)
+	return bunDB, redisClient
+}
+
+func main() {
+	_ = godotenv.Load() // Loads .env file if present
+
+	ctx := context.Background()
+	bunDB, redisClient := verifyConnections(ctx)
+	defer bunDB.Close()
+	defer redisClient.Close()
+
+	service := order.NewOrderService(&db.DB{Bun: bunDB}, rediswrap.NewRedis(redisClient), &kafka.Producer{})
 	handler := &api.Handler{OrderService: service}
 
-	// --- Setup Router ---
 	r := chi.NewRouter()
+	r.Route("/order", func(r chi.Router) {
+		r.Post("/", handler.CreateOrder)
+		r.Get("/{orderId}", handler.GetOrder)
+		r.Put("/{orderId}", handler.UpdateOrder)
+		r.Delete("/{orderId}", handler.DeleteOrder)
+	})
 
-	r.Post("/api/v1/orders", handler.CreateOrder)
-	r.Get("/api/v1/orders/{orderId}", handler.GetOrder)
-	r.Put("/api/v1/orders/{orderId}", handler.UpdateOrder)
-	r.Delete("/api/v1/orders/{orderId}", handler.DeleteOrder)
-
-	// --- Start HTTP Server ---
 	server := &http.Server{
 		Addr:    ":8080",
 		Handler: r,
 	}
 
 	go func() {
-		log.Println("🚀 Order Service running on :8080")
+		log.Println("🚀 Order Service on :8080")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("❌ HTTP server error: %v", err)
+			log.Fatalf("HTTP error: %v", err)
 		}
 	}()
 
-	// --- Graceful Shutdown ---
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-	log.Println("📦 Shutdown signal received. Cleaning up...")
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+	<-stop
 
-	ctxShutdown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctxShutdown, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-
-	if err := server.Shutdown(ctxShutdown); err != nil {
-		log.Fatalf("❌ Server forced to shutdown: %v", err)
-	}
-
-	log.Println("✅ Server exited gracefully")
+	_ = server.Shutdown(ctxShutdown)
+	log.Println("✅ Order service shutdown complete")
 }
