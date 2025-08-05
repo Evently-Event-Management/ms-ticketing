@@ -50,7 +50,6 @@ func (p *Producer) PublishOrderUpdated(order db.Order) error {
 		kafka.Message{
 			Key:   []byte(order.ID),
 			Value: msgBytes,
-			Topic: "order_updated",
 		},
 	)
 }
@@ -68,7 +67,6 @@ func (p *Producer) PublishOrderCancelled(order db.Order) error {
 		kafka.Message{
 			Key:   []byte(order.ID),
 			Value: msgBytes,
-			Topic: "order_cancelled",
 		},
 	)
 }
