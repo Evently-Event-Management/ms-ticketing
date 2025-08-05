@@ -25,7 +25,7 @@ func (d *DB) GetOrderByID(id string) (*Order, error) {
 func (d *DB) UpdateOrder(order Order) error {
 	_, err := d.Bun.NewUpdate().
 		Model(&order).
-		Column("event_id", "user_id", "seat_id", "status", "updated_at", "promo_code", "discount_applied").
+		Column("event_id", "user_id", "seat_ids", "status", "updated_at", "promo_code", "discount_applied").
 		Where("id = ?", order.ID).
 		Exec(context.Background())
 	return err

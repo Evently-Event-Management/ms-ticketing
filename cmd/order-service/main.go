@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"log"
+	"ms-ticketing/internal/kafka"
 	"net/http"
 	"os"
 	"os/signal"
@@ -20,7 +21,6 @@ import (
 	"ms-ticketing/internal/order"
 	"ms-ticketing/internal/order/api"
 	"ms-ticketing/internal/order/db"
-	"ms-ticketing/internal/order/kafka"
 	rediswrap "ms-ticketing/internal/order/redis"
 )
 
@@ -64,7 +64,12 @@ func main() {
 	defer bunDB.Close()
 	defer redisClient.Close()
 
-	service := order.NewOrderService(&db.DB{Bun: bunDB}, rediswrap.NewRedis(redisClient), &kafka.Producer{})
+	// Create Kafka producer
+	kafkaProducer := kafka.NewProducer([]string{"localhost:9092"}, "order_created")
+
+	// Pass to service
+	service := order.NewOrderService(&db.DB{Bun: bunDB}, rediswrap.NewRedis(redisClient), kafkaProducer)
+
 	handler := &api.Handler{OrderService: service}
 
 	r := chi.NewRouter()

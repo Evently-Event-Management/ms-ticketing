@@ -21,6 +21,8 @@ type RedisLock interface {
 
 type KafkaPublisher interface {
 	PublishOrderCreated(order db.Order) error
+	PublishOrderUpdated(order db.Order) error
+	PublishOrderCancelled(order db.Order) error
 }
 
 type OrderService struct {
@@ -68,7 +70,11 @@ func (s *OrderService) PlaceOrder(order db.Order) error {
 		return err
 	}
 	fmt.Println("Order created successfully, publishing to Kafka...")
-	// Optionally publish to Kafka here
+	if err := s.Kafka.PublishOrderCreated(order); err != nil {
+		// Log error, but don't fail the order creation
+		fmt.Printf("Kafka publish error (order created): %v\n", err)
+	}
+
 	return nil
 }
 
@@ -90,6 +96,9 @@ func (s *OrderService) UpdateOrder(id string, updateData db.Order) error {
 	}
 
 	fmt.Println("Updating order in DB...")
+	if err := s.Kafka.PublishOrderUpdated(updateData); err != nil {
+		fmt.Printf("Kafka publish error (order updated): %v\n", err)
+	}
 	return s.DB.UpdateOrder(updateData)
 }
 
@@ -114,6 +123,9 @@ func (s *OrderService) CancelOrder(id string) error {
 	for _, seatID := range order.SeatIDs {
 		_ = s.Redis.UnlockSeats(order.SeatIDs, order.ID)
 		fmt.Printf("Unlocked seat: %s\n", seatID)
+	}
+	if err := s.Kafka.PublishOrderCancelled(*order); err != nil {
+		fmt.Printf("Kafka publish error (order cancelled): %v\n", err)
 	}
 	return nil
 }
