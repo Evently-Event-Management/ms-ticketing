@@ -24,12 +24,10 @@ func Migrate() {
 
 	fmt.Println("✅ Connected to MySQL!")
 
-	// Run migrations
 	if err := migrate(db); err != nil {
 		log.Fatalf("❌ Migration failed: %v", err)
 	}
 
-	// Seed sample data
 	if err := seed(db); err != nil {
 		log.Fatalf("❌ Seeding failed: %v", err)
 	}
@@ -79,32 +77,32 @@ func migrate(db *sql.DB) error {
 			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 		)`,
 
-		// Replace the orders table creation query with:
 		`CREATE TABLE orders (
-		 id VARCHAR(50) PRIMARY KEY,
-		 event_id VARCHAR(50) NOT NULL,
-		 user_id VARCHAR(50) NOT NULL,
-		 seat_ids JSON NOT NULL,
-		 status VARCHAR(20) NOT NULL,
-		 promo_code VARCHAR(50),
-		 discount_applied BOOLEAN DEFAULT FALSE,
-		 created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		 updated_at DATETIME NULL,
-		 FOREIGN KEY (event_id) REFERENCES events(id),
-		 FOREIGN KEY (user_id) REFERENCES users(id),
-		 FOREIGN KEY (promo_code) REFERENCES promos(code)
+			id VARCHAR(50) PRIMARY KEY,
+			event_id VARCHAR(50) NOT NULL,
+			user_id VARCHAR(50) NOT NULL,
+			seat_ids JSON NOT NULL,
+			status VARCHAR(20) NOT NULL,
+			promo_code VARCHAR(50),
+			discount_applied BOOLEAN DEFAULT FALSE,
+			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME NULL,
+			FOREIGN KEY (event_id) REFERENCES events(id),
+			FOREIGN KEY (user_id) REFERENCES users(id),
+			FOREIGN KEY (promo_code) REFERENCES promos(code)
 		)`,
 
 		`CREATE TABLE tickets (
 			id VARCHAR(50) PRIMARY KEY,
-			order_id VARCHAR(50) NOT NULL,
 			event_id VARCHAR(50) NOT NULL,
-			seat_id VARCHAR(50) NOT NULL,
 			user_id VARCHAR(50) NOT NULL,
-			issued_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (order_id) REFERENCES orders(id),
+			seat_id JSON NOT NULL,
+			status VARCHAR(20) NOT NULL,
+			checked_in BOOLEAN DEFAULT FALSE,
+			check_in_time DATETIME NULL,
+			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME NULL,
 			FOREIGN KEY (event_id) REFERENCES events(id),
-			FOREIGN KEY (seat_id) REFERENCES seats(id),
 			FOREIGN KEY (user_id) REFERENCES users(id)
 		)`,
 	}
@@ -121,7 +119,6 @@ func migrate(db *sql.DB) error {
 func seed(db *sql.DB) error {
 	now := time.Now().Format("2006-01-02 15:04:05")
 
-	// Insert Users
 	users := []struct {
 		id       string
 		email    string
@@ -138,7 +135,6 @@ func seed(db *sql.DB) error {
 		}
 	}
 
-	// Insert Event
 	_, err := db.Exec(`INSERT INTO events (id, name, description, start_date, end_date, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
 		"event001",
 		"Summer Fest 2025",
@@ -150,7 +146,6 @@ func seed(db *sql.DB) error {
 		return err
 	}
 
-	// Insert Seats
 	seats := []struct {
 		id      string
 		eventID string
@@ -166,7 +161,6 @@ func seed(db *sql.DB) error {
 		}
 	}
 
-	// Insert Promo
 	_, err = db.Exec(`INSERT INTO promos (id, code, description, discount, valid_from, valid_until, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		"promo001",
 		"SUMMER20",
@@ -179,12 +173,11 @@ func seed(db *sql.DB) error {
 		return err
 	}
 
-	// Insert Order (fix: use seat_ids as JSON)
 	_, err = db.Exec(`INSERT INTO orders (id, event_id, user_id, seat_ids, status, promo_code, discount_applied, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 		"order123",
 		"event001",
 		"user001",
-		`["seatA1"]`, // JSON array as string
+		`["seatA1", "seatA2"]`,
 		"completed",
 		"SUMMER20",
 		true,
@@ -193,13 +186,15 @@ func seed(db *sql.DB) error {
 		return err
 	}
 
-	// Insert Ticket
-	_, err = db.Exec(`INSERT INTO tickets (id, order_id, event_id, seat_id, user_id, issued_at) VALUES (?, ?, ?, ?, ?, ?)`,
-		"ticket123",
-		"order123",
+	_, err = db.Exec(`INSERT INTO tickets (id, event_id, user_id, seat_id, status, checked_in, check_in_time, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		"ticket001",
 		"event001",
-		"seatA1",
 		"user001",
+		`["seatA1", "seatA2"]`,
+		"issued",
+		false,
+		nil,
+		now,
 		now)
 	if err != nil {
 		return err

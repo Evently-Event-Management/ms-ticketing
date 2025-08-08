@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"log"
-	"ms-ticketing/internal/kafka"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,19 +11,18 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-redis/redis/v8"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/mysqldialect"
 
-	"ms-ticketing/internal/order"
-	"ms-ticketing/internal/order/db"
-	"ms-ticketing/internal/order/order_api"
-	rediswrap "ms-ticketing/internal/order/redis"
+	"ms-ticketing/internal/tickets"
+	"ms-ticketing/internal/tickets/db"
+	"ms-ticketing/internal/tickets/ticket_api"
 )
 
-func verifyConnections(ctx context.Context) (*bun.DB, *redis.Client) {
+func verifyConnections(ctx context.Context) *bun.DB {
 	dsn := os.Getenv("MYSQL_DSN")
 	if dsn == "" {
 		log.Fatal("[Database] MYSQL_DSN not set")
@@ -39,45 +37,24 @@ func verifyConnections(ctx context.Context) (*bun.DB, *redis.Client) {
 	log.Println("[Database] MySQL connection successful")
 
 	bunDB := bun.NewDB(sqldb, mysqldialect.New())
-	db.Migrate()
 
-	redisAddr := os.Getenv("REDIS_ADDR")
-	if redisAddr == "" {
-		log.Fatal("[Database] REDIS_ADDR not set")
-	}
-	redisClient := redis.NewClient(&redis.Options{
-		Addr: redisAddr,
-	})
-	if err := redisClient.Ping(ctx).Err(); err != nil {
-		log.Fatalf("[Database] Redis connection error: %v", err)
-	}
-	log.Println("[Database] Redis connection successful")
-
-	return bunDB, redisClient
+	return bunDB
 }
 
 func main() {
 	_ = godotenv.Load() // Loads .env file if present
 
 	ctx := context.Background()
-	bunDB, redisClient := verifyConnections(ctx)
+	bunDB := verifyConnections(ctx)
 	defer bunDB.Close()
-	defer redisClient.Close()
 
-	// Create Kafka producer
-	kafkaProducer := kafka.NewProducer([]string{"localhost:9092"}, "order_created")
-
-	// Pass to service
-	service := order.NewOrderService(&db.DB{Bun: bunDB}, rediswrap.NewRedis(redisClient), kafkaProducer)
-
-	handler := &order_api.Handler{OrderService: service}
+	service := tickets.NewTicketService(&db.DB{Bun: bunDB})
+	handler := &ticket_api.Handler{TicketService: service}
 
 	r := chi.NewRouter()
-	r.Route("/order", func(r chi.Router) {
-		r.Post("/", handler.CreateOrder)
-		r.Get("/{orderId}", handler.GetOrder)
-		r.Put("/{orderId}", handler.UpdateOrder)
-		r.Delete("/{orderId}", handler.DeleteOrder)
+	r.Route("/ticket", func(r chi.Router) {
+		r.Get("/checkout/{ticketID}", handler.CheckoutTicket)
+
 	})
 
 	server := &http.Server{

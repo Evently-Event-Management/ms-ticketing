@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"ms-ticketing/internal/models"
 
 	"github.com/segmentio/kafka-go"
-	"ms-ticketing/internal/order/db"
 )
 
 type Consumer struct {
@@ -27,7 +27,7 @@ func NewConsumer(brokers []string, topic, groupID string) *Consumer {
 }
 
 // Start begins consuming messages from Kafka
-func (c *Consumer) Start(handler func(order db.Order)) {
+func (c *Consumer) Start(handler func(order models.Order)) {
 	fmt.Println("🔄 Kafka consumer started...")
 
 	for {
@@ -37,7 +37,7 @@ func (c *Consumer) Start(handler func(order db.Order)) {
 			continue
 		}
 
-		var order db.Order
+		var order models.Order
 		if err := json.Unmarshal(msg.Value, &order); err != nil {
 			log.Printf("⚠️ Failed to unmarshal message: %v\n", err)
 			continue

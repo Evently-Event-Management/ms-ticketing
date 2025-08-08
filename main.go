@@ -19,9 +19,9 @@ func main() {
 	})
 
 	// Mount microservice routes
-	r.Mount("/api/v1/order", proxy("http://order:8001"))
-	r.Mount("/api/v1/seating", proxy("http://seating:8002"))
-	r.Mount("/api/v1/payment", proxy("http://payment:8003"))
+	r.Mount("/order_api/v1/order", proxy("http://order:8001"))
+	r.Mount("/order_api/v1/seating", proxy("http://seating:8002"))
+	r.Mount("/order_api/v1/payment", proxy("http://payment:8003"))
 
 	// Health check endpoint
 	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {

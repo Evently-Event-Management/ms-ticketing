@@ -1,4 +1,4 @@
-package api
+package order_api
 
 import (
 	"encoding/json"
