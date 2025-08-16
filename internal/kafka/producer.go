@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/segmentio/kafka-go"
-	"ms-ticketing/internal/order/db"
+	"ms-ticketing/internal/models"
 )
 
 type Producer struct {
@@ -21,7 +21,7 @@ func NewProducer(brokers []string, topic string) *Producer {
 }
 
 // PublishOrderCreated streams the order creation event to Kafka
-func (p *Producer) PublishOrderCreated(order db.Order) error {
+func (p *Producer) PublishOrderCreated(order models.Order) error {
 	msgBytes, err := json.Marshal(order)
 	if err != nil {
 		return err
@@ -38,7 +38,7 @@ func (p *Producer) PublishOrderCreated(order db.Order) error {
 }
 
 // PublishOrderUpdated streams the order update event to Kafka
-func (p *Producer) PublishOrderUpdated(order db.Order) error {
+func (p *Producer) PublishOrderUpdated(order models.Order) error {
 	msgBytes, err := json.Marshal(order)
 	if err != nil {
 		return err
@@ -55,7 +55,7 @@ func (p *Producer) PublishOrderUpdated(order db.Order) error {
 }
 
 // PublishOrderCancelled streams the order cancellation event to Kafka
-func (p *Producer) PublishOrderCancelled(order db.Order) error {
+func (p *Producer) PublishOrderCancelled(order models.Order) error {
 	msgBytes, err := json.Marshal(order)
 	if err != nil {
 		return err

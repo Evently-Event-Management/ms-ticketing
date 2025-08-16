@@ -3,15 +3,15 @@ package order
 import (
 	"errors"
 	"fmt"
-	"ms-ticketing/internal/order/db"
+	"ms-ticketing/internal/models"
 )
 
 type DBLayer interface {
-	CreateOrder(order db.Order) error
-	GetOrderByID(id string) (*db.Order, error)
-	UpdateOrder(order db.Order) error
+	CreateOrder(order models.Order) error
+	GetOrderByID(id string) (*models.Order, error)
+	UpdateOrder(order models.Order) error
 	CancelOrder(id string) error
-	GetOrderBySeatAndEvent(seatID, eventID string) (*db.Order, error)
+	GetOrderBySeatAndEvent(seatID, eventID string) (*models.Order, error)
 }
 
 type RedisLock interface {
@@ -20,9 +20,9 @@ type RedisLock interface {
 }
 
 type KafkaPublisher interface {
-	PublishOrderCreated(order db.Order) error
-	PublishOrderUpdated(order db.Order) error
-	PublishOrderCancelled(order db.Order) error
+	PublishOrderCreated(order models.Order) error
+	PublishOrderUpdated(order models.Order) error
+	PublishOrderCancelled(order models.Order) error
 }
 
 type OrderService struct {
@@ -35,11 +35,11 @@ func NewOrderService(db DBLayer, redis RedisLock, kafka KafkaPublisher) *OrderSe
 	return &OrderService{DB: db, Redis: redis, Kafka: kafka}
 }
 
-func (s *OrderService) GetOrderBySeatAndEvent(seatID, eventID string) (*db.Order, error) {
+func (s *OrderService) GetOrderBySeatAndEvent(seatID, eventID string) (*models.Order, error) {
 	return s.DB.GetOrderBySeatAndEvent(seatID, eventID)
 }
 
-func (s *OrderService) PlaceOrder(order db.Order) error {
+func (s *OrderService) PlaceOrder(order models.Order) error {
 	fmt.Printf("Placing order: %s for event: %s\n", order.ID, order.EventID)
 
 	for _, seatID := range order.SeatIDs {
@@ -78,11 +78,11 @@ func (s *OrderService) PlaceOrder(order db.Order) error {
 	return nil
 }
 
-func (s *OrderService) GetOrder(id string) (*db.Order, error) {
+func (s *OrderService) GetOrder(id string) (*models.Order, error) {
 	return s.DB.GetOrderByID(id)
 }
 
-func (s *OrderService) UpdateOrder(id string, updateData db.Order) error {
+func (s *OrderService) UpdateOrder(id string, updateData models.Order) error {
 	fmt.Printf("Updating order: %s\n", id)
 	order, err := s.DB.GetOrderByID(id)
 	if err != nil {
