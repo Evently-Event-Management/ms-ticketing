@@ -1,20 +1,44 @@
 package models
 
 import (
-	"github.com/uptrace/bun"
 	"time"
+
+	"github.com/uptrace/bun"
 )
+
+type OrderRequest struct {
+	SessionID string   `json:"order_id"`
+	SeatIDs   []string `json:"seat_ids"`
+}
 
 type Order struct {
 	bun.BaseModel `bun:"table:orders"`
 
-	ID              string    `bun:"id,pk" json:"id"`
-	EventID         string    `bun:"event_id,notnull" json:"event_id"`
-	UserID          string    `bun:"user_id,notnull" json:"user_id"`
-	SeatIDs         []string  `bun:"seat_ids,array,notnull" json:"seat_ids"` // PostgreSQL array
-	Status          string    `bun:"status,notnull" json:"status"`
-	CreatedAt       time.Time `bun:"created_at,notnull,default:current_timestamp"`
-	UpdatedAt       time.Time `bun:"updated_at,nullzero" json:"updated_at"`
-	PromoCode       string    `bun:"promo_code,nullzero" json:"promo_code"`
-	DiscountApplied bool      `bun:"discount_applied,nullzero" json:"discount_applied"`
+	OrderID   string    `bun:"order_id,pk"`
+	UserID    string    `bun:"user_id"`
+	SessionID string    `bun:"session_id"`
+	SeatIDs   []string  `bun:"seat_ids,array"`
+	Status    string    `bun:"status"`
+	Price     float64   `bun:"price"`
+	CreatedAt time.Time `bun:"created_at"`
+}
+
+type Tier struct {
+	ID    string  `bun:"tier_id" json:"id"`
+	Name  string  `bun:"tier_name" json:"name"`
+	Price float64 `bun:"price" json:"price"`
+	Color string  `bun:"color" json:"color"`
+}
+
+type SeatDetails struct {
+	SeatID string `bun:"seat_id" json:"seatId"`
+	Label  string `bun:"seat_label" json:"label"`
+	Tier   Tier   `bun:"tier" json:"tier"`
+}
+
+type OrderResponse struct {
+	OrderID   string   `json:"order_id"`
+	SessionID string   `json:"session_id"`
+	SeatIDs   []string `json:"seat_ids"`
+	UserID    string   `json:"user_id"`
 }

@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/segmentio/kafka-go"
 	"ms-ticketing/internal/models"
+
+	"github.com/segmentio/kafka-go"
 )
 
 type Producer struct {
@@ -31,7 +32,7 @@ func (p *Producer) PublishOrderCreated(order models.Order) error {
 
 	return p.Writer.WriteMessages(context.Background(),
 		kafka.Message{
-			Key:   []byte(order.ID),
+			Key:   []byte(order.OrderID),
 			Value: msgBytes,
 		},
 	)
@@ -48,7 +49,7 @@ func (p *Producer) PublishOrderUpdated(order models.Order) error {
 
 	return p.Writer.WriteMessages(context.Background(),
 		kafka.Message{
-			Key:   []byte(order.ID),
+			Key:   []byte(order.OrderID),
 			Value: msgBytes,
 		},
 	)
@@ -65,7 +66,7 @@ func (p *Producer) PublishOrderCancelled(order models.Order) error {
 
 	return p.Writer.WriteMessages(context.Background(),
 		kafka.Message{
-			Key:   []byte(order.ID),
+			Key:   []byte(order.OrderID),
 			Value: msgBytes,
 		},
 	)

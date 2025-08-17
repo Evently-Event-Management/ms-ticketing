@@ -3,10 +3,11 @@ package order_api
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/go-chi/chi/v5"
+	"ms-ticketing/internal/models"
 	"ms-ticketing/internal/order"
-	"ms-ticketing/internal/order/db"
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type Handler struct {
@@ -14,7 +15,7 @@ type Handler struct {
 }
 
 func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
-	var req db.Order
+	var req models.Order
 	fmt.Println("CreateOrder: received request")
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -30,11 +31,11 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Could not place order: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	fmt.Printf("CreateOrder: order placed successfully, ID: %v\n", req.ID)
+	fmt.Printf("CreateOrder: order placed successfully, OrderID: %v\n", req.OrderID)
 
 	resp := map[string]interface{}{
 		"status":  "created",
-		"orderId": req.ID,
+		"orderId": req.OrderID,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -46,22 +47,23 @@ func (h *Handler) GetOrder(w http.ResponseWriter, r *http.Request) {
 	orderID := chi.URLParam(r, "orderId")
 	fmt.Printf("GetOrder: orderId=%s\n", orderID)
 
-	order, err := h.OrderService.GetOrder(orderID)
+	orderData, err := h.OrderService.GetOrder(orderID)
 	if err != nil {
 		fmt.Printf("GetOrder: order not found: %v\n", err)
 		http.Error(w, "Order not found", http.StatusNotFound)
 		return
 	}
-	fmt.Printf("GetOrder: found order: %+v\n", order)
+	fmt.Printf("GetOrder: found order: %+v\n", orderData)
 
-	json.NewEncoder(w).Encode(order)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(orderData)
 }
 
 func (h *Handler) UpdateOrder(w http.ResponseWriter, r *http.Request) {
 	orderID := chi.URLParam(r, "orderId")
 	fmt.Printf("UpdateOrder: orderId=%s\n", orderID)
 
-	var updateData db.Order
+	var updateData models.Order
 	if err := json.NewDecoder(r.Body).Decode(&updateData); err != nil {
 		fmt.Printf("UpdateOrder: failed to decode body: %v\n", err)
 		http.Error(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
@@ -69,7 +71,7 @@ func (h *Handler) UpdateOrder(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Printf("UpdateOrder: decoded update data: %+v\n", updateData)
 
-	updateData.ID = orderID
+	updateData.OrderID = orderID
 
 	err := h.OrderService.UpdateOrder(orderID, updateData)
 	if err != nil {
@@ -80,7 +82,7 @@ func (h *Handler) UpdateOrder(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("UpdateOrder: order updated successfully")
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Order updated successfully"))
+	w.Write([]byte(`{"message":"Order updated successfully"}`))
 }
 
 func (h *Handler) DeleteOrder(w http.ResponseWriter, r *http.Request) {
@@ -89,46 +91,46 @@ func (h *Handler) DeleteOrder(w http.ResponseWriter, r *http.Request) {
 
 	err := h.OrderService.CancelOrder(orderID)
 	if err != nil {
-		fmt.Printf("DeleteOrder: failed to delete order: %v\n", err)
-		http.Error(w, "Could not delete order: "+err.Error(), http.StatusInternalServerError)
+		fmt.Printf("DeleteOrder: failed to cancel order: %v\n", err)
+		http.Error(w, "Could not cancel order: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	fmt.Println("DeleteOrder: order deleted successfully")
+	fmt.Println("DeleteOrder: order cancelled successfully")
 
 	w.WriteHeader(http.StatusNoContent)
-	w.Write([]byte("Order deleted successfully"))
 }
 
-func (h *Handler) ApplyPromo(w http.ResponseWriter, r *http.Request) {
-	orderID := chi.URLParam(r, "orderId")
-	fmt.Printf("ApplyPromo: orderId=%s\n", orderID)
+// func (h *Handler) ApplyPromo(w http.ResponseWriter, r *http.Request) {
+// 	orderID := chi.URLParam(r, "orderId")
+// 	fmt.Printf("ApplyPromo: orderId=%s\n", orderID)
 
-	var promo struct {
-		Code string `json:"code"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&promo); err != nil {
-		fmt.Printf("ApplyPromo: failed to decode promo: %v\n", err)
-		http.Error(w, "Invalid promo code JSON: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-	fmt.Printf("ApplyPromo: promo code: %s\n", promo.Code)
+// 	var promo struct {
+// 		Code string `json:"code"`
+// 	}
+// 	if err := json.NewDecoder(r.Body).Decode(&promo); err != nil {
+// 		fmt.Printf("ApplyPromo: failed to decode promo: %v\n", err)
+// 		http.Error(w, "Invalid promo code JSON: "+err.Error(), http.StatusBadRequest)
+// 		return
+// 	}
+// 	fmt.Printf("ApplyPromo: promo code: %s\n", promo.Code)
 
-	if promo.Code == "" {
-		fmt.Println("ApplyPromo: promo code is empty")
-		http.Error(w, "Promo code cannot be empty", http.StatusBadRequest)
-		return
-	}
+// 	if promo.Code == "" {
+// 		fmt.Println("ApplyPromo: promo code is empty")
+// 		http.Error(w, "Promo code cannot be empty", http.StatusBadRequest)
+// 		return
+// 	}
 
-	if err := h.OrderService.ApplyPromoCode(orderID, promo.Code); err != nil {
-		fmt.Printf("ApplyPromo: failed to apply promo: %v\n", err)
-		http.Error(w, "Failed to apply promo: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-	fmt.Println("ApplyPromo: promo code applied successfully")
+// 	if err := h.OrderService.ApplyPromoCode(orderID, promo.Code); err != nil {
+// 		fmt.Printf("ApplyPromo: failed to apply promo: %v\n", err)
+// 		http.Error(w, "Failed to apply promo: "+err.Error(), http.StatusBadRequest)
+// 		return
+// 	}
+// 	fmt.Println("ApplyPromo: promo code applied successfully")
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"message":"Promo code applied successfully"}`))
-}
+// 	w.Header().Set("Content-Type", "application/json")
+// 	w.WriteHeader(http.StatusOK)
+// 	w.Write([]byte(`{"message":"Promo code applied successfully"}`))
+// }
 
 func (h *Handler) CheckoutOrder(w http.ResponseWriter, r *http.Request) {
 	orderID := chi.URLParam(r, "orderId")
@@ -141,6 +143,27 @@ func (h *Handler) CheckoutOrder(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println("CheckoutOrder: order checked out successfully")
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{"message":"Order checked out successfully"}`))
+}
+
+func (h *Handler) SeatValidationAndPlaceOrder(w http.ResponseWriter, r *http.Request) {
+	// Parse body once (pass to service)
+	var orderReq models.OrderRequest
+	if err := json.NewDecoder(r.Body).Decode(&orderReq); err != nil {
+		http.Error(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Call service
+	response, err := h.OrderService.SeatValidationAndPlaceOrder(r, orderReq)
+	if err != nil {
+		http.Error(w, "Seat validation failed: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Success
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(response)
 }

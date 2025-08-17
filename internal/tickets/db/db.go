@@ -2,20 +2,29 @@ package db
 
 import (
 	"context"
-	"fmt"
-	"github.com/uptrace/bun"
+	"time"
+
 	"ms-ticketing/internal/models"
+
+	"github.com/uptrace/bun"
 )
 
 type DB struct {
 	Bun *bun.DB
 }
 
-func (d *DB) GetTicketByID(id string) (*models.Ticket, error) {
+// GetTicketsByOrder implements tickets.DBLayer.
+func (d *DB) GetTicketsByOrder(orderID string) ([]models.Ticket, error) {
+	panic("unimplemented")
+}
+
+// ---------------- TICKETS ----------------
+
+func (d *DB) GetTicketByID(ticketID string) (*models.Ticket, error) {
 	var ticket models.Ticket
 	err := d.Bun.NewSelect().
 		Model(&ticket).
-		Where("id = ?", id).
+		Where("ticket_id = ?", ticketID).
 		Limit(1).
 		Scan(context.Background())
 	if err != nil {
@@ -27,60 +36,41 @@ func (d *DB) GetTicketByID(id string) (*models.Ticket, error) {
 func (d *DB) UpdateTicket(ticket models.Ticket) error {
 	_, err := d.Bun.NewUpdate().
 		Model(&ticket).
-		Column("event_id", "user_id", "seat_id", "status", "checked_in", "check_in_time", "updated_at").
-		Where("id = ?", ticket.ID).
+		Column("order_id", "seat_id", "seat_label", "colour", "tier_id", "tier_name", "qr_code", "price_at_purchase", "issued_at").
+		Where("ticket_id = ?", ticket.TicketID).
 		Exec(context.Background())
 	return err
 }
 
-func (d *DB) CancelTicket(id string) error {
+func (d *DB) CancelTicket(ticketID string) error {
 	_, err := d.Bun.NewDelete().
 		Model((*models.Ticket)(nil)).
-		Where("id = ?", id).
+		Where("ticket_id = ?", ticketID).
 		Exec(context.Background())
 	return err
 }
 
 func (d *DB) CreateTicket(ticket models.Ticket) error {
-	_, err := d.Bun.NewInsert().Model(&ticket).Exec(context.Background())
+	// Ensure issued_at is set if empty
+	if ticket.IssuedAt.IsZero() {
+		ticket.IssuedAt = time.Now()
+	}
+	_, err := d.Bun.NewInsert().
+		Model(&ticket).
+		Exec(context.Background())
 	return err
 }
 
-func (d *DB) GetTicketsByUser(userID string) (*models.Ticket, error) {
-	var ticket models.Ticket
+func (d *DB) GetTicketsByUser(userID string) ([]models.Ticket, error) {
+	var tickets []models.Ticket
 	err := d.Bun.NewSelect().
-		Model(&ticket).
+		Model(&tickets).
 		Where("user_id = ?", userID).
 		Scan(context.Background())
 	if err != nil {
 		return nil, err
 	}
-	return &ticket, nil
+	return tickets, nil
 }
 
-// UserExists checks if a user with the given ID exists in the database
-func (d *DB) UserExists(userID string) (bool, error) {
-	fmt.Println(userID)
-	err, _ := d.Bun.NewSelect().
-		Model((*models.User)(nil)).
-		Where("id = ?", userID).
-		Exists(context.Background())
-	if err != true {
-		return false, nil
-	}
-	return true, nil
-}
-
-// EventExists checks if an event with the given ID exists in the database
-func (d *DB) EventExists(eventID string) (bool, error) {
-	err, _ := d.Bun.NewSelect().
-		Model((*models.Event)(nil)). // Assuming you have an Event model
-		Where("id = ?", eventID).
-		Exists(context.Background())
-	if err != true {
-		return false, nil
-	}
-	return true, nil
-}
-
-// SeatExists checks if a seat with the given ID exists in the database
+// ---------------- EXISTENCE CHECKS ----------------

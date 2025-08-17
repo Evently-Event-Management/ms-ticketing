@@ -43,7 +43,7 @@ func (c *Consumer) Start(handler func(order models.Order)) {
 			continue
 		}
 
-		log.Printf("📩 Received order event: ID=%s", order.ID)
+		log.Printf("📩 Received order event: ID=%s", order.OrderID)
 		handler(order)
 	}
 }

@@ -1,20 +1,24 @@
 package models
 
 import (
-	"github.com/uptrace/bun"
 	"time"
+
+	"github.com/uptrace/bun"
 )
 
 type Ticket struct {
 	bun.BaseModel `bun:"table:tickets"`
 
-	ID          string    `bun:"id,pk" json:"id"`
-	EventID     string    `bun:"event_id,notnull" json:"event_id"`
-	UserID      string    `bun:"user_id,notnull" json:"user_id"`
-	SeatID      string    `bun:"seat_id,array,notnull" json:"seat_id"`
-	Status      string    `bun:"status,notnull" json:"status"`
-	CheckedIn   bool      `bun:"checked_in,nullzero" json:"checked_in"`
-	CheckInTime time.Time `bun:"check_in_time,nullzero" json:"check_in_time"`
-	CreatedAt   time.Time `bun:"created_at,notnull,default:current_timestamp"`
-	UpdatedAt   time.Time `bun:"updated_at,nullzero" json:"updated_at"`
+	TicketID        string    `bun:"ticket_id,pk"`
+	OrderID         string    `bun:"order_id"`
+	SeatID          string    `bun:"seat_id"`
+	SeatLabel       string    `bun:"seat_label"`
+	Colour          string    `bun:"colour"`
+	TierID          string    `bun:"tier_id"`
+	TierName        string    `bun:"tier_name"`
+	QRCode          []byte    `bun:"qr_code"`
+	PriceAtPurchase float64   `bun:"price_at_purchase"`
+	IssuedAt        time.Time `bun:"issued_at"`
+	CheckedIn       bool      `bun:"checked_in"`
+	CheckedInTime   time.Time `bun:"checked_in_time"`
 }

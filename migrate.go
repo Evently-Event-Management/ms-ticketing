@@ -6,13 +6,14 @@ import (
 	"log"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/lib/pq"
+	_ "github.com/lib/pq"
 )
 
-func main() {
-	dsn := "appuser:secretpass@tcp(localhost:3307)/appdb?parseTime=true"
+const dsn = "postgres://appuser:secretpass@localhost:5432/appdb?sslmode=disable"
 
-	db, err := sql.Open("mysql", dsn)
+func main() {
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		log.Fatalf("❌ Failed to open DB: %v", err)
 	}
@@ -21,188 +22,137 @@ func main() {
 	if err := db.Ping(); err != nil {
 		log.Fatalf("❌ Failed to ping DB: %v", err)
 	}
+	fmt.Println("✅ Connected to DB")
 
-	fmt.Println("✅ Connected to MySQL!")
-
-	// Run migrations
 	if err := migrate(db); err != nil {
 		log.Fatalf("❌ Migration failed: %v", err)
 	}
+	fmt.Println("✅ Migration complete")
 
-	// Seed sample data
 	if err := seed(db); err != nil {
 		log.Fatalf("❌ Seeding failed: %v", err)
 	}
+	fmt.Println("✅ Seeding complete")
 
-	fmt.Println("✅ Migration and seeding completed!")
+	if err := printData(db); err != nil {
+		log.Fatalf("❌ Print failed: %v", err)
+	}
 }
 
 func migrate(db *sql.DB) error {
-	queries := []string{
-		`DROP TABLE IF EXISTS tickets`,
-		`DROP TABLE IF EXISTS orders`,
-		`DROP TABLE IF EXISTS promos`,
-		`DROP TABLE IF EXISTS seats`,
-		`DROP TABLE IF EXISTS users`,
-		`DROP TABLE IF EXISTS events`,
+	schema := `
+	CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-		`CREATE TABLE users (
-			id VARCHAR(50) PRIMARY KEY,
-			email VARCHAR(100) NOT NULL UNIQUE,
-			full_name VARCHAR(100) NOT NULL,
-			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-		)`,
+	DROP TABLE IF EXISTS tickets;
+	DROP TABLE IF EXISTS orders;
 
-		`CREATE TABLE events (
-			id VARCHAR(50) PRIMARY KEY,
-			name VARCHAR(100) NOT NULL,
-			description TEXT,
-			start_date DATETIME NOT NULL,
-			end_date DATETIME NOT NULL,
-			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-		)`,
+	CREATE TABLE orders (
+		order_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+		user_id UUID NOT NULL,
+		session_id UUID NOT NULL,
+		seat_ids TEXT[] NOT NULL,
+		status   TEXT NOT NULL,
+		price    NUMERIC(10,2) NOT NULL,
+		created_at TIMESTAMP NOT NULL DEFAULT NOW()
+	);
 
-		`CREATE TABLE seats (
-			id VARCHAR(50) PRIMARY KEY,
-			event_id VARCHAR(50) NOT NULL,
-			label VARCHAR(20) NOT NULL,
-			FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
-		)`,
-
-		`CREATE TABLE promos (
-			id VARCHAR(50) PRIMARY KEY,
-			code VARCHAR(50) NOT NULL UNIQUE,
-			description TEXT,
-			discount FLOAT NOT NULL,
-			valid_from DATETIME NOT NULL,
-			valid_until DATETIME NOT NULL,
-			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-		)`,
-
-		`CREATE TABLE orders (
-			id VARCHAR(50) PRIMARY KEY,
-			event_id VARCHAR(50) NOT NULL,
-			user_id VARCHAR(50) NOT NULL,
-			seat_id VARCHAR(50) NOT NULL,
-			status VARCHAR(20) NOT NULL,
-			promo_code VARCHAR(50),
-			discount_applied BOOLEAN DEFAULT FALSE,
-			created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at DATETIME NULL,
-			FOREIGN KEY (event_id) REFERENCES events(id),
-			FOREIGN KEY (user_id) REFERENCES users(id),
-			FOREIGN KEY (seat_id) REFERENCES seats(id),
-			FOREIGN KEY (promo_code) REFERENCES promos(code)
-		)`,
-
-		`CREATE TABLE tickets (
-			id VARCHAR(50) PRIMARY KEY,
-			order_id VARCHAR(50) NOT NULL,
-			event_id VARCHAR(50) NOT NULL,
-			seat_id VARCHAR(50) NOT NULL,
-			user_id VARCHAR(50) NOT NULL,
-			issued_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			FOREIGN KEY (order_id) REFERENCES orders(id),
-			FOREIGN KEY (event_id) REFERENCES events(id),
-			FOREIGN KEY (seat_id) REFERENCES seats(id),
-			FOREIGN KEY (user_id) REFERENCES users(id)
-		)`,
-	}
-
-	for _, q := range queries {
-		if _, err := db.Exec(q); err != nil {
-			return fmt.Errorf("query failed: %v, error: %w", q, err)
-		}
-	}
-
-	return nil
+	CREATE TABLE tickets (
+		ticket_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+		order_id  UUID NOT NULL REFERENCES orders(order_id) ON DELETE CASCADE,
+		seat_id   UUID NOT NULL,
+		seat_label TEXT NOT NULL,
+		colour     TEXT NOT NULL,
+		tier_id    UUID NOT NULL,
+		tier_name  TEXT NOT NULL,
+		price_at_purchase NUMERIC(10,2) NOT NULL,
+		issued_at TIMESTAMP NOT NULL DEFAULT NOW(),
+		checked_in BOOLEAN NOT NULL DEFAULT FALSE,
+		checked_in_time TIMESTAMP
+	);
+	`
+	_, err := db.Exec(schema)
+	return err
 }
 
 func seed(db *sql.DB) error {
-	now := time.Now().Format("2006-01-02 15:04:05")
+	now := time.Now()
 
-	// Insert Users
-	users := []struct {
-		id       string
-		email    string
-		fullName string
-	}{
-		{"user001", "alice@example.com", "Alice Wonderland"},
-		{"user002", "bob@example.com", "Bob Builder"},
-	}
-	for _, u := range users {
-		_, err := db.Exec(`INSERT INTO users (id, email, full_name, created_at) VALUES (?, ?, ?, ?)`,
-			u.id, u.email, u.fullName, now)
-		if err != nil {
-			return err
-		}
-	}
+	// Sample UUIDs
+	userID := "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+	sessionID := "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+	seat1 := "11111111-1111-1111-1111-111111111111"
+	seat2 := "22222222-2222-2222-2222-222222222222"
+	tier1 := "33333333-3333-3333-3333-333333333333"
+	tier2 := "44444444-4444-4444-4444-444444444444"
 
-	// Insert Event
-	_, err := db.Exec(`INSERT INTO events (id, name, description, start_date, end_date, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
-		"event001",
-		"Summer Fest 2025",
-		"Annual summer music festival.",
-		time.Now().AddDate(0, 1, 0).Format("2006-01-02 15:04:05"),
-		time.Now().AddDate(0, 1, 3).Format("2006-01-02 15:04:05"),
-		now)
-	if err != nil {
-		return err
-	}
-
-	// Insert Seats
-	seats := []struct {
-		id      string
-		eventID string
-		label   string
-	}{
-		{"seatA1", "event001", "A1"},
-		{"seatA2", "event001", "A2"},
-	}
-	for _, s := range seats {
-		_, err := db.Exec(`INSERT INTO seats (id, event_id, label) VALUES (?, ?, ?)`, s.id, s.eventID, s.label)
-		if err != nil {
-			return err
-		}
-	}
-
-	// Insert Promo
-	_, err = db.Exec(`INSERT INTO promos (id, code, description, discount, valid_from, valid_until, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-		"promo001",
-		"SUMMER20",
-		"20% off summer tickets",
-		20.0,
-		now,
-		time.Now().AddDate(0, 2, 0).Format("2006-01-02 15:04:05"),
-		now)
-	if err != nil {
-		return err
-	}
-
-	// Insert Order
-	_, err = db.Exec(`INSERT INTO orders (id, event_id, user_id, seat_id, status, promo_code, discount_applied, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-		"order123",
-		"event001",
-		"user001",
-		"seatA1",
+	// Insert sample Order
+	var orderID string
+	err := db.QueryRow(
+		`INSERT INTO orders (user_id, session_id, seat_ids, status, price, created_at)
+		 VALUES ($1, $2, $3, $4, $5, $6) RETURNING order_id`,
+		userID,
+		sessionID,
+		pq.Array([]string{seat1, seat2}),
 		"completed",
-		"SUMMER20",
-		true,
-		now)
+		250.00,
+		now,
+	).Scan(&orderID)
 	if err != nil {
 		return err
 	}
 
-	// Insert Ticket
-	_, err = db.Exec(`INSERT INTO tickets (id, order_id, event_id, seat_id, user_id, issued_at) VALUES (?, ?, ?, ?, ?, ?)`,
-		"ticket123",
-		"order123",
-		"event001",
-		"seatA1",
-		"user001",
-		now)
+	// Insert sample Tickets
+	_, err = db.Exec(
+		`INSERT INTO tickets (order_id, seat_id, seat_label, colour, tier_id, tier_name, price_at_purchase, issued_at) 
+		 VALUES
+		 ($1, $2, 'A1', 'Red', $3, 'VIP', 150.00, $4),
+		 ($1, $5, 'A2', 'Blue', $6, 'Standard', 100.00, $4)`,
+		orderID, // $1
+		seat1,   // $2
+		tier1,   // $3
+		now,     // $4
+		seat2,   // $5
+		tier2,   // $6
+	)
+	return err
+}
+
+func printData(db *sql.DB) error {
+	fmt.Println("\n📦 Orders:")
+	rows, err := db.Query(`SELECT order_id, user_id, session_id, seat_ids, status, price, created_at FROM orders`)
 	if err != nil {
 		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id, userID, sessionID string
+		var seats []string
+		var status string
+		var price float64
+		var created time.Time
+		if err := rows.Scan(&id, &userID, &sessionID, pq.Array(&seats), &status, &price, &created); err != nil {
+			return err
+		}
+		fmt.Printf("- Order %s | User %s | Session %s | Seats: %v | Status: %s | Price: %.2f | Created: %s\n",
+			id, userID, sessionID, seats, status, price, created)
+	}
+
+	fmt.Println("\n🎟 Tickets:")
+	trows, err := db.Query(`SELECT ticket_id, order_id, seat_id, seat_label, colour, tier_name, price_at_purchase FROM tickets`)
+	if err != nil {
+		return err
+	}
+	defer trows.Close()
+
+	for trows.Next() {
+		var tid, oid, sid, label, colour, tier string
+		var price float64
+		if err := trows.Scan(&tid, &oid, &sid, &label, &colour, &tier, &price); err != nil {
+			return err
+		}
+		fmt.Printf("- Ticket %s | Order: %s | Seat: %s (%s, %s) | Tier: %s | Price: %.2f\n",
+			tid, oid, sid, label, colour, tier, price)
 	}
 
 	return nil
