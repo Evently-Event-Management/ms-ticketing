@@ -11,7 +11,8 @@ import (
 	"strings"
 )
 
-func getM2MToken(cfg models.Config, client *http.Client) (string, error) {
+// GetM2MToken retrieves a machine-to-machine token from Keycloak
+func GetM2MToken(cfg models.Config, client *http.Client) (string, error) {
 	tokenURL := fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", cfg.KeycloakURL, cfg.KeycloakRealm)
 	log.Printf("Requesting M2M token from: %s", tokenURL)
 

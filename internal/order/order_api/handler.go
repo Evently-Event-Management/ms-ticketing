@@ -5,13 +5,15 @@ import (
 	"fmt"
 	"ms-ticketing/internal/models"
 	"ms-ticketing/internal/order"
+	tickets "ms-ticketing/internal/tickets/service"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 )
 
 type Handler struct {
-	OrderService *order.OrderService
+	OrderService  *order.OrderService
+	TicketService *tickets.TicketService
 }
 
 func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
@@ -149,12 +151,17 @@ func (h *Handler) CheckoutOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) SeatValidationAndPlaceOrder(w http.ResponseWriter, r *http.Request) {
-	// Parse body once (pass to service)
+	// Parse the JSON request body
 	var orderReq models.OrderRequest
+
 	if err := json.NewDecoder(r.Body).Decode(&orderReq); err != nil {
+		fmt.Printf("Failed to decode request body: %v\n", err)
 		http.Error(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	fmt.Println("Received request with SessionID:", orderReq.SessionID)
+	fmt.Println("Received request with SeatIDs:", orderReq.SeatIDs)
 
 	// Call service
 	response, err := h.OrderService.SeatValidationAndPlaceOrder(r, orderReq)
@@ -164,6 +171,7 @@ func (h *Handler) SeatValidationAndPlaceOrder(w http.ResponseWriter, r *http.Req
 	}
 
 	// Success
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(response)
 }

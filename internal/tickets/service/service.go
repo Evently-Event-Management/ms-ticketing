@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-type DBLayer interface {
+type TicketDBLayer interface {
 	CreateTicket(ticket models.Ticket) error
 	GetTicketByID(ticketID string) (*models.Ticket, error)
 	UpdateTicket(ticket models.Ticket) error
@@ -18,10 +18,10 @@ type DBLayer interface {
 }
 
 type TicketService struct {
-	DB DBLayer
+	DB TicketDBLayer
 }
 
-func NewTicketService(db DBLayer) *TicketService {
+func NewTicketService(db TicketDBLayer) *TicketService {
 	return &TicketService{DB: db}
 }
 

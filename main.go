@@ -6,6 +6,9 @@ import (
 	"log"
 	"ms-ticketing/internal/auth"
 	"ms-ticketing/internal/kafka"
+	ticket_db "ms-ticketing/internal/tickets/db"
+	tickets "ms-ticketing/internal/tickets/service"
+	"ms-ticketing/internal/tickets/ticket_api"
 	"net/http"
 	"os"
 	"os/signal"
@@ -87,15 +90,18 @@ func main() {
 	// Kafka producer
 	kafkaProducer := kafka.NewProducer([]string{"localhost:9092"}, "order_created")
 
+	ticketService := tickets.NewTicketService(&ticket_db.DB{Bun: bunDB})
 	// Service layer
-	service := order.NewOrderService(
+	orderService := order.NewOrderService(
 		&db.DB{Bun: bunDB},
 		rediswrap.NewRedis(redisClient),
 		kafkaProducer,
+		ticketService,
 		client,
 	)
-	handler := &order_api.Handler{OrderService: service}
 
+	handler := &order_api.Handler{OrderService: orderService}
+	ticketHandler := &ticket_api.Handler{TicketService: ticketService}
 	// Router setup
 	r := chi.NewRouter()
 
@@ -111,6 +117,14 @@ func main() {
 		r.Get("/{orderId}", handler.GetOrder)
 		r.Put("/{orderId}", handler.UpdateOrder)
 		r.Delete("/{orderId}", handler.DeleteOrder)
+	})
+
+	r.Route("/ticket", func(r chi.Router) {
+		r.Get("/", ticketHandler.ListTicketsByOrder)
+		r.Get("/{ticketId}", ticketHandler.ViewTicket)
+		r.Post("/", ticketHandler.CreateTicket)
+		r.Put("/{ticketId}", ticketHandler.UpdateTicket)
+		r.Delete("/{ticketId}", ticketHandler.DeleteTicket)
 	})
 
 	// HTTP Server

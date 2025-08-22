@@ -64,6 +64,7 @@ func migrate(db *sql.DB) error {
 		colour     TEXT NOT NULL,
 		tier_id    UUID NOT NULL,
 		tier_name  TEXT NOT NULL,
+		qr_code    BYTEA,
 		price_at_purchase NUMERIC(10,2) NOT NULL,
 		issued_at TIMESTAMP NOT NULL DEFAULT NOW(),
 		checked_in BOOLEAN NOT NULL DEFAULT FALSE,
@@ -103,10 +104,10 @@ func seed(db *sql.DB) error {
 
 	// Insert sample Tickets
 	_, err = db.Exec(
-		`INSERT INTO tickets (order_id, seat_id, seat_label, colour, tier_id, tier_name, price_at_purchase, issued_at) 
+		`INSERT INTO tickets (order_id, seat_id, seat_label, colour, tier_id, tier_name, qr_code, price_at_purchase, issued_at) 
 		 VALUES
-		 ($1, $2, 'A1', 'Red', $3, 'VIP', 150.00, $4),
-		 ($1, $5, 'A2', 'Blue', $6, 'Standard', 100.00, $4)`,
+		 ($1, $2, 'A1', 'Red', $3, 'VIP', decode('48656c6c6f20515221', 'hex'), 150.00, $4),
+		 ($1, $5, 'A2', 'Blue', $6, 'Standard', decode('48656c6c6f20515221', 'hex'), 100.00, $4)`,
 		orderID, // $1
 		seat1,   // $2
 		tier1,   // $3

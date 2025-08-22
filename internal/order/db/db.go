@@ -11,6 +11,8 @@ type DB struct {
 	Bun *bun.DB
 }
 
+// CancelTicket implements tickets.TicketDBLayer.
+
 // ---------------- ORDERS ----------------
 
 // GetOrderByID → fetch one order by its ID

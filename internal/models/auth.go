@@ -7,14 +7,10 @@ type TokenResponse struct {
 }
 
 type Config struct {
-	SQSQueueURL     string
-	AWSRegion       string
-	AWSEndpoint     string // For LocalStack
-	EventServiceURL string
-	KeycloakURL     string
-	KeycloakRealm   string
-	ClientID        string
-	ClientSecret    string
+	KeycloakURL   string
+	KeycloakRealm string
+	ClientID      string
+	ClientSecret  string
 }
 
 type M2MTokenResponse struct {

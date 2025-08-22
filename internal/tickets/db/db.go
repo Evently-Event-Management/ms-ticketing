@@ -15,7 +15,15 @@ type DB struct {
 
 // GetTicketsByOrder implements tickets.DBLayer.
 func (d *DB) GetTicketsByOrder(orderID string) ([]models.Ticket, error) {
-	panic("unimplemented")
+	var tickets []models.Ticket
+	err := d.Bun.NewSelect().
+		Model(&tickets).
+		Where("order_id = ?", orderID).
+		Scan(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	return tickets, nil
 }
 
 // ---------------- TICKETS ----------------

@@ -7,7 +7,7 @@ import (
 )
 
 type OrderRequest struct {
-	SessionID string   `json:"order_id"`
+	SessionID string   `json:"session_id"`
 	SeatIDs   []string `json:"seat_ids"`
 }
 
