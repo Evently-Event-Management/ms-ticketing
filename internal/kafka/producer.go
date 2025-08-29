@@ -2,72 +2,94 @@ package kafka
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"ms-ticketing/internal/models"
+	"sync"
 
 	"github.com/segmentio/kafka-go"
 )
 
 type Producer struct {
-	Writer *kafka.Writer
+	Writers map[string]*kafka.Writer
+	Brokers []string
+	mu      sync.Mutex
 }
 
-func NewProducer(brokers []string, topic string) *Producer {
-	writer := kafka.NewWriter(kafka.WriterConfig{
+func NewProducer(brokers []string) *Producer {
+	return &Producer{
+		Writers: map[string]*kafka.Writer{
+			"ticketly.order.created": kafka.NewWriter(kafka.WriterConfig{
+				Brokers: brokers,
+				Topic:   "ticketly.order.created",
+			}),
+			"ticketly.order.updated": kafka.NewWriter(kafka.WriterConfig{
+				Brokers: brokers,
+				Topic:   "ticketly.order.updated",
+			}),
+			"ticketly.order.canceled": kafka.NewWriter(kafka.WriterConfig{
+				Brokers: brokers,
+				Topic:   "ticketly.order.canceled",
+			}),
+			"ticketly.seats.locked": kafka.NewWriter(kafka.WriterConfig{
+				Brokers: brokers,
+				Topic:   "ticketly.seats.locked",
+			}),
+			"ticketly.seats.unlocked": kafka.NewWriter(kafka.WriterConfig{
+				Brokers: brokers,
+				Topic:   "ticketly.seats.unlocked",
+			}),
+		},
 		Brokers: brokers,
+	}
+}
+
+func (p *Producer) getOrCreateWriter(topic string) (*kafka.Writer, error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	// Check if writer exists
+	if writer, exists := p.Writers[topic]; exists {
+		return writer, nil
+	}
+
+	// Create topic if it doesn't exist
+	if err := CreateTopicIfNotExists(p.Brokers, topic); err != nil {
+		return nil, fmt.Errorf("failed to create topic %s: %w", topic, err)
+	}
+
+	// Create new writer
+	writer := kafka.NewWriter(kafka.WriterConfig{
+		Brokers: p.Brokers,
 		Topic:   topic,
 	})
-	return &Producer{Writer: writer}
+
+	// Store for future use
+	p.Writers[topic] = writer
+	return writer, nil
 }
 
-// PublishOrderCreated streams the order creation event to Kafka
-func (p *Producer) PublishOrderCreated(order models.Order) error {
-	msgBytes, err := json.Marshal(order)
+func (p *Producer) Publish(topic string, key string, value []byte) error {
+	writer, err := p.getOrCreateWriter(topic)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get writer for topic %s: %w", topic, err)
 	}
 
-	fmt.Printf("Publishing to Kafka [order_created]: %s\n", string(msgBytes))
+	// Add debug logging for the Kafka message
+	fmt.Printf("Publishing to Kafka topic: %s, key: %s, value length: %d bytes\n",
+		topic, key, len(value))
 
-	return p.Writer.WriteMessages(context.Background(),
-		kafka.Message{
-			Key:   []byte(order.OrderID),
-			Value: msgBytes,
-		},
+	return writer.WriteMessages(context.Background(),
+		kafka.Message{Key: []byte(key), Value: value},
 	)
 }
 
-// PublishOrderUpdated streams the order update event to Kafka
-func (p *Producer) PublishOrderUpdated(order models.Order) error {
-	msgBytes, err := json.Marshal(order)
-	if err != nil {
-		return err
+func (p *Producer) Close() error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	for topic, w := range p.Writers {
+		if err := w.Close(); err != nil {
+			return fmt.Errorf("failed to close writer for topic %s: %w", topic, err)
+		}
 	}
-
-	fmt.Printf("Publishing to Kafka [order_updated]: %s\n", string(msgBytes))
-
-	return p.Writer.WriteMessages(context.Background(),
-		kafka.Message{
-			Key:   []byte(order.OrderID),
-			Value: msgBytes,
-		},
-	)
-}
-
-// PublishOrderCancelled streams the order cancellation event to Kafka
-func (p *Producer) PublishOrderCancelled(order models.Order) error {
-	msgBytes, err := json.Marshal(order)
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf("Publishing to Kafka [order_cancelled]: %s\n", string(msgBytes))
-
-	return p.Writer.WriteMessages(context.Background(),
-		kafka.Message{
-			Key:   []byte(order.OrderID),
-			Value: msgBytes,
-		},
-	)
+	return nil
 }

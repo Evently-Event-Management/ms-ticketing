@@ -82,3 +82,16 @@ func (d *DB) GetTicketsByOrder(orderID string) ([]models.Ticket, error) {
 	}
 	return tickets, nil
 }
+
+func (d *DB) GetSessionIdBySeat(seatID string) (string, error) {
+	var sessionID string
+	err := d.Bun.NewSelect().
+		Model(&sessionID).
+		Where("seat_id = ?", seatID).
+		Limit(1).
+		Scan(context.Background())
+	if err != nil {
+		return "", err
+	}
+	return sessionID, nil
+}

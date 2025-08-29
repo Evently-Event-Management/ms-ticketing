@@ -78,3 +78,5 @@ func (r *Redis) UnlockSeats(seatIDs []string, orderID string) error {
 	}
 	return firstErr
 }
+
+// Define DB interface or import the correct type

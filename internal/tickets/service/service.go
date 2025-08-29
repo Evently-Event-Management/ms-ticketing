@@ -2,6 +2,7 @@ package tickets
 
 import (
 	"fmt"
+	"ms-ticketing/internal/logger"
 	"ms-ticketing/internal/models"
 	qr_genrator "ms-ticketing/internal/tickets/qr_genrator"
 	"os"
@@ -19,6 +20,11 @@ type TicketDBLayer interface {
 
 type TicketService struct {
 	DB TicketDBLayer
+}
+
+type Handler struct {
+	TicketService *TicketService
+	Logger        *logger.Logger
 }
 
 func NewTicketService(db TicketDBLayer) *TicketService {
