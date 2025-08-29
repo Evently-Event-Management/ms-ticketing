@@ -15,30 +15,41 @@ type Producer struct {
 }
 
 func NewProducer(brokers []string) *Producer {
+	// Convert kafka:9092 to kafka:29092 for containerized environments
+	adjustedBrokers := make([]string, len(brokers))
+	for i, broker := range brokers {
+		if broker == "kafka:9092" {
+			fmt.Printf("Converting Kafka broker address from kafka:9092 to kafka:29092 for internal container communication\n")
+			adjustedBrokers[i] = "kafka:29092"
+		} else {
+			adjustedBrokers[i] = broker
+		}
+	}
+
 	return &Producer{
 		Writers: map[string]*kafka.Writer{
 			"ticketly.order.created": kafka.NewWriter(kafka.WriterConfig{
-				Brokers: brokers,
+				Brokers: adjustedBrokers,
 				Topic:   "ticketly.order.created",
 			}),
 			"ticketly.order.updated": kafka.NewWriter(kafka.WriterConfig{
-				Brokers: brokers,
+				Brokers: adjustedBrokers,
 				Topic:   "ticketly.order.updated",
 			}),
 			"ticketly.order.canceled": kafka.NewWriter(kafka.WriterConfig{
-				Brokers: brokers,
+				Brokers: adjustedBrokers,
 				Topic:   "ticketly.order.canceled",
 			}),
 			"ticketly.seats.locked": kafka.NewWriter(kafka.WriterConfig{
-				Brokers: brokers,
+				Brokers: adjustedBrokers,
 				Topic:   "ticketly.seats.locked",
 			}),
 			"ticketly.seats.released": kafka.NewWriter(kafka.WriterConfig{
-				Brokers: brokers,
+				Brokers: adjustedBrokers,
 				Topic:   "ticketly.seats.released",
 			}),
 		},
-		Brokers: brokers,
+		Brokers: adjustedBrokers,
 	}
 }
 
