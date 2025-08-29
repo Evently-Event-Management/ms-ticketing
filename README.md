@@ -22,6 +22,8 @@ A microservice-based ticketing system for event management, built with Go, Kafka
 - **migrate.go**: Database migration and sample data
 
 ## Setup
+
+### Local Development Setup
 1. **Clone the repo:**
    ```sh
    git clone https://github.com/Evently-Event-Management/ms-ticketing.git
@@ -35,11 +37,73 @@ A microservice-based ticketing system for event management, built with Go, Kafka
    - `SEAT_SERVICE_URL`: Seat validation service URL
 3. **Run migrations:**
    ```sh
+   # Using docker-compose with the migration profile
+   docker-compose --profile migrate up migration
+   
+   # Or, if you prefer to run migrations directly
    go run migrate.go
    ```
 4. **Start the service:**
    ```sh
    go run main.go
+   ```
+
+### Docker Setup
+1. **Build and run with Docker Compose:**
+   ```sh
+   # Build all services
+   docker-compose build
+
+   # Start all services (Postgres, Redis, Kafka, Zookeeper, and ms-ticketing)
+   docker-compose up -d
+   
+   # Run migrations (using the migrate profile)
+   docker-compose --profile migrate up migration
+
+   # To build or rebuild just the ms-ticketing service
+   docker-compose build ms-ticketing
+   
+   # View logs
+   docker-compose logs -f ms-ticketing
+   ```
+
+2. **Build Docker images individually:**
+   ```sh
+   # Build the main application
+   docker build -t ms-ticketing .
+   
+   # Build the migration image
+   docker build -t ms-ticketing-migrate -f Dockerfile.migrate .
+   ```
+
+3. **Running services independently:**
+   ```sh
+   # Run the main application (ensure dependencies are running)
+   docker run --network host -e POSTGRES_DSN="postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable" ms-ticketing
+   
+   # Run migrations manually
+   docker run --network host -e POSTGRES_DSN="postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable" ms-ticketing-migrate
+   ```
+
+4. **Accessing the service:**
+   - The service will be available at http://localhost:8084
+   - Kafka UI is available at http://localhost:8081
+   - PostgreSQL is available at localhost:5432
+   - Redis is available at localhost:6379
+
+5. **Troubleshooting Docker setup:**
+   ```sh
+   # Check container status
+   docker-compose ps
+   
+   # View detailed logs
+   docker-compose logs -f
+   
+   # Restart a specific service
+   docker-compose restart ms-ticketing
+   
+   # Rebuild and restart a service
+   docker-compose up -d --build ms-ticketing
    ```
 
 ## Kafka Consumers
@@ -100,9 +164,9 @@ VALUES (
 ```
 
 ## API Endpoints
-- `/order`: Place, update, cancel, and view orders
-- `/ticket`: Create, update, delete, view, and check-in tickets
-- `/secure`: Test endpoint for JWT authentication
+- `/api/order`: Place, update, cancel, and view orders
+- `/api/order/ticket`: Create, update, delete, view, and check-in tickets
+- `/api/secure`: Test endpoint for JWT authentication
 
 ## License
 MIT

@@ -4,15 +4,21 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 )
 
-const dsn = "postgres://appuser:secretpass@localhost:5432/appdb?sslmode=disable"
-
 func main() {
+	// Use environment variable if available, otherwise fallback to default
+	dsn := os.Getenv("POSTGRES_DSN")
+	if dsn == "" {
+		dsn = "postgres://appuser:secretpass@localhost:5432/appdb?sslmode=disable"
+		fmt.Println("⚠️ Using default DSN. Set POSTGRES_DSN environment variable to override.")
+	}
+
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		log.Fatalf("❌ Failed to open DB: %v", err)

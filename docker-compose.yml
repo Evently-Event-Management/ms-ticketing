@@ -22,6 +22,8 @@ services:
     container_name: ms-redis
     ports:
       - "6379:6379"
+    # Enable keyspace notifications for Redis expiry events
+    command: redis-server --notify-keyspace-events KEA
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -59,6 +61,55 @@ services:
     environment:
       KAFKA_CLUSTERS_0_NAME: local-kafka
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      
+  # Ticketing Service
+  ms-ticketing:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ms-ticketing
+    ports:
+      - "8084:8084"
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    environment:
+      # Database
+      POSTGRES_DSN: postgres://appuser:secretpass@postgres:5432/appdb?sslmode=disable
+      # Redis
+      REDIS_ADDR: redis:6379
+      # Kafka
+      KAFKA_ADDR: kafka:9092
+      # Authentication (update with your actual values)
+      OIDC_ISSUER: ${OIDC_ISSUER}
+      KEYCLOAK_URL: ${KEYCLOAK_URL}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+      # Service URLs
+      SEAT_SERVICE_URL: ${SEAT_SERVICE_URL}
+      # Other env vars
+      QR_SECRET_KEY: ${QR_SECRET_KEY}
+      TICKET_CLIENT_SECRET: ${TICKET_CLIENT_SECRET}
+      TICKET_CLIENT_ID: ${TICKET_CLIENT_ID}
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+  # Migration Service (run once to set up the database)
+  migration:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrate
+    container_name: ms-ticketing-migrate
+    depends_on:
+      - postgres
+    environment:
+      # Database
+      POSTGRES_DSN: postgres://appuser:secretpass@postgres:5432/appdb?sslmode=disable
+    # This service is designed to run and exit, not to stay running
+    restart: "no"
+    profiles:
+      - migrate
 
 volumes:
   postgres_data:

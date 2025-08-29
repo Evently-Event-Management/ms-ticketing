@@ -219,30 +219,34 @@ func main() {
 	r.Use(auth.Middleware())
 	logger.Info("AUTH", "JWT middleware applied globally")
 
-	// Secure test route
-	r.Get("/secure", SecureHandler)
+	// API Routes with /api prefix
+	r.Route("/api", func(r chi.Router) {
+		// Secure test route
+		r.Get("/secure", SecureHandler)
 
-	// Order routes
-	r.Route("/order", func(r chi.Router) {
-		r.Post("/", handler.SeatValidationAndPlaceOrder)
-		r.Get("/{orderId}", handler.GetOrder)
-		r.Put("/{orderId}", handler.UpdateOrder)
-		r.Delete("/{orderId}", handler.DeleteOrder)
-	})
-	logger.Info("ROUTER", "Order routes registered")
+		// Order routes with /order prefix
+		r.Route("/order", func(r chi.Router) {
+			r.Post("/", handler.SeatValidationAndPlaceOrder)
+			r.Get("/{orderId}", handler.GetOrder)
+			r.Put("/{orderId}", handler.UpdateOrder)
+			r.Delete("/{orderId}", handler.DeleteOrder)
+		})
+		logger.Info("ROUTER", "Order routes registered under /api/order")
 
-	r.Route("/ticket", func(r chi.Router) {
-		r.Get("/", ticketHandler.ListTicketsByOrder)
-		r.Get("/{ticketId}", ticketHandler.ViewTicket)
-		r.Post("/", ticketHandler.CreateTicket)
-		r.Put("/{ticketId}", ticketHandler.UpdateTicket)
-		r.Delete("/{ticketId}", ticketHandler.DeleteTicket)
+		// Ticket routes under order service
+		r.Route("/order/ticket", func(r chi.Router) {
+			r.Get("/", ticketHandler.ListTicketsByOrder)
+			r.Get("/{ticketId}", ticketHandler.ViewTicket)
+			r.Post("/", ticketHandler.CreateTicket)
+			r.Put("/{ticketId}", ticketHandler.UpdateTicket)
+			r.Delete("/{ticketId}", ticketHandler.DeleteTicket)
+		})
+		logger.Info("ROUTER", "Ticket routes registered under /api/order/ticket")
 	})
-	logger.Info("ROUTER", "Ticket routes registered")
 
 	// HTTP Server
 	server := &http.Server{
-		Addr:    ":8083",
+		Addr:    ":8084",
 		Handler: r,
 	}
 
@@ -252,7 +256,7 @@ func main() {
 
 	// Start server
 	go func() {
-		logger.Info("HTTP", "🚀 Order Service running on :8083")
+		logger.Info("HTTP", "🚀 Order Service running on :8084")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Fatal("HTTP", fmt.Sprintf("HTTP server error: %v", err))
 		}
