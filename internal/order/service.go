@@ -448,12 +448,12 @@ func (s *OrderService) publishSeatsLocked(orderReq models.OrderRequest) error {
 	}
 
 	// Use the first seat ID as key, or generate a unique key if needed
-	key := "seats_locked"
-	if len(orderReq.SeatIDs) > 0 {
-		key = orderReq.SeatIDs[0]
-	}
+	//key := "seats_locked"
+	//if len(orderReq.SeatIDs) > 0 {
+	//	key = orderReq.SeatIDs[0]
+	//}
 
-	err = s.Kafka.Publish("ticketly.seats.locked", key, payload)
+	err = s.Kafka.Publish("ticketly.seats.locked", orderReq.SessionID, payload)
 	if err != nil {
 		s.logger.Error("KAFKA", fmt.Sprintf("Failed to publish seats locked event: %v", err))
 	} else {

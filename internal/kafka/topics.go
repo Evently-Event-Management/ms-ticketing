@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -10,22 +11,28 @@ import (
 
 // EnsureTopicsExist creates Kafka topics if they don't already exist
 func EnsureTopicsExist(brokers []string, topics []string) error {
+	// Log the brokers being used
+	log.Printf("Ensuring topics exist using brokers: %v", brokers)
+
+	if len(brokers) == 0 || brokers[0] == "" {
+		return fmt.Errorf("empty broker list provided")
+	}
+
+	// Important: In Docker containers, we need to use the internal Kafka address
+	// Your docker-compose shows PLAINTEXT://kafka:29092 for internal communication
+	// If we're connecting to kafka:9092, we should adjust to kafka:29092
+	kafkaAddr := brokers[0]
+	if kafkaAddr == "kafka:9092" {
+		log.Printf("Converting kafka:9092 to kafka:29092 for internal container communication")
+		kafkaAddr = "kafka:29092"
+	}
+
 	// Connect to the first broker to create topics
-	conn, err := kafka.Dial("tcp", brokers[0])
+	conn, err := kafka.Dial("tcp", kafkaAddr)
 	if err != nil {
 		return err
 	}
 	defer conn.Close()
-
-	controller, err := conn.Controller()
-	if err != nil {
-		return err
-	}
-	controllerConn, err := kafka.Dial("tcp", controller.Host)
-	if err != nil {
-		return err
-	}
-	defer controllerConn.Close()
 
 	// Create each topic
 	for _, topic := range topics {
@@ -37,7 +44,7 @@ func EnsureTopicsExist(brokers []string, topics []string) error {
 			},
 		}
 
-		err = controllerConn.CreateTopics(topicConfigs...)
+		err = conn.CreateTopics(topicConfigs...)
 		if err != nil {
 			// If error contains "already exists", it's not a problem
 			if err.Error() == "kafka server: topic already exists" {
