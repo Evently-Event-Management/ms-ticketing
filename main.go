@@ -98,14 +98,36 @@ func verifyConnections(ctx context.Context, logger *logger.Logger) (*bun.DB, *re
 		logger.Fatal("CONFIG", "POSTGRES_DSN not set")
 	}
 
-	// Open PostgreSQL
-	sqldb, err := sql.Open("postgres", dsn)
+	// Open PostgreSQL with retry logic
+	var sqldb *sql.DB
+	var err error
+	maxRetries := 5
+
+	for i := 0; i < maxRetries; i++ {
+		logger.Info("DATABASE", fmt.Sprintf("Attempting to connect to PostgreSQL (attempt %d/%d)", i+1, maxRetries))
+		sqldb, err = sql.Open("postgres", dsn)
+		if err != nil {
+			logger.Error("DATABASE", fmt.Sprintf("Failed to open PostgreSQL: %v", err))
+			time.Sleep(2 * time.Second)
+			continue
+		}
+
+		err = sqldb.Ping()
+		if err == nil {
+			break // Connection successful
+		}
+
+		logger.Error("DATABASE", fmt.Sprintf("Failed to connect to PostgreSQL: %v", err))
+		if i < maxRetries-1 {
+			time.Sleep(2 * time.Second)
+		}
+	}
+
+	// Final check after all retries
 	if err != nil {
-		logger.Fatal("DATABASE", fmt.Sprintf("Failed to open PostgreSQL: %v", err))
+		logger.Fatal("DATABASE", fmt.Sprintf("Failed to connect to PostgreSQL after %d attempts: %v", maxRetries, err))
 	}
-	if err := sqldb.Ping(); err != nil {
-		logger.Fatal("DATABASE", fmt.Sprintf("Failed to connect to PostgreSQL: %v", err))
-	}
+
 	logger.Info("DATABASE", "✅ PostgreSQL connection successful")
 
 	// Wrap with Bun

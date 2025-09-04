@@ -435,13 +435,7 @@ func (s *OrderService) publishOrderCancelled(order models.Order) error {
 }
 
 func (s *OrderService) publishSeatsLocked(orderReq models.OrderRequest) error {
-	// Create a properly formatted payload with camelCase field names
-	camelCasePayload := map[string]interface{}{
-		"sessionId": orderReq.SessionID,
-		"seatIds":   orderReq.SeatIDs,
-	}
-
-	payload, err := json.Marshal(camelCasePayload)
+	payload, err := json.Marshal(orderReq)
 	if err != nil {
 		s.logger.Error("KAFKA", fmt.Sprintf("Failed to marshal order request: %v", err))
 		return fmt.Errorf("failed to marshal order request: %w", err)

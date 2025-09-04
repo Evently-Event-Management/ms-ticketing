@@ -18,16 +18,8 @@ func EnsureTopicsExist(brokers []string, topics []string) error {
 		return fmt.Errorf("empty broker list provided")
 	}
 
-	// Important: In Docker containers, we need to use the internal Kafka address
-	// Your docker-compose shows PLAINTEXT://kafka:29092 for internal communication
-	// If we're connecting to kafka:9092, we should adjust to kafka:29092
-	kafkaAddr := brokers[0]
-	if kafkaAddr == "kafka:9092" {
-		log.Printf("Converting kafka:9092 to kafka:29092 for internal container communication")
-		kafkaAddr = "kafka:29092"
-	}
-
 	// Connect to the first broker to create topics
+	kafkaAddr := brokers[0]
 	conn, err := kafka.Dial("tcp", kafkaAddr)
 	if err != nil {
 		return err
