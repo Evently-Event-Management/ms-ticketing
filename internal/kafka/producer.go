@@ -33,9 +33,9 @@ func NewProducer(brokers []string) *Producer {
 				Brokers: brokers,
 				Topic:   "ticketly.seats.locked",
 			}),
-			"ticketly.seats.unlocked": kafka.NewWriter(kafka.WriterConfig{
+			"ticketly.seats.released": kafka.NewWriter(kafka.WriterConfig{
 				Brokers: brokers,
-				Topic:   "ticketly.seats.unlocked",
+				Topic:   "ticketly.seats.released",
 			}),
 		},
 		Brokers: brokers,

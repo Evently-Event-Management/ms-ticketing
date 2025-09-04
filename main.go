@@ -37,7 +37,7 @@ type DB interface {
 	GetSessionIdBySeat(seatID string) (string, error)
 }
 
-func subscribeSeatUnlocks(rdb *redis.Client, producer *kafka.Producer, db DB, logger *logger.Logger) {
+func subscribeSeatUnlocks(rdb *redis.Client, producer *kafka.Producer, db DB, logger *logger.Logger, kafkaBrokers []string) {
 	pubsub := rdb.PSubscribe(context.Background(), "__keyevent@0__:expired")
 	go func() {
 		for msg := range pubsub.Channel() {
@@ -69,7 +69,7 @@ func subscribeSeatUnlocks(rdb *redis.Client, producer *kafka.Producer, db DB, lo
 				if err != nil {
 					logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to publish seat unlock event: %v", err))
 					// Try to create the topic if it doesn't exist
-					err = kafka.CreateTopicIfNotExists([]string{"localhost:9092"}, "ticketly.seats.released")
+					err = kafka.CreateTopicIfNotExists(kafkaBrokers, "ticketly.seats.released")
 					if err != nil {
 						logger.Error("KAFKA", fmt.Sprintf("Failed to create topic: %v", err))
 					} else {
@@ -98,14 +98,36 @@ func verifyConnections(ctx context.Context, logger *logger.Logger) (*bun.DB, *re
 		logger.Fatal("CONFIG", "POSTGRES_DSN not set")
 	}
 
-	// Open PostgreSQL
-	sqldb, err := sql.Open("postgres", dsn)
+	// Open PostgreSQL with retry logic
+	var sqldb *sql.DB
+	var err error
+	maxRetries := 5
+
+	for i := 0; i < maxRetries; i++ {
+		logger.Info("DATABASE", fmt.Sprintf("Attempting to connect to PostgreSQL (attempt %d/%d)", i+1, maxRetries))
+		sqldb, err = sql.Open("postgres", dsn)
+		if err != nil {
+			logger.Error("DATABASE", fmt.Sprintf("Failed to open PostgreSQL: %v", err))
+			time.Sleep(2 * time.Second)
+			continue
+		}
+
+		err = sqldb.Ping()
+		if err == nil {
+			break // Connection successful
+		}
+
+		logger.Error("DATABASE", fmt.Sprintf("Failed to connect to PostgreSQL: %v", err))
+		if i < maxRetries-1 {
+			time.Sleep(2 * time.Second)
+		}
+	}
+
+	// Final check after all retries
 	if err != nil {
-		logger.Fatal("DATABASE", fmt.Sprintf("Failed to open PostgreSQL: %v", err))
+		logger.Fatal("DATABASE", fmt.Sprintf("Failed to connect to PostgreSQL after %d attempts: %v", maxRetries, err))
 	}
-	if err := sqldb.Ping(); err != nil {
-		logger.Fatal("DATABASE", fmt.Sprintf("Failed to connect to PostgreSQL: %v", err))
-	}
+
 	logger.Info("DATABASE", "✅ PostgreSQL connection successful")
 
 	// Wrap with Bun
@@ -168,7 +190,9 @@ func main() {
 	logger.Info("KAFKA", "Initializing Kafka producer")
 	// Kafka producer
 	kafkaADDR := os.Getenv("KAFKA_ADDR")
+	logger.Info("KAFKA", fmt.Sprintf("Using Kafka address from environment variable: %s", kafkaADDR))
 	kafkaBrokers := []string{kafkaADDR}
+	logger.Info("KAFKA", fmt.Sprintf("Kafka brokers configured: %v", kafkaBrokers))
 	kafkaProducer := kafka.NewProducer(kafkaBrokers)
 	logger.Info("KAFKA", "Kafka producer initialized successfully")
 
@@ -179,7 +203,7 @@ func main() {
 		"ticketly.order.updated",
 		"ticketly.order.canceled",
 		"ticketly.seats.locked",
-		"ticketly.seats.unlocked",
+		"ticketly.seats.released",
 		"payment_succefully",
 		"payment_unseecuufull",
 	}
@@ -252,7 +276,7 @@ func main() {
 
 	// Start seat unlock subscription
 	logger.Info("REDIS", "Starting seat unlock subscription")
-	subscribeSeatUnlocks(redisClient, kafkaProducer, &db.DB{Bun: bunDB}, logger)
+	subscribeSeatUnlocks(redisClient, kafkaProducer, &db.DB{Bun: bunDB}, logger, kafkaBrokers)
 
 	// Start server
 	go func() {
