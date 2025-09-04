@@ -268,7 +268,6 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 	// Step 4: Lock seats in Redis
 	s.logger.Debug("REDIS", "Attempting to lock seats in Redis")
 	ok, err := s.Redis.LockSeats(orderReq.SeatIDs, orderID)
-
 	if err != nil {
 		s.logger.Error("REDIS", fmt.Sprintf("Failed to lock seats: %v", err))
 		return nil, fmt.Errorf("failed to lock seats: %w", err)
@@ -277,11 +276,13 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 		s.logger.Warn("REDIS", "One or more seats already locked")
 		return nil, fmt.Errorf("one or more seats already locked")
 	}
-
 	s.logger.Info("REDIS", "Seats locked successfully")
+	// Kafka seat lock event is now streamed directly from Redis lock implementation
 
-	if err := s.publishSeatsLocked(orderReq); err != nil {
-		s.logger.Error("KAFKA", fmt.Sprintf("Kafka publish error (seats locked): %v", err))
+	// Transaction rollback helper
+	rollback := func() {
+		s.logger.Warn("TXN", "Rolling back: unlocking seats")
+		_ = s.Redis.UnlockSeats(orderReq.SeatIDs, orderID)
 	}
 
 	// Step 5: Get seat details for ticket creation
@@ -291,6 +292,7 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 	reqDetails, err := http.NewRequest("POST", validateURLDetails, bytes.NewBuffer(reqBody))
 	if err != nil {
 		s.logger.Error("SEAT_DETAILS", fmt.Sprintf("Failed to create seat details request: %v", err))
+		rollback()
 		return nil, fmt.Errorf("failed to create seat details request: %w", err)
 	}
 	reqDetails.Header.Set("Authorization", "Bearer "+m2m_token)
@@ -299,12 +301,14 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 	respDetails, err := s.client.Do(reqDetails)
 	if err != nil {
 		s.logger.Error("SEAT_DETAILS", fmt.Sprintf("Seat detail collection service error: %v", err))
+		rollback()
 		return nil, fmt.Errorf("seat detail collection service error: %w", err)
 	}
 	defer respDetails.Body.Close()
 
 	if respDetails.StatusCode != http.StatusOK {
 		s.logger.Error("SEAT_DETAILS", fmt.Sprintf("Seat detail collection failed: status %d", respDetails.StatusCode))
+		rollback()
 		return nil, fmt.Errorf("seat detail collection failed: status %d", respDetails.StatusCode)
 	}
 
@@ -312,6 +316,7 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 	var seatDetails []models.SeatDetails
 	if err := json.NewDecoder(respDetails.Body).Decode(&seatDetails); err != nil {
 		s.logger.Error("SEAT_DETAILS", fmt.Sprintf("Failed to decode seat details: %v", err))
+		rollback()
 		return nil, fmt.Errorf("failed to decode seat details: %w", err)
 	}
 
@@ -331,7 +336,7 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 	// Step 7: Save order (DB + Kafka event)
 	if err := s.PlaceOrder(order); err != nil {
 		s.logger.Error("ORDER", fmt.Sprintf("Failed to place order: %v. Unlocking seats.", err))
-		_ = s.Redis.UnlockSeats(orderReq.SeatIDs, orderID)
+		rollback()
 		return nil, fmt.Errorf("failed to place order: %w", err)
 	}
 
@@ -357,11 +362,15 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 		if s.TicketService != nil {
 			if err := s.TicketService.PlaceTicket(ticket); err != nil {
 				s.logger.Warn("TICKET", fmt.Sprintf("Failed to create ticket for seat %s: %v", seat.SeatID, err))
+				rollback()
+				return nil, fmt.Errorf("failed to create ticket for seat %s: %w", seat.SeatID, err)
 			} else {
 				s.logger.Info("TICKET", fmt.Sprintf("Created ticket %s for seat %s", ticket.TicketID, ticket.SeatID))
 			}
 		} else {
 			s.logger.Warn("TICKET", "TicketService not configured, skipping ticket creation")
+			rollback()
+			return nil, fmt.Errorf("ticket service not configured")
 		}
 	}
 
@@ -370,6 +379,8 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 		order.Price = totalPrice
 		if err := s.DB.UpdateOrder(order); err != nil {
 			s.logger.Warn("ORDER", fmt.Sprintf("Failed to update order price: %v", err))
+			rollback()
+			return nil, fmt.Errorf("failed to update order price: %w", err)
 		} else {
 			s.logger.Info("ORDER", fmt.Sprintf("Updated order price to: $%.2f", totalPrice))
 		}

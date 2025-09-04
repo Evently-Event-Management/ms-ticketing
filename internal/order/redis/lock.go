@@ -5,15 +5,19 @@ import (
 	"fmt"
 	"time"
 
+	"encoding/json"
+	kafka "ms-ticketing/internal/kafka"
+
 	"github.com/go-redis/redis/v8"
 )
 
 type Redis struct {
-	Client *redis.Client
+	Client   *redis.Client
+	Producer *kafka.Producer
 }
 
-func NewRedis(client *redis.Client) *Redis {
-	return &Redis{Client: client}
+func NewRedis(client *redis.Client, producer *kafka.Producer) *Redis {
+	return &Redis{Client: client, Producer: producer}
 }
 
 const lockTTL = 5 * time.Minute
@@ -22,6 +26,18 @@ const lockTTL = 5 * time.Minute
 func (r *Redis) LockSeat(seatID, orderID string) (bool, error) {
 	key := "seat_lock:" + seatID
 	ok, err := r.Client.SetNX(context.Background(), key, orderID, lockTTL).Result()
+	if ok {
+		// Stream lock event to Kafka
+		if r.Producer != nil {
+			event := map[string]interface{}{
+				"seat_id":   seatID,
+				"order_id":  orderID,
+				"timestamp": time.Now().Unix(),
+			}
+			value, _ := json.Marshal(event)
+			_ = r.Producer.Publish("seat.locked", seatID, value)
+		}
+	}
 	return ok, err
 }
 
@@ -38,6 +54,16 @@ func (r *Redis) UnlockSeat(seatID, orderID string) error {
 	}
 	if val == orderID {
 		_, err := r.Client.Del(ctx, key).Result()
+		if err == nil && r.Producer != nil {
+			// Stream unlock event to Kafka
+			event := map[string]interface{}{
+				"seat_id":   seatID,
+				"order_id":  orderID,
+				"timestamp": time.Now().Unix(),
+			}
+			value, _ := json.Marshal(event)
+			_ = r.Producer.Publish("seat.unlocked", seatID, value)
+		}
 		return err
 	}
 	return nil // do not unlock if not owned by this order
