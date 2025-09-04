@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"ms-ticketing/internal/auth"
 	"ms-ticketing/internal/models"
 	tickets "ms-ticketing/internal/tickets/service"
@@ -235,12 +236,15 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 
 	s.logger.Debug("SEAT_VALIDATION", fmt.Sprintf("Session ID: %s", orderReq.SessionID))
 	validateURL := fmt.Sprintf("%s/internal/v1/sessions/%s/seats/validate", seatServiceBase, orderReq.SessionID)
-	var seatIds = map[string]interface{}{
-		"seatIds": orderReq.SeatIDs,
+
+	// Directly use the request body from frontend
+	reqBody, err := json.Marshal(orderReq)
+	if err != nil {
+		s.logger.Error("SEAT_VALIDATION", fmt.Sprintf("Failed to marshal request: %v", err))
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
 	s.logger.Debug("SEAT_VALIDATION", fmt.Sprintf("Validation URL: %s", validateURL))
-	reqBody, _ := json.Marshal(seatIds)
 	s.logger.Debug("SEAT_VALIDATION", fmt.Sprintf("Request body: %s", string(reqBody)))
 
 	req, err := http.NewRequest("POST", validateURL, bytes.NewBuffer(reqBody))
@@ -256,7 +260,12 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 		s.logger.Error("SEAT_VALIDATION", fmt.Sprintf("Seat validation service error: %v", err))
 		return nil, fmt.Errorf("seat validation service error: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			s.logger.Error("SEAT_VALIDATION", fmt.Sprintf("Failed to close seat validation response body: %v", err))
+		}
+	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
 		s.logger.Error("SEAT_VALIDATION", fmt.Sprintf("Seat validation failed: status %d", resp.StatusCode))
@@ -288,7 +297,8 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 	// Step 5: Get seat details for ticket creation
 	s.logger.Debug("SEAT_DETAILS", "Requesting seat details for ticket creation")
 	validateURLDetails := fmt.Sprintf("%s/internal/v1/sessions/%s/seats/details", seatServiceBase, orderReq.SessionID)
-	reqBody, _ = json.Marshal(seatIds)
+
+	// Use the same request body for seat details
 	reqDetails, err := http.NewRequest("POST", validateURLDetails, bytes.NewBuffer(reqBody))
 	if err != nil {
 		s.logger.Error("SEAT_DETAILS", fmt.Sprintf("Failed to create seat details request: %v", err))
@@ -304,7 +314,12 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 		rollback()
 		return nil, fmt.Errorf("seat detail collection service error: %w", err)
 	}
-	defer respDetails.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			s.logger.Error("SEAT_DETAILS", fmt.Sprintf("Failed to close seat details response body: %v", err))
+		}
+	}(respDetails.Body)
 
 	if respDetails.StatusCode != http.StatusOK {
 		s.logger.Error("SEAT_DETAILS", fmt.Sprintf("Seat detail collection failed: status %d", respDetails.StatusCode))
@@ -446,25 +461,19 @@ func (s *OrderService) publishOrderCancelled(order models.Order) error {
 }
 
 func (s *OrderService) publishSeatsLocked(orderReq models.OrderRequest) error {
-	// Create a properly formatted payload with camelCase field names
-	camelCasePayload := map[string]interface{}{
-		"sessionId": orderReq.SessionID,
-		"seatIds":   orderReq.SeatIDs,
-	}
-
-	payload, err := json.Marshal(camelCasePayload)
+	payload, err := json.Marshal(orderReq)
 	if err != nil {
 		s.logger.Error("KAFKA", fmt.Sprintf("Failed to marshal order request: %v", err))
 		return fmt.Errorf("failed to marshal order request: %w", err)
 	}
 
 	// Use the first seat ID as key, or generate a unique key if needed
-	key := "seats_locked"
-	if len(orderReq.SeatIDs) > 0 {
-		key = orderReq.SeatIDs[0]
-	}
+	//key := "seats_locked"
+	//if len(orderReq.SeatIDs) > 0 {
+	//	key = orderReq.SeatIDs[0]
+	//}
 
-	err = s.Kafka.Publish("ticketly.seats.locked", key, payload)
+	err = s.Kafka.Publish("ticketly.seats.locked", orderReq.SessionID, payload)
 	if err != nil {
 		s.logger.Error("KAFKA", fmt.Sprintf("Failed to publish seats locked event: %v", err))
 	} else {
