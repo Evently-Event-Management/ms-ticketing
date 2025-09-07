@@ -20,7 +20,8 @@ func NewRedis(client *redis.Client, producer *kafka.Producer) *Redis {
 	return &Redis{Client: client, Producer: producer}
 }
 
-const lockTTL = 5 * time.Minute
+// Shorter lock TTL for testing purposes
+const lockTTL = 1 * time.Minute
 
 // Lock a single seat
 func (r *Redis) LockSeat(seatID, orderID string) (bool, error) {
@@ -35,7 +36,7 @@ func (r *Redis) LockSeat(seatID, orderID string) (bool, error) {
 				"timestamp": time.Now().Unix(),
 			}
 			value, _ := json.Marshal(event)
-			_ = r.Producer.Publish("seat.locked", seatID, value)
+			_ = r.Producer.Publish("ticketly.seat.locked", seatID, value)
 		}
 	}
 	return ok, err

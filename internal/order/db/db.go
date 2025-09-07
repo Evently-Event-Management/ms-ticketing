@@ -84,14 +84,22 @@ func (d *DB) GetTicketsByOrder(orderID string) ([]models.Ticket, error) {
 }
 
 func (d *DB) GetSessionIdBySeat(seatID string) (string, error) {
-	var sessionID string
+	// Define a temporary struct to hold the query result
+	type OrderResult struct {
+		SessionID string `bun:"session_id"`
+	}
+
+	var result OrderResult
 	err := d.Bun.NewSelect().
-		Model(&sessionID).
-		Where("seat_id = ?", seatID).
+		Table("orders").
+		Column("session_id").
+		Where("? = ANY(seat_ids)", seatID).
 		Limit(1).
-		Scan(context.Background())
+		Scan(context.Background(), &result)
+
 	if err != nil {
 		return "", err
 	}
-	return sessionID, nil
+
+	return result.SessionID, nil
 }

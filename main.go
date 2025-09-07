@@ -38,9 +38,36 @@ type DB interface {
 }
 
 func subscribeSeatUnlocks(rdb *redis.Client, producer *kafka.Producer, db DB, logger *logger.Logger, kafkaBrokers []string) {
-	pubsub := rdb.PSubscribe(context.Background(), "__keyevent@0__:expired")
+	ctx := context.Background()
+
+	// Ensure keyspace notifications are enabled
+	val, err := rdb.ConfigGet(ctx, "notify-keyspace-events").Result()
+	if err != nil {
+		logger.Error("REDIS", fmt.Sprintf("Failed to get keyspace config: %v", err))
+	} else {
+		logger.Info("REDIS", fmt.Sprintf("Current keyspace notifications setting: %v", val))
+		if len(val) < 2 || !strings.Contains(val[1].(string), "x") || !strings.Contains(val[1].(string), "E") {
+			logger.Warn("REDIS", "Keyspace notifications not properly configured for expiry events!")
+		}
+	}
+
+	pubsub := rdb.PSubscribe(ctx, "__keyevent@0__:expired")
+	logger.Info("REDIS", fmt.Sprintf("Subscribed to Redis keyevent expired notifications (DB %d)", rdb.Options().DB))
+
+	// Test if subscription is working
+	go func() {
+		time.Sleep(2 * time.Second)
+		testKey := "test_seat_lock_subscription"
+		logger.Info("REDIS", fmt.Sprintf("Setting test key %s with 3s expiry to verify subscription", testKey))
+		err := rdb.Set(ctx, testKey, "test", 3*time.Second).Err()
+		if err != nil {
+			logger.Error("REDIS", fmt.Sprintf("Failed to set test key: %v", err))
+		}
+	}()
+
 	go func() {
 		for msg := range pubsub.Channel() {
+			logger.Info("REDIS", fmt.Sprintf("Received expired key event: %s", msg.Payload))
 			if strings.HasPrefix(msg.Payload, "seat_lock:") {
 				seatID := strings.TrimPrefix(msg.Payload, "seat_lock:")
 				logger.Info("SEAT_UNLOCK", fmt.Sprintf("Seat lock expired for seat: %s", seatID))
@@ -54,8 +81,8 @@ func subscribeSeatUnlocks(rdb *redis.Client, producer *kafka.Producer, db DB, lo
 
 				// Create payload for Kafka with camelCase field names
 				payload := map[string]interface{}{
-					"sessionId": sessionID,
-					"seatIds":   []string{seatID},
+					"session_id": sessionID,
+					"seat_ids":   []string{seatID},
 				}
 
 				value, err := json.Marshal(payload)
@@ -144,7 +171,14 @@ func verifyConnections(ctx context.Context, logger *logger.Logger) (*bun.DB, *re
 	if err := redisClient.Ping(ctx).Err(); err != nil {
 		logger.Fatal("DATABASE", fmt.Sprintf("Redis connection error: %v", err))
 	}
-	logger.Info("DATABASE", "✅ Redis connection successful")
+	// Configure Redis keyspace notifications
+	_, err = redisClient.ConfigSet(ctx, "notify-keyspace-events", "Ex").Result()
+	if err != nil {
+		logger.Warn("REDIS", fmt.Sprintf("Failed to enable keyspace notifications: %v", err))
+	} else {
+		logger.Info("REDIS", "Keyspace notifications enabled for expired events")
+	}
+	logger.Info("DATABASE", fmt.Sprintf("✅ Redis connection successful to %s (DB: %d)", redisAddr, redisClient.Options().DB))
 
 	return bunDB, redisClient
 }
@@ -220,7 +254,7 @@ func main() {
 	// Service layer
 	orderService := order.NewOrderService(
 		&db.DB{Bun: bunDB},
-		rediswrap.NewRedis(redisClient),
+		rediswrap.NewRedis(redisClient, kafkaProducer),
 		kafkaProducer,
 		ticketService,
 		client,
