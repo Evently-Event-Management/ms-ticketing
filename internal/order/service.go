@@ -286,8 +286,9 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 		return nil, fmt.Errorf("one or more seats already locked")
 	}
 	s.logger.Info("REDIS", "Seats locked successfully")
-	// Kafka seat lock event is now streamed directly from Redis lock implementation
-
+	if err := s.publishSeatsLocked(orderReq); err != nil {
+		s.logger.Error("KAFKA", fmt.Sprintf("Kafka publish error (seats locked): %v", err))
+	}
 	// Transaction rollback helper
 	rollback := func() {
 		s.logger.Warn("TXN", "Rolling back: unlocking seats")
