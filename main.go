@@ -54,17 +54,6 @@ func subscribeSeatUnlocks(rdb *redis.Client, producer *kafka.Producer, db DB, lo
 	pubsub := rdb.PSubscribe(ctx, "__keyevent@0__:expired")
 	logger.Info("REDIS", fmt.Sprintf("Subscribed to Redis keyevent expired notifications (DB %d)", rdb.Options().DB))
 
-	// Test if subscription is working
-	go func() {
-		time.Sleep(2 * time.Second)
-		testKey := "test_seat_lock_subscription"
-		logger.Info("REDIS", fmt.Sprintf("Setting test key %s with 3s expiry to verify subscription", testKey))
-		err := rdb.Set(ctx, testKey, "test", 3*time.Second).Err()
-		if err != nil {
-			logger.Error("REDIS", fmt.Sprintf("Failed to set test key: %v", err))
-		}
-	}()
-
 	go func() {
 		for msg := range pubsub.Channel() {
 			logger.Info("REDIS", fmt.Sprintf("Received expired key event: %s", msg.Payload))
@@ -118,8 +107,6 @@ func subscribeSeatUnlocks(rdb *redis.Client, producer *kafka.Producer, db DB, lo
 
 // Verify PostgreSQL + Redis connections
 func verifyConnections(ctx context.Context, logger *logger.Logger) (*bun.DB, *redis.Client) {
-	// PostgreSQL DSN (from env)
-	// Example: postgres://postgres:1234@localhost:5432/appdb?sslmode=disable
 	dsn := os.Getenv("POSTGRES_DSN")
 	if dsn == "" {
 		logger.Fatal("CONFIG", "POSTGRES_DSN not set")

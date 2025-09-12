@@ -80,5 +80,3 @@ func (d *DB) GetTicketsByUser(userID string) ([]models.Ticket, error) {
 	}
 	return tickets, nil
 }
-
-// ---------------- EXISTENCE CHECKS ----------------
