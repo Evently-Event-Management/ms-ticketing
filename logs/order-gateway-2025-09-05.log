@@ -1,0 +1,278 @@
+{"timestamp":"2025-09-05T06:33:20.852Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-09-05T06:33:20.852Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-09-05.log","file":"logger.go","line":69}
+{"timestamp":"2025-09-05T06:33:20.852Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":164}
+{"timestamp":"2025-09-05T06:33:20.853Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":170}
+{"timestamp":"2025-09-05T06:33:20.853Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":178}
+{"timestamp":"2025-09-05T06:33:20.855Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 1/5)","file":"main.go","line":107}
+{"timestamp":"2025-09-05T06:33:20.921Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: pq: password authentication failed for user \"appuser\"","file":"main.go","line":120}
+{"timestamp":"2025-09-05T06:33:22.921Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 2/5)","file":"main.go","line":107}
+{"timestamp":"2025-09-05T06:33:22.952Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: pq: password authentication failed for user \"appuser\"","file":"main.go","line":120}
+{"timestamp":"2025-09-05T06:33:24.952Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 3/5)","file":"main.go","line":107}
+{"timestamp":"2025-09-05T06:33:25.085Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: pq: password authentication failed for user \"appuser\"","file":"main.go","line":120}
+{"timestamp":"2025-09-05T06:33:27.086Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 4/5)","file":"main.go","line":107}
+{"timestamp":"2025-09-05T06:33:27.121Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: pq: password authentication failed for user \"appuser\"","file":"main.go","line":120}
+{"timestamp":"2025-09-05T06:33:29.122Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 5/5)","file":"main.go","line":107}
+{"timestamp":"2025-09-05T06:33:29.177Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: pq: password authentication failed for user \"appuser\"","file":"main.go","line":120}
+{"timestamp":"2025-09-05T06:33:29.177Z","level":"FATAL","category":"DATABASE","message":"Failed to connect to PostgreSQL after 5 attempts: pq: password authentication failed for user \"appuser\"","file":"main.go","line":128}
+{"timestamp":"2025-09-05T06:33:57.939Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-09-05T06:33:57.940Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-09-05.log","file":"logger.go","line":69}
+{"timestamp":"2025-09-05T06:33:57.940Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":164}
+{"timestamp":"2025-09-05T06:33:57.940Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":170}
+{"timestamp":"2025-09-05T06:33:57.940Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":178}
+{"timestamp":"2025-09-05T06:33:57.940Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 1/5)","file":"main.go","line":107}
+{"timestamp":"2025-09-05T06:33:57.988Z","level":"INFO","category":"DATABASE","message":"✅ PostgreSQL connection successful","file":"main.go","line":131}
+{"timestamp":"2025-09-05T06:33:57.999Z","level":"INFO","category":"DATABASE","message":"✅ Redis connection successful","file":"main.go","line":147}
+{"timestamp":"2025-09-05T06:33:57.999Z","level":"INFO","category":"KAFKA","message":"Initializing Kafka producer","file":"main.go","line":190}
+{"timestamp":"2025-09-05T06:33:57.999Z","level":"INFO","category":"KAFKA","message":"Using Kafka address from environment variable: localhost:9092","file":"main.go","line":193}
+{"timestamp":"2025-09-05T06:33:57.999Z","level":"INFO","category":"KAFKA","message":"Kafka brokers configured: [localhost:9092]","file":"main.go","line":195}
+{"timestamp":"2025-09-05T06:33:57.999Z","level":"INFO","category":"KAFKA","message":"Kafka producer initialized successfully","file":"main.go","line":197}
+{"timestamp":"2025-09-05T06:33:57.999Z","level":"INFO","category":"KAFKA","message":"Ensuring required topics exist","file":"main.go","line":200}
+{"timestamp":"2025-09-05T06:33:59.060Z","level":"INFO","category":"KAFKA","message":"Required topics ensured successfully","file":"main.go","line":213}
+{"timestamp":"2025-09-05T06:33:59.060Z","level":"INFO","category":"SERVICE","message":"Initializing ticket service","file":"main.go","line":216}
+{"timestamp":"2025-09-05T06:33:59.060Z","level":"INFO","category":"SERVICE","message":"Initializing order service","file":"main.go","line":219}
+{"timestamp":"2025-09-05T06:33:59.060Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-09-05T06:33:59.061Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-09-05.log","file":"logger.go","line":69}
+{"timestamp":"2025-09-05T06:33:59.061Z","level":"INFO","category":"HTTP","message":"Setting up router and middleware","file":"main.go","line":238}
+{"timestamp":"2025-09-05T06:33:59.068Z","level":"INFO","category":"DATABASE","message":"Redis connection closed","file":"main.go","line":187}
+{"timestamp":"2025-09-05T06:33:59.069Z","level":"INFO","category":"DATABASE","message":"PostgreSQL connection closed","file":"main.go","line":183}
+{"timestamp":"2025-09-05T06:33:59.070Z","level":"INFO","category":"LOGGER","message":"Closing log file","file":"logger.go","line":216}
+{"timestamp":"2025-09-05T06:36:23.693Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-09-05T06:36:23.693Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-09-05.log","file":"logger.go","line":69}
+{"timestamp":"2025-09-05T06:36:23.693Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":164}
+{"timestamp":"2025-09-05T06:36:23.694Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":170}
+{"timestamp":"2025-09-05T06:36:23.694Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":178}
+{"timestamp":"2025-09-05T06:36:23.694Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 1/5)","file":"main.go","line":107}
+{"timestamp":"2025-09-05T06:36:23.715Z","level":"INFO","category":"DATABASE","message":"✅ PostgreSQL connection successful","file":"main.go","line":131}
+{"timestamp":"2025-09-05T06:36:23.720Z","level":"INFO","category":"DATABASE","message":"✅ Redis connection successful","file":"main.go","line":147}
+{"timestamp":"2025-09-05T06:36:23.720Z","level":"INFO","category":"KAFKA","message":"Initializing Kafka producer","file":"main.go","line":190}
+{"timestamp":"2025-09-05T06:36:23.720Z","level":"INFO","category":"KAFKA","message":"Using Kafka address from environment variable: localhost:9092","file":"main.go","line":193}
+{"timestamp":"2025-09-05T06:36:23.720Z","level":"INFO","category":"KAFKA","message":"Kafka brokers configured: [localhost:9092]","file":"main.go","line":195}
+{"timestamp":"2025-09-05T06:36:23.720Z","level":"INFO","category":"KAFKA","message":"Kafka producer initialized successfully","file":"main.go","line":197}
+{"timestamp":"2025-09-05T06:36:23.720Z","level":"INFO","category":"KAFKA","message":"Ensuring required topics exist","file":"main.go","line":200}
+{"timestamp":"2025-09-05T06:36:24.761Z","level":"INFO","category":"KAFKA","message":"Required topics ensured successfully","file":"main.go","line":213}
+{"timestamp":"2025-09-05T06:36:24.761Z","level":"INFO","category":"SERVICE","message":"Initializing ticket service","file":"main.go","line":216}
+{"timestamp":"2025-09-05T06:36:24.761Z","level":"INFO","category":"SERVICE","message":"Initializing order service","file":"main.go","line":219}
+{"timestamp":"2025-09-05T06:36:24.762Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-09-05T06:36:24.762Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-09-05.log","file":"logger.go","line":69}
+{"timestamp":"2025-09-05T06:36:24.762Z","level":"INFO","category":"HTTP","message":"Setting up router and middleware","file":"main.go","line":238}
+{"timestamp":"2025-09-05T06:36:24.765Z","level":"INFO","category":"DATABASE","message":"Redis connection closed","file":"main.go","line":187}
+{"timestamp":"2025-09-05T06:36:24.765Z","level":"INFO","category":"DATABASE","message":"PostgreSQL connection closed","file":"main.go","line":183}
+{"timestamp":"2025-09-05T06:36:24.765Z","level":"INFO","category":"LOGGER","message":"Closing log file","file":"logger.go","line":216}
+{"timestamp":"2025-09-05T06:37:42.729Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-09-05T06:37:42.730Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-09-05.log","file":"logger.go","line":69}
+{"timestamp":"2025-09-05T06:37:42.730Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":164}
+{"timestamp":"2025-09-05T06:37:42.730Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":170}
+{"timestamp":"2025-09-05T06:37:42.730Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":178}
+{"timestamp":"2025-09-05T06:37:42.730Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 1/5)","file":"main.go","line":107}
+{"timestamp":"2025-09-05T06:37:42.750Z","level":"INFO","category":"DATABASE","message":"✅ PostgreSQL connection successful","file":"main.go","line":131}
+{"timestamp":"2025-09-05T06:37:42.753Z","level":"INFO","category":"DATABASE","message":"✅ Redis connection successful","file":"main.go","line":147}
+{"timestamp":"2025-09-05T06:37:42.753Z","level":"INFO","category":"KAFKA","message":"Initializing Kafka producer","file":"main.go","line":190}
+{"timestamp":"2025-09-05T06:37:42.753Z","level":"INFO","category":"KAFKA","message":"Using Kafka address from environment variable: localhost:9092","file":"main.go","line":193}
+{"timestamp":"2025-09-05T06:37:42.753Z","level":"INFO","category":"KAFKA","message":"Kafka brokers configured: [localhost:9092]","file":"main.go","line":195}
+{"timestamp":"2025-09-05T06:37:42.753Z","level":"INFO","category":"KAFKA","message":"Kafka producer initialized successfully","file":"main.go","line":197}
+{"timestamp":"2025-09-05T06:37:42.754Z","level":"INFO","category":"KAFKA","message":"Ensuring required topics exist","file":"main.go","line":200}
+{"timestamp":"2025-09-05T06:37:43.775Z","level":"INFO","category":"KAFKA","message":"Required topics ensured successfully","file":"main.go","line":213}
+{"timestamp":"2025-09-05T06:37:43.775Z","level":"INFO","category":"SERVICE","message":"Initializing ticket service","file":"main.go","line":216}
+{"timestamp":"2025-09-05T06:37:43.775Z","level":"INFO","category":"SERVICE","message":"Initializing order service","file":"main.go","line":219}
+{"timestamp":"2025-09-05T06:37:43.775Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-09-05T06:37:43.776Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-09-05.log","file":"logger.go","line":69}
+{"timestamp":"2025-09-05T06:37:43.776Z","level":"INFO","category":"HTTP","message":"Setting up router and middleware","file":"main.go","line":238}
+{"timestamp":"2025-09-05T06:37:43.785Z","level":"INFO","category":"DATABASE","message":"Redis connection closed","file":"main.go","line":187}
+{"timestamp":"2025-09-05T06:37:43.786Z","level":"INFO","category":"DATABASE","message":"PostgreSQL connection closed","file":"main.go","line":183}
+{"timestamp":"2025-09-05T06:37:43.786Z","level":"INFO","category":"LOGGER","message":"Closing log file","file":"logger.go","line":216}
+{"timestamp":"2025-09-05T06:57:05.520Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-09-05T06:57:05.520Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-09-05.log","file":"logger.go","line":69}
+{"timestamp":"2025-09-05T06:57:05.520Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":164}
+{"timestamp":"2025-09-05T06:57:05.521Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":170}
+{"timestamp":"2025-09-05T06:57:05.521Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":178}
+{"timestamp":"2025-09-05T06:57:05.521Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 1/5)","file":"main.go","line":107}
+{"timestamp":"2025-09-05T06:57:05.540Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: dial tcp [::1]:5432: connectex: No connection could be made because the target machine actively refused it.","file":"main.go","line":120}
+{"timestamp":"2025-09-05T06:57:07.540Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 2/5)","file":"main.go","line":107}
+{"timestamp":"2025-09-05T06:57:07.542Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: dial tcp [::1]:5432: connectex: No connection could be made because the target machine actively refused it.","file":"main.go","line":120}
+{"timestamp":"2025-09-05T06:57:09.543Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 3/5)","file":"main.go","line":107}
+{"timestamp":"2025-09-05T06:57:09.544Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: dial tcp [::1]:5432: connectex: No connection could be made because the target machine actively refused it.","file":"main.go","line":120}
+{"timestamp":"2025-09-05T06:57:11.545Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 4/5)","file":"main.go","line":107}
+{"timestamp":"2025-09-05T06:57:11.554Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: dial tcp [::1]:5432: connectex: No connection could be made because the target machine actively refused it.","file":"main.go","line":120}
+{"timestamp":"2025-09-05T06:57:13.555Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 5/5)","file":"main.go","line":107}
+{"timestamp":"2025-09-05T06:57:13.556Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: dial tcp [::1]:5432: connectex: No connection could be made because the target machine actively refused it.","file":"main.go","line":120}
+{"timestamp":"2025-09-05T06:57:13.556Z","level":"FATAL","category":"DATABASE","message":"Failed to connect to PostgreSQL after 5 attempts: dial tcp [::1]:5432: connectex: No connection could be made because the target machine actively refused it.","file":"main.go","line":128}
+{"timestamp":"2025-09-05T06:58:45.702Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-09-05T06:58:45.731Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-09-05.log","file":"logger.go","line":69}
+{"timestamp":"2025-09-05T06:58:45.731Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":164}
+{"timestamp":"2025-09-05T06:58:45.775Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":170}
+{"timestamp":"2025-09-05T06:58:45.775Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":178}
+{"timestamp":"2025-09-05T06:58:45.775Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 1/5)","file":"main.go","line":107}
+{"timestamp":"2025-09-05T06:58:46.785Z","level":"INFO","category":"DATABASE","message":"✅ PostgreSQL connection successful","file":"main.go","line":131}
+{"timestamp":"2025-09-05T06:58:46.922Z","level":"INFO","category":"DATABASE","message":"✅ Redis connection successful","file":"main.go","line":147}
+{"timestamp":"2025-09-05T06:58:46.922Z","level":"INFO","category":"KAFKA","message":"Initializing Kafka producer","file":"main.go","line":190}
+{"timestamp":"2025-09-05T06:58:46.923Z","level":"INFO","category":"KAFKA","message":"Using Kafka address from environment variable: localhost:9092","file":"main.go","line":193}
+{"timestamp":"2025-09-05T06:58:46.923Z","level":"INFO","category":"KAFKA","message":"Kafka brokers configured: [localhost:9092]","file":"main.go","line":195}
+{"timestamp":"2025-09-05T06:58:46.923Z","level":"INFO","category":"KAFKA","message":"Kafka producer initialized successfully","file":"main.go","line":197}
+{"timestamp":"2025-09-05T06:58:46.923Z","level":"INFO","category":"KAFKA","message":"Ensuring required topics exist","file":"main.go","line":200}
+{"timestamp":"2025-09-05T06:58:48.633Z","level":"INFO","category":"KAFKA","message":"Required topics ensured successfully","file":"main.go","line":213}
+{"timestamp":"2025-09-05T06:58:48.633Z","level":"INFO","category":"SERVICE","message":"Initializing ticket service","file":"main.go","line":216}
+{"timestamp":"2025-09-05T06:58:48.634Z","level":"INFO","category":"SERVICE","message":"Initializing order service","file":"main.go","line":219}
+{"timestamp":"2025-09-05T06:58:48.634Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-09-05T06:58:48.634Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-09-05.log","file":"logger.go","line":69}
+{"timestamp":"2025-09-05T06:58:48.634Z","level":"INFO","category":"HTTP","message":"Setting up router and middleware","file":"main.go","line":238}
+{"timestamp":"2025-09-05T06:58:48.992Z","level":"INFO","category":"AUTH","message":"JWT middleware applied globally","file":"main.go","line":244}
+{"timestamp":"2025-09-05T06:58:48.993Z","level":"INFO","category":"ROUTER","message":"Order routes registered under /api/order","file":"main.go","line":258}
+{"timestamp":"2025-09-05T06:58:48.993Z","level":"INFO","category":"ROUTER","message":"Ticket routes registered under /api/order/ticket","file":"main.go","line":268}
+{"timestamp":"2025-09-05T06:58:48.993Z","level":"INFO","category":"REDIS","message":"Starting seat unlock subscription","file":"main.go","line":278}
+{"timestamp":"2025-09-05T06:58:48.995Z","level":"INFO","category":"HTTP","message":"🚀 Order Service running on :8084","file":"main.go","line":283}
+{"timestamp":"2025-09-05T06:58:48.995Z","level":"INFO","category":"APP","message":"Service started successfully, waiting for shutdown signal","file":"main.go","line":292}
+{"timestamp":"2025-09-05T06:58:48.995Z","level":"FATAL","category":"HTTP","message":"HTTP server error: listen tcp :8084: bind: Only one usage of each socket address (protocol/network address/port) is normally permitted.","file":"main.go","line":285}
+{"timestamp":"2025-09-05T06:59:13.819Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-09-05T06:59:13.820Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-09-05.log","file":"logger.go","line":69}
+{"timestamp":"2025-09-05T06:59:13.820Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":164}
+{"timestamp":"2025-09-05T06:59:13.820Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":170}
+{"timestamp":"2025-09-05T06:59:13.820Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":178}
+{"timestamp":"2025-09-05T06:59:13.820Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 1/5)","file":"main.go","line":107}
+{"timestamp":"2025-09-05T06:59:15.667Z","level":"INFO","category":"DATABASE","message":"✅ PostgreSQL connection successful","file":"main.go","line":131}
+{"timestamp":"2025-09-05T06:59:15.672Z","level":"INFO","category":"DATABASE","message":"✅ Redis connection successful","file":"main.go","line":147}
+{"timestamp":"2025-09-05T06:59:15.672Z","level":"INFO","category":"KAFKA","message":"Initializing Kafka producer","file":"main.go","line":190}
+{"timestamp":"2025-09-05T06:59:15.672Z","level":"INFO","category":"KAFKA","message":"Using Kafka address from environment variable: localhost:9092","file":"main.go","line":193}
+{"timestamp":"2025-09-05T06:59:15.672Z","level":"INFO","category":"KAFKA","message":"Kafka brokers configured: [localhost:9092]","file":"main.go","line":195}
+{"timestamp":"2025-09-05T06:59:15.673Z","level":"INFO","category":"KAFKA","message":"Kafka producer initialized successfully","file":"main.go","line":197}
+{"timestamp":"2025-09-05T06:59:15.673Z","level":"INFO","category":"KAFKA","message":"Ensuring required topics exist","file":"main.go","line":200}
+{"timestamp":"2025-09-05T06:59:16.697Z","level":"INFO","category":"KAFKA","message":"Required topics ensured successfully","file":"main.go","line":213}
+{"timestamp":"2025-09-05T06:59:16.697Z","level":"INFO","category":"SERVICE","message":"Initializing ticket service","file":"main.go","line":216}
+{"timestamp":"2025-09-05T06:59:16.697Z","level":"INFO","category":"SERVICE","message":"Initializing order service","file":"main.go","line":219}
+{"timestamp":"2025-09-05T06:59:16.698Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-09-05T06:59:16.698Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-09-05.log","file":"logger.go","line":69}
+{"timestamp":"2025-09-05T06:59:16.698Z","level":"INFO","category":"HTTP","message":"Setting up router and middleware","file":"main.go","line":238}
+{"timestamp":"2025-09-05T06:59:17.010Z","level":"INFO","category":"AUTH","message":"JWT middleware applied globally","file":"main.go","line":244}
+{"timestamp":"2025-09-05T06:59:17.011Z","level":"INFO","category":"ROUTER","message":"Order routes registered under /api/order","file":"main.go","line":258}
+{"timestamp":"2025-09-05T06:59:17.011Z","level":"INFO","category":"ROUTER","message":"Ticket routes registered under /api/order/ticket","file":"main.go","line":268}
+{"timestamp":"2025-09-05T06:59:17.011Z","level":"INFO","category":"REDIS","message":"Starting seat unlock subscription","file":"main.go","line":278}
+{"timestamp":"2025-09-05T06:59:17.012Z","level":"INFO","category":"APP","message":"Service started successfully, waiting for shutdown signal","file":"main.go","line":292}
+{"timestamp":"2025-09-05T06:59:17.012Z","level":"INFO","category":"HTTP","message":"🚀 Order Service running on :8084","file":"main.go","line":283}
+{"timestamp":"2025-09-05T07:15:59.358Z","level":"INFO","category":"APP","message":"Shutdown signal received, initiating graceful shutdown","file":"main.go","line":295}
+{"timestamp":"2025-09-05T07:15:59.360Z","level":"INFO","category":"HTTP","message":"✅ Order Service shutdown complete","file":"main.go","line":302}
+{"timestamp":"2025-09-05T07:15:59.360Z","level":"INFO","category":"DATABASE","message":"Redis connection closed","file":"main.go","line":187}
+{"timestamp":"2025-09-05T07:15:59.360Z","level":"INFO","category":"DATABASE","message":"PostgreSQL connection closed","file":"main.go","line":183}
+{"timestamp":"2025-09-05T07:15:59.361Z","level":"INFO","category":"LOGGER","message":"Closing log file","file":"logger.go","line":216}
+{"timestamp":"2025-09-05T07:48:00.394Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-09-05T07:48:00.394Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-09-05.log","file":"logger.go","line":69}
+{"timestamp":"2025-09-05T07:48:00.394Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":164}
+{"timestamp":"2025-09-05T07:48:00.401Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":170}
+{"timestamp":"2025-09-05T07:48:00.401Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":178}
+{"timestamp":"2025-09-05T07:48:00.401Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 1/5)","file":"main.go","line":107}
+{"timestamp":"2025-09-05T07:48:00.418Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: dial tcp: lookup ticketly-db.cp0qikwog82w.ap-south-1.rds.amazonaws.com: no such host","file":"main.go","line":120}
+{"timestamp":"2025-09-05T07:48:02.419Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 2/5)","file":"main.go","line":107}
+{"timestamp":"2025-09-05T07:48:02.419Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: dial tcp: lookup ticketly-db.cp0qikwog82w.ap-south-1.rds.amazonaws.com: no such host","file":"main.go","line":120}
+{"timestamp":"2025-09-05T07:48:04.420Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 3/5)","file":"main.go","line":107}
+{"timestamp":"2025-09-05T07:48:04.421Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: dial tcp: lookup ticketly-db.cp0qikwog82w.ap-south-1.rds.amazonaws.com: no such host","file":"main.go","line":120}
+{"timestamp":"2025-09-05T07:48:06.421Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 4/5)","file":"main.go","line":107}
+{"timestamp":"2025-09-05T07:48:06.434Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: dial tcp: lookup ticketly-db.cp0qikwog82w.ap-south-1.rds.amazonaws.com: no such host","file":"main.go","line":120}
+{"timestamp":"2025-09-05T07:48:08.434Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 5/5)","file":"main.go","line":107}
+{"timestamp":"2025-09-05T07:48:08.435Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: dial tcp: lookup ticketly-db.cp0qikwog82w.ap-south-1.rds.amazonaws.com: no such host","file":"main.go","line":120}
+{"timestamp":"2025-09-05T07:48:08.435Z","level":"FATAL","category":"DATABASE","message":"Failed to connect to PostgreSQL after 5 attempts: dial tcp: lookup ticketly-db.cp0qikwog82w.ap-south-1.rds.amazonaws.com: no such host","file":"main.go","line":128}
+{"timestamp":"2025-09-05T07:50:15.513Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-09-05T07:50:15.513Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-09-05.log","file":"logger.go","line":69}
+{"timestamp":"2025-09-05T07:50:15.513Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":164}
+{"timestamp":"2025-09-05T07:50:15.513Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":170}
+{"timestamp":"2025-09-05T07:50:15.514Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":178}
+{"timestamp":"2025-09-05T07:50:15.514Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 1/5)","file":"main.go","line":107}
+{"timestamp":"2025-09-05T07:50:16.436Z","level":"INFO","category":"DATABASE","message":"✅ PostgreSQL connection successful","file":"main.go","line":131}
+{"timestamp":"2025-09-05T07:50:16.453Z","level":"INFO","category":"DATABASE","message":"✅ Redis connection successful","file":"main.go","line":147}
+{"timestamp":"2025-09-05T07:50:16.453Z","level":"INFO","category":"KAFKA","message":"Initializing Kafka producer","file":"main.go","line":190}
+{"timestamp":"2025-09-05T07:50:16.454Z","level":"INFO","category":"KAFKA","message":"Using Kafka address from environment variable: localhost:9092","file":"main.go","line":193}
+{"timestamp":"2025-09-05T07:50:16.455Z","level":"INFO","category":"KAFKA","message":"Kafka brokers configured: [localhost:9092]","file":"main.go","line":195}
+{"timestamp":"2025-09-05T07:50:16.456Z","level":"INFO","category":"KAFKA","message":"Kafka producer initialized successfully","file":"main.go","line":197}
+{"timestamp":"2025-09-05T07:50:16.457Z","level":"INFO","category":"KAFKA","message":"Ensuring required topics exist","file":"main.go","line":200}
+{"timestamp":"2025-09-05T07:50:17.526Z","level":"INFO","category":"KAFKA","message":"Required topics ensured successfully","file":"main.go","line":213}
+{"timestamp":"2025-09-05T07:50:17.526Z","level":"INFO","category":"SERVICE","message":"Initializing ticket service","file":"main.go","line":216}
+{"timestamp":"2025-09-05T07:50:17.526Z","level":"INFO","category":"SERVICE","message":"Initializing order service","file":"main.go","line":219}
+{"timestamp":"2025-09-05T07:50:17.526Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-09-05T07:50:17.526Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-09-05.log","file":"logger.go","line":69}
+{"timestamp":"2025-09-05T07:50:17.526Z","level":"INFO","category":"HTTP","message":"Setting up router and middleware","file":"main.go","line":238}
+{"timestamp":"2025-09-05T07:50:18.057Z","level":"INFO","category":"AUTH","message":"JWT middleware applied globally","file":"main.go","line":244}
+{"timestamp":"2025-09-05T07:50:18.058Z","level":"INFO","category":"ROUTER","message":"Order routes registered under /api/order","file":"main.go","line":258}
+{"timestamp":"2025-09-05T07:50:18.058Z","level":"INFO","category":"ROUTER","message":"Ticket routes registered under /api/order/ticket","file":"main.go","line":268}
+{"timestamp":"2025-09-05T07:50:18.059Z","level":"INFO","category":"REDIS","message":"Starting seat unlock subscription","file":"main.go","line":278}
+{"timestamp":"2025-09-05T07:50:18.060Z","level":"INFO","category":"APP","message":"Service started successfully, waiting for shutdown signal","file":"main.go","line":292}
+{"timestamp":"2025-09-05T07:50:18.060Z","level":"INFO","category":"HTTP","message":"🚀 Order Service running on :8084","file":"main.go","line":283}
+{"timestamp":"2025-09-05T07:51:24.233Z","level":"INFO","category":"API","message":"SeatValidationAndPlaceOrder: received request","file":"handler.go","line":254}
+{"timestamp":"2025-09-05T07:51:24.233Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SessionID: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"handler.go","line":265}
+{"timestamp":"2025-09-05T07:51:24.233Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SeatIDs: [441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755]","file":"handler.go","line":266}
+{"timestamp":"2025-09-05T07:51:24.235Z","level":"INFO","category":"ORDER","message":"Starting seat validation and order placement process","file":"service.go","line":196}
+{"timestamp":"2025-09-05T07:51:24.236Z","level":"DEBUG","category":"ORDER","message":"Order request: {SessionID:79ad4660-5fbf-48f8-94a4-1994356cc5e4 EventID: SeatIDs:[441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755]}","file":"service.go","line":211}
+{"timestamp":"2025-09-05T07:51:24.236Z","level":"DEBUG","category":"AUTH","message":"Requesting M2M token for seat validation","file":"service.go","line":219}
+{"timestamp":"2025-09-05T07:51:24.339Z","level":"DEBUG","category":"ORDER","message":"Generated order ID: 62d69f8b-69cc-4572-9879-723e269b5b0e","file":"service.go","line":228}
+{"timestamp":"2025-09-05T07:51:24.339Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Session ID: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"service.go","line":237}
+{"timestamp":"2025-09-05T07:51:24.340Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Validation URL: http://localhost:8082/api/event-query/internal/v1/sessions/79ad4660-5fbf-48f8-94a4-1994356cc5e4/seats/validate","file":"service.go","line":247}
+{"timestamp":"2025-09-05T07:51:24.340Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Request body: {\"session_id\":\"79ad4660-5fbf-48f8-94a4-1994356cc5e4\",\"event_id\":\"\",\"seat_ids\":[\"441e5b1d-9eb5-4e96-8d65-9f8a54eafb36\",\"c6fa2855-932d-4698-ba83-f71525749755\"]}","file":"service.go","line":248}
+{"timestamp":"2025-09-05T07:51:25.279Z","level":"ERROR","category":"SEAT_VALIDATION","message":"Seat validation failed: status 400","file":"service.go","line":271}
+{"timestamp":"2025-09-05T07:51:25.280Z","level":"ERROR","category":"API","message":"SeatValidationAndPlaceOrder: seat validation failed: seat validation failed: status 400","file":"handler.go","line":271}
+{"timestamp":"2025-09-05T07:58:26.648Z","level":"INFO","category":"APP","message":"Shutdown signal received, initiating graceful shutdown","file":"main.go","line":295}
+{"timestamp":"2025-09-05T07:58:26.649Z","level":"INFO","category":"HTTP","message":"✅ Order Service shutdown complete","file":"main.go","line":302}
+{"timestamp":"2025-09-05T07:58:26.649Z","level":"INFO","category":"DATABASE","message":"Redis connection closed","file":"main.go","line":187}
+{"timestamp":"2025-09-05T07:58:26.650Z","level":"INFO","category":"DATABASE","message":"PostgreSQL connection closed","file":"main.go","line":183}
+{"timestamp":"2025-09-05T07:58:26.650Z","level":"INFO","category":"LOGGER","message":"Closing log file","file":"logger.go","line":216}
+{"timestamp":"2025-09-05T07:58:32.356Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-09-05T07:58:32.356Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-09-05.log","file":"logger.go","line":69}
+{"timestamp":"2025-09-05T07:58:32.356Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":164}
+{"timestamp":"2025-09-05T07:58:32.356Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":170}
+{"timestamp":"2025-09-05T07:58:32.356Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":178}
+{"timestamp":"2025-09-05T07:58:32.356Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 1/5)","file":"main.go","line":107}
+{"timestamp":"2025-09-05T07:58:33.254Z","level":"INFO","category":"DATABASE","message":"✅ PostgreSQL connection successful","file":"main.go","line":131}
+{"timestamp":"2025-09-05T07:58:33.259Z","level":"INFO","category":"DATABASE","message":"✅ Redis connection successful","file":"main.go","line":147}
+{"timestamp":"2025-09-05T07:58:33.259Z","level":"INFO","category":"KAFKA","message":"Initializing Kafka producer","file":"main.go","line":190}
+{"timestamp":"2025-09-05T07:58:33.259Z","level":"INFO","category":"KAFKA","message":"Using Kafka address from environment variable: localhost:9092","file":"main.go","line":193}
+{"timestamp":"2025-09-05T07:58:33.259Z","level":"INFO","category":"KAFKA","message":"Kafka brokers configured: [localhost:9092]","file":"main.go","line":195}
+{"timestamp":"2025-09-05T07:58:33.260Z","level":"INFO","category":"KAFKA","message":"Kafka producer initialized successfully","file":"main.go","line":197}
+{"timestamp":"2025-09-05T07:58:33.260Z","level":"INFO","category":"KAFKA","message":"Ensuring required topics exist","file":"main.go","line":200}
+{"timestamp":"2025-09-05T07:58:34.283Z","level":"INFO","category":"KAFKA","message":"Required topics ensured successfully","file":"main.go","line":213}
+{"timestamp":"2025-09-05T07:58:34.283Z","level":"INFO","category":"SERVICE","message":"Initializing ticket service","file":"main.go","line":216}
+{"timestamp":"2025-09-05T07:58:34.283Z","level":"INFO","category":"SERVICE","message":"Initializing order service","file":"main.go","line":219}
+{"timestamp":"2025-09-05T07:58:34.284Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-09-05T07:58:34.284Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-09-05.log","file":"logger.go","line":69}
+{"timestamp":"2025-09-05T07:58:34.284Z","level":"INFO","category":"HTTP","message":"Setting up router and middleware","file":"main.go","line":238}
+{"timestamp":"2025-09-05T07:58:34.590Z","level":"INFO","category":"AUTH","message":"JWT middleware applied globally","file":"main.go","line":244}
+{"timestamp":"2025-09-05T07:58:34.590Z","level":"INFO","category":"ROUTER","message":"Order routes registered under /api/order","file":"main.go","line":258}
+{"timestamp":"2025-09-05T07:58:34.590Z","level":"INFO","category":"ROUTER","message":"Ticket routes registered under /api/order/ticket","file":"main.go","line":268}
+{"timestamp":"2025-09-05T07:58:34.591Z","level":"INFO","category":"REDIS","message":"Starting seat unlock subscription","file":"main.go","line":278}
+{"timestamp":"2025-09-05T07:58:34.592Z","level":"INFO","category":"APP","message":"Service started successfully, waiting for shutdown signal","file":"main.go","line":292}
+{"timestamp":"2025-09-05T07:58:34.592Z","level":"INFO","category":"HTTP","message":"🚀 Order Service running on :8084","file":"main.go","line":283}
+{"timestamp":"2025-09-05T07:58:44.249Z","level":"INFO","category":"API","message":"SeatValidationAndPlaceOrder: received request","file":"handler.go","line":254}
+{"timestamp":"2025-09-05T07:58:44.249Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SessionID: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"handler.go","line":265}
+{"timestamp":"2025-09-05T07:58:44.249Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SeatIDs: [441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755]","file":"handler.go","line":266}
+{"timestamp":"2025-09-05T07:58:44.249Z","level":"INFO","category":"ORDER","message":"Starting seat validation and order placement process","file":"service.go","line":201}
+{"timestamp":"2025-09-05T07:58:44.249Z","level":"DEBUG","category":"ORDER","message":"Order request: {SessionID:79ad4660-5fbf-48f8-94a4-1994356cc5e4 EventID: SeatIDs:[441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755]}","file":"service.go","line":216}
+{"timestamp":"2025-09-05T07:58:44.249Z","level":"DEBUG","category":"AUTH","message":"Requesting M2M token for seat validation","file":"service.go","line":224}
+{"timestamp":"2025-09-05T07:58:44.335Z","level":"DEBUG","category":"ORDER","message":"Generated order ID: 56fca82f-b898-4d30-95ff-b14421dd5531","file":"service.go","line":233}
+{"timestamp":"2025-09-05T07:58:44.335Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Session ID: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"service.go","line":242}
+{"timestamp":"2025-09-05T07:58:44.336Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Validation URL: http://localhost:8082/api/event-query/internal/v1/sessions/79ad4660-5fbf-48f8-94a4-1994356cc5e4/seats/validate","file":"service.go","line":256}
+{"timestamp":"2025-09-05T07:58:44.336Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Request body: {\"sessionId\":\"79ad4660-5fbf-48f8-94a4-1994356cc5e4\",\"seatIds\":[\"441e5b1d-9eb5-4e96-8d65-9f8a54eafb36\",\"c6fa2855-932d-4698-ba83-f71525749755\"]}","file":"service.go","line":257}
+{"timestamp":"2025-09-05T07:58:44.384Z","level":"ERROR","category":"SEAT_VALIDATION","message":"Seat validation failed: status 400","file":"service.go","line":280}
+{"timestamp":"2025-09-05T07:58:44.384Z","level":"ERROR","category":"API","message":"SeatValidationAndPlaceOrder: seat validation failed: seat validation failed: status 400","file":"handler.go","line":271}
+{"timestamp":"2025-09-05T08:02:44.931Z","level":"INFO","category":"API","message":"SeatValidationAndPlaceOrder: received request","file":"handler.go","line":254}
+{"timestamp":"2025-09-05T08:02:44.931Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SessionID: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"handler.go","line":265}
+{"timestamp":"2025-09-05T08:02:44.931Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SeatIDs: [441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755]","file":"handler.go","line":266}
+{"timestamp":"2025-09-05T08:02:44.931Z","level":"INFO","category":"ORDER","message":"Starting seat validation and order placement process","file":"service.go","line":201}
+{"timestamp":"2025-09-05T08:02:44.932Z","level":"DEBUG","category":"ORDER","message":"Order request: {SessionID:79ad4660-5fbf-48f8-94a4-1994356cc5e4 EventID: SeatIDs:[441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755]}","file":"service.go","line":216}
+{"timestamp":"2025-09-05T08:02:44.932Z","level":"DEBUG","category":"AUTH","message":"Requesting M2M token for seat validation","file":"service.go","line":224}
+{"timestamp":"2025-09-05T08:02:45.198Z","level":"DEBUG","category":"ORDER","message":"Generated order ID: 5b5f96bd-8a18-4f5b-8bb5-5782c57faf37","file":"service.go","line":233}
+{"timestamp":"2025-09-05T08:02:45.198Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Session ID: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"service.go","line":242}
+{"timestamp":"2025-09-05T08:02:45.198Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Validation URL: http://localhost:8082/api/event-query/internal/v1/sessions/79ad4660-5fbf-48f8-94a4-1994356cc5e4/seats/validate","file":"service.go","line":256}
+{"timestamp":"2025-09-05T08:02:45.198Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Request body: {\"sessionId\":\"79ad4660-5fbf-48f8-94a4-1994356cc5e4\",\"seatIds\":[\"441e5b1d-9eb5-4e96-8d65-9f8a54eafb36\",\"c6fa2855-932d-4698-ba83-f71525749755\"]}","file":"service.go","line":257}
+{"timestamp":"2025-09-05T08:02:45.220Z","level":"ERROR","category":"SEAT_VALIDATION","message":"Seat validation failed: status 400","file":"service.go","line":280}
+{"timestamp":"2025-09-05T08:02:45.220Z","level":"ERROR","category":"API","message":"SeatValidationAndPlaceOrder: seat validation failed: seat validation failed: status 400","file":"handler.go","line":271}
+{"timestamp":"2025-09-05T08:04:35.378Z","level":"INFO","category":"API","message":"SeatValidationAndPlaceOrder: received request","file":"handler.go","line":254}
+{"timestamp":"2025-09-05T08:04:35.379Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SessionID: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"handler.go","line":265}
+{"timestamp":"2025-09-05T08:04:35.379Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SeatIDs: [441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755]","file":"handler.go","line":266}
+{"timestamp":"2025-09-05T08:04:35.379Z","level":"INFO","category":"ORDER","message":"Starting seat validation and order placement process","file":"service.go","line":201}
+{"timestamp":"2025-09-05T08:04:35.379Z","level":"DEBUG","category":"ORDER","message":"Order request: {SessionID:79ad4660-5fbf-48f8-94a4-1994356cc5e4 EventID: SeatIDs:[441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755]}","file":"service.go","line":216}
+{"timestamp":"2025-09-05T08:04:35.379Z","level":"DEBUG","category":"AUTH","message":"Requesting M2M token for seat validation","file":"service.go","line":224}
+{"timestamp":"2025-09-05T08:04:35.703Z","level":"DEBUG","category":"ORDER","message":"Generated order ID: 5594dd06-79ef-4591-b959-0a89ffb9ac55","file":"service.go","line":233}
+{"timestamp":"2025-09-05T08:04:35.703Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Session ID: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"service.go","line":242}
+{"timestamp":"2025-09-05T08:04:35.703Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Validation URL: http://localhost:8082/api/event-query/internal/v1/sessions/79ad4660-5fbf-48f8-94a4-1994356cc5e4/seats/validate","file":"service.go","line":256}
+{"timestamp":"2025-09-05T08:04:35.703Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Request body: {\"sessionId\":\"79ad4660-5fbf-48f8-94a4-1994356cc5e4\",\"seatIds\":[\"441e5b1d-9eb5-4e96-8d65-9f8a54eafb36\",\"c6fa2855-932d-4698-ba83-f71525749755\"]}","file":"service.go","line":257}
+{"timestamp":"2025-09-05T08:04:35.732Z","level":"ERROR","category":"SEAT_VALIDATION","message":"Seat validation failed: status 400","file":"service.go","line":280}
+{"timestamp":"2025-09-05T08:04:35.734Z","level":"ERROR","category":"API","message":"SeatValidationAndPlaceOrder: seat validation failed: seat validation failed: status 400","file":"handler.go","line":271}
+{"timestamp":"2025-09-05T08:09:10.205Z","level":"INFO","category":"APP","message":"Shutdown signal received, initiating graceful shutdown","file":"main.go","line":295}
+{"timestamp":"2025-09-05T08:09:10.206Z","level":"INFO","category":"HTTP","message":"✅ Order Service shutdown complete","file":"main.go","line":302}
+{"timestamp":"2025-09-05T08:09:10.206Z","level":"INFO","category":"DATABASE","message":"Redis connection closed","file":"main.go","line":187}
+{"timestamp":"2025-09-05T08:09:10.206Z","level":"INFO","category":"DATABASE","message":"PostgreSQL connection closed","file":"main.go","line":183}
+{"timestamp":"2025-09-05T08:09:10.206Z","level":"INFO","category":"LOGGER","message":"Closing log file","file":"logger.go","line":216}

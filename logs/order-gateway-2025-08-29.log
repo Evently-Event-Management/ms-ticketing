@@ -1,0 +1,653 @@
+{"timestamp":"2025-08-29T04:20:05.572Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T04:20:05.573Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T04:20:05.573Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":129}
+{"timestamp":"2025-08-29T04:20:05.583Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":135}
+{"timestamp":"2025-08-29T04:20:05.583Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":143}
+{"timestamp":"2025-08-29T04:20:05.671Z","level":"FATAL","category":"DATABASE","message":"Failed to connect to PostgreSQL: pq: password authentication failed for user \"appuser\"","file":"main.go","line":94}
+{"timestamp":"2025-08-29T04:20:17.076Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T04:20:17.076Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T04:20:17.076Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":129}
+{"timestamp":"2025-08-29T04:20:17.077Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":135}
+{"timestamp":"2025-08-29T04:20:17.077Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":143}
+{"timestamp":"2025-08-29T04:20:17.119Z","level":"FATAL","category":"DATABASE","message":"Failed to connect to PostgreSQL: pq: password authentication failed for user \"appuser\"","file":"main.go","line":94}
+{"timestamp":"2025-08-29T04:20:18.907Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T04:20:18.907Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T04:20:18.907Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":129}
+{"timestamp":"2025-08-29T04:20:18.908Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":135}
+{"timestamp":"2025-08-29T04:20:18.908Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":143}
+{"timestamp":"2025-08-29T04:20:18.948Z","level":"FATAL","category":"DATABASE","message":"Failed to connect to PostgreSQL: pq: password authentication failed for user \"appuser\"","file":"main.go","line":94}
+{"timestamp":"2025-08-29T04:20:37.960Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T04:20:37.960Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T04:20:37.960Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":129}
+{"timestamp":"2025-08-29T04:20:37.960Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":135}
+{"timestamp":"2025-08-29T04:20:37.960Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":143}
+{"timestamp":"2025-08-29T04:20:38.001Z","level":"FATAL","category":"DATABASE","message":"Failed to connect to PostgreSQL: pq: password authentication failed for user \"appuser\"","file":"main.go","line":94}
+{"timestamp":"2025-08-29T04:22:11.231Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T04:22:11.232Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T04:22:11.232Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":129}
+{"timestamp":"2025-08-29T04:22:11.232Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":135}
+{"timestamp":"2025-08-29T04:22:11.232Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":143}
+{"timestamp":"2025-08-29T04:22:11.283Z","level":"INFO","category":"DATABASE","message":"✅ PostgreSQL connection successful","file":"main.go","line":96}
+{"timestamp":"2025-08-29T04:22:11.292Z","level":"INFO","category":"DATABASE","message":"✅ Redis connection successful","file":"main.go","line":112}
+{"timestamp":"2025-08-29T04:22:11.292Z","level":"INFO","category":"KAFKA","message":"Initializing Kafka producer","file":"main.go","line":155}
+{"timestamp":"2025-08-29T04:22:11.292Z","level":"INFO","category":"KAFKA","message":"Kafka producer initialized successfully","file":"main.go","line":158}
+{"timestamp":"2025-08-29T04:22:11.292Z","level":"INFO","category":"SERVICE","message":"Initializing ticket service","file":"main.go","line":160}
+{"timestamp":"2025-08-29T04:22:11.292Z","level":"INFO","category":"SERVICE","message":"Initializing order service","file":"main.go","line":163}
+{"timestamp":"2025-08-29T04:22:11.293Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T04:22:11.293Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T04:22:11.293Z","level":"INFO","category":"HTTP","message":"Setting up router and middleware","file":"main.go","line":176}
+{"timestamp":"2025-08-29T04:22:11.296Z","level":"INFO","category":"DATABASE","message":"Redis connection closed","file":"main.go","line":152}
+{"timestamp":"2025-08-29T04:22:11.296Z","level":"INFO","category":"DATABASE","message":"PostgreSQL connection closed","file":"main.go","line":148}
+{"timestamp":"2025-08-29T04:22:11.296Z","level":"INFO","category":"LOGGER","message":"Closing log file","file":"logger.go","line":216}
+{"timestamp":"2025-08-29T04:22:52.585Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T04:22:52.585Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T04:22:52.585Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":129}
+{"timestamp":"2025-08-29T04:22:52.586Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":135}
+{"timestamp":"2025-08-29T04:22:52.586Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":143}
+{"timestamp":"2025-08-29T04:22:52.606Z","level":"INFO","category":"DATABASE","message":"✅ PostgreSQL connection successful","file":"main.go","line":96}
+{"timestamp":"2025-08-29T04:22:52.610Z","level":"INFO","category":"DATABASE","message":"✅ Redis connection successful","file":"main.go","line":112}
+{"timestamp":"2025-08-29T04:22:52.610Z","level":"INFO","category":"KAFKA","message":"Initializing Kafka producer","file":"main.go","line":155}
+{"timestamp":"2025-08-29T04:22:52.610Z","level":"INFO","category":"KAFKA","message":"Kafka producer initialized successfully","file":"main.go","line":158}
+{"timestamp":"2025-08-29T04:22:52.610Z","level":"INFO","category":"SERVICE","message":"Initializing ticket service","file":"main.go","line":160}
+{"timestamp":"2025-08-29T04:22:52.610Z","level":"INFO","category":"SERVICE","message":"Initializing order service","file":"main.go","line":163}
+{"timestamp":"2025-08-29T04:22:52.611Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T04:22:52.611Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T04:22:52.611Z","level":"INFO","category":"HTTP","message":"Setting up router and middleware","file":"main.go","line":176}
+{"timestamp":"2025-08-29T04:22:52.618Z","level":"INFO","category":"DATABASE","message":"Redis connection closed","file":"main.go","line":152}
+{"timestamp":"2025-08-29T04:22:52.618Z","level":"INFO","category":"DATABASE","message":"PostgreSQL connection closed","file":"main.go","line":148}
+{"timestamp":"2025-08-29T04:22:52.619Z","level":"INFO","category":"LOGGER","message":"Closing log file","file":"logger.go","line":216}
+{"timestamp":"2025-08-29T04:33:01.378Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T04:33:01.378Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T04:33:01.378Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":129}
+{"timestamp":"2025-08-29T04:33:01.379Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":135}
+{"timestamp":"2025-08-29T04:33:01.380Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":143}
+{"timestamp":"2025-08-29T04:33:01.401Z","level":"INFO","category":"DATABASE","message":"✅ PostgreSQL connection successful","file":"main.go","line":96}
+{"timestamp":"2025-08-29T04:33:01.403Z","level":"INFO","category":"DATABASE","message":"✅ Redis connection successful","file":"main.go","line":112}
+{"timestamp":"2025-08-29T04:33:01.403Z","level":"INFO","category":"KAFKA","message":"Initializing Kafka producer","file":"main.go","line":155}
+{"timestamp":"2025-08-29T04:33:01.403Z","level":"INFO","category":"KAFKA","message":"Kafka producer initialized successfully","file":"main.go","line":158}
+{"timestamp":"2025-08-29T04:33:01.403Z","level":"INFO","category":"SERVICE","message":"Initializing ticket service","file":"main.go","line":160}
+{"timestamp":"2025-08-29T04:33:01.403Z","level":"INFO","category":"SERVICE","message":"Initializing order service","file":"main.go","line":163}
+{"timestamp":"2025-08-29T04:33:01.404Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T04:33:01.404Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T04:33:01.405Z","level":"INFO","category":"HTTP","message":"Setting up router and middleware","file":"main.go","line":176}
+{"timestamp":"2025-08-29T04:33:01.425Z","level":"INFO","category":"AUTH","message":"JWT middleware applied globally","file":"main.go","line":182}
+{"timestamp":"2025-08-29T04:33:01.427Z","level":"INFO","category":"ROUTER","message":"Order routes registered","file":"main.go","line":194}
+{"timestamp":"2025-08-29T04:33:01.427Z","level":"INFO","category":"ROUTER","message":"Ticket routes registered","file":"main.go","line":203}
+{"timestamp":"2025-08-29T04:33:01.427Z","level":"INFO","category":"REDIS","message":"Starting seat unlock subscription","file":"main.go","line":212}
+{"timestamp":"2025-08-29T04:33:01.429Z","level":"INFO","category":"APP","message":"Service started successfully, waiting for shutdown signal","file":"main.go","line":226}
+{"timestamp":"2025-08-29T04:33:01.429Z","level":"INFO","category":"HTTP","message":"🚀 Order Service running on :8083","file":"main.go","line":217}
+{"timestamp":"2025-08-29T04:41:07.569Z","level":"INFO","category":"APP","message":"Shutdown signal received, initiating graceful shutdown","file":"main.go","line":229}
+{"timestamp":"2025-08-29T04:41:07.570Z","level":"INFO","category":"HTTP","message":"✅ Order Service shutdown complete","file":"main.go","line":236}
+{"timestamp":"2025-08-29T04:41:07.571Z","level":"INFO","category":"DATABASE","message":"Redis connection closed","file":"main.go","line":152}
+{"timestamp":"2025-08-29T04:41:07.571Z","level":"INFO","category":"DATABASE","message":"PostgreSQL connection closed","file":"main.go","line":148}
+{"timestamp":"2025-08-29T04:41:07.573Z","level":"INFO","category":"LOGGER","message":"Closing log file","file":"logger.go","line":216}
+{"timestamp":"2025-08-29T04:44:14.890Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T04:44:14.890Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T04:44:14.890Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":129}
+{"timestamp":"2025-08-29T04:44:14.891Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":135}
+{"timestamp":"2025-08-29T04:44:14.891Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":143}
+{"timestamp":"2025-08-29T04:44:14.914Z","level":"INFO","category":"DATABASE","message":"✅ PostgreSQL connection successful","file":"main.go","line":96}
+{"timestamp":"2025-08-29T04:44:14.918Z","level":"INFO","category":"DATABASE","message":"✅ Redis connection successful","file":"main.go","line":112}
+{"timestamp":"2025-08-29T04:44:14.918Z","level":"INFO","category":"KAFKA","message":"Initializing Kafka producer","file":"main.go","line":155}
+{"timestamp":"2025-08-29T04:44:14.918Z","level":"INFO","category":"KAFKA","message":"Kafka producer initialized successfully","file":"main.go","line":158}
+{"timestamp":"2025-08-29T04:44:14.918Z","level":"INFO","category":"SERVICE","message":"Initializing ticket service","file":"main.go","line":160}
+{"timestamp":"2025-08-29T04:44:14.918Z","level":"INFO","category":"SERVICE","message":"Initializing order service","file":"main.go","line":163}
+{"timestamp":"2025-08-29T04:44:14.918Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T04:44:14.918Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T04:44:14.918Z","level":"INFO","category":"HTTP","message":"Setting up router and middleware","file":"main.go","line":182}
+{"timestamp":"2025-08-29T04:45:02.996Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T04:45:02.997Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T04:45:02.997Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":129}
+{"timestamp":"2025-08-29T04:45:02.997Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":135}
+{"timestamp":"2025-08-29T04:45:02.997Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":143}
+{"timestamp":"2025-08-29T04:45:03.019Z","level":"INFO","category":"DATABASE","message":"✅ PostgreSQL connection successful","file":"main.go","line":96}
+{"timestamp":"2025-08-29T04:45:03.022Z","level":"INFO","category":"DATABASE","message":"✅ Redis connection successful","file":"main.go","line":112}
+{"timestamp":"2025-08-29T04:45:03.022Z","level":"INFO","category":"KAFKA","message":"Initializing Kafka producer","file":"main.go","line":155}
+{"timestamp":"2025-08-29T04:45:03.022Z","level":"INFO","category":"KAFKA","message":"Kafka producer initialized successfully","file":"main.go","line":158}
+{"timestamp":"2025-08-29T04:45:03.022Z","level":"INFO","category":"SERVICE","message":"Initializing ticket service","file":"main.go","line":160}
+{"timestamp":"2025-08-29T04:45:03.022Z","level":"INFO","category":"SERVICE","message":"Initializing order service","file":"main.go","line":163}
+{"timestamp":"2025-08-29T04:45:03.022Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T04:45:03.022Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T04:45:03.022Z","level":"INFO","category":"HTTP","message":"Setting up router and middleware","file":"main.go","line":182}
+{"timestamp":"2025-08-29T05:04:06.314Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T05:04:06.314Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T05:04:06.314Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":129}
+{"timestamp":"2025-08-29T05:04:06.314Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":135}
+{"timestamp":"2025-08-29T05:04:06.315Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":143}
+{"timestamp":"2025-08-29T05:04:06.356Z","level":"INFO","category":"DATABASE","message":"✅ PostgreSQL connection successful","file":"main.go","line":96}
+{"timestamp":"2025-08-29T05:04:06.365Z","level":"INFO","category":"DATABASE","message":"✅ Redis connection successful","file":"main.go","line":112}
+{"timestamp":"2025-08-29T05:04:06.365Z","level":"INFO","category":"KAFKA","message":"Initializing Kafka producer","file":"main.go","line":155}
+{"timestamp":"2025-08-29T05:04:06.365Z","level":"INFO","category":"KAFKA","message":"Kafka producer initialized successfully","file":"main.go","line":158}
+{"timestamp":"2025-08-29T05:04:06.365Z","level":"INFO","category":"SERVICE","message":"Initializing ticket service","file":"main.go","line":160}
+{"timestamp":"2025-08-29T05:04:06.365Z","level":"INFO","category":"SERVICE","message":"Initializing order service","file":"main.go","line":163}
+{"timestamp":"2025-08-29T05:04:06.366Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T05:04:06.366Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T05:04:06.366Z","level":"INFO","category":"HTTP","message":"Setting up router and middleware","file":"main.go","line":182}
+{"timestamp":"2025-08-29T05:04:17.807Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T05:04:17.807Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T05:04:17.807Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":129}
+{"timestamp":"2025-08-29T05:04:17.807Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":135}
+{"timestamp":"2025-08-29T05:04:17.807Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":143}
+{"timestamp":"2025-08-29T05:04:17.834Z","level":"INFO","category":"DATABASE","message":"✅ PostgreSQL connection successful","file":"main.go","line":96}
+{"timestamp":"2025-08-29T05:04:17.839Z","level":"INFO","category":"DATABASE","message":"✅ Redis connection successful","file":"main.go","line":112}
+{"timestamp":"2025-08-29T05:04:17.839Z","level":"INFO","category":"KAFKA","message":"Initializing Kafka producer","file":"main.go","line":155}
+{"timestamp":"2025-08-29T05:04:17.839Z","level":"INFO","category":"KAFKA","message":"Kafka producer initialized successfully","file":"main.go","line":158}
+{"timestamp":"2025-08-29T05:04:17.839Z","level":"INFO","category":"SERVICE","message":"Initializing ticket service","file":"main.go","line":160}
+{"timestamp":"2025-08-29T05:04:17.839Z","level":"INFO","category":"SERVICE","message":"Initializing order service","file":"main.go","line":163}
+{"timestamp":"2025-08-29T05:04:17.840Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T05:04:17.840Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T05:04:17.840Z","level":"INFO","category":"HTTP","message":"Setting up router and middleware","file":"main.go","line":182}
+{"timestamp":"2025-08-29T05:16:30.275Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T05:16:30.275Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T05:16:30.275Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":129}
+{"timestamp":"2025-08-29T05:16:30.276Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":135}
+{"timestamp":"2025-08-29T05:16:30.276Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":143}
+{"timestamp":"2025-08-29T05:16:30.316Z","level":"INFO","category":"DATABASE","message":"✅ PostgreSQL connection successful","file":"main.go","line":96}
+{"timestamp":"2025-08-29T05:16:30.319Z","level":"INFO","category":"DATABASE","message":"✅ Redis connection successful","file":"main.go","line":112}
+{"timestamp":"2025-08-29T05:16:30.319Z","level":"INFO","category":"KAFKA","message":"Initializing Kafka producer","file":"main.go","line":155}
+{"timestamp":"2025-08-29T05:16:30.319Z","level":"INFO","category":"KAFKA","message":"Kafka producer initialized successfully","file":"main.go","line":158}
+{"timestamp":"2025-08-29T05:16:30.319Z","level":"INFO","category":"SERVICE","message":"Initializing ticket service","file":"main.go","line":160}
+{"timestamp":"2025-08-29T05:16:30.319Z","level":"INFO","category":"SERVICE","message":"Initializing order service","file":"main.go","line":163}
+{"timestamp":"2025-08-29T05:16:30.319Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T05:16:30.320Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T05:16:30.320Z","level":"INFO","category":"HTTP","message":"Setting up router and middleware","file":"main.go","line":182}
+{"timestamp":"2025-08-29T05:16:30.660Z","level":"INFO","category":"AUTH","message":"JWT middleware applied globally","file":"main.go","line":188}
+{"timestamp":"2025-08-29T05:16:30.660Z","level":"INFO","category":"ROUTER","message":"Order routes registered","file":"main.go","line":200}
+{"timestamp":"2025-08-29T05:16:30.660Z","level":"INFO","category":"ROUTER","message":"Ticket routes registered","file":"main.go","line":209}
+{"timestamp":"2025-08-29T05:16:30.661Z","level":"INFO","category":"REDIS","message":"Starting seat unlock subscription","file":"main.go","line":218}
+{"timestamp":"2025-08-29T05:16:30.662Z","level":"INFO","category":"APP","message":"Service started successfully, waiting for shutdown signal","file":"main.go","line":232}
+{"timestamp":"2025-08-29T05:16:30.662Z","level":"INFO","category":"HTTP","message":"🚀 Order Service running on :8083","file":"main.go","line":223}
+{"timestamp":"2025-08-29T05:18:01.414Z","level":"INFO","category":"API","message":"SeatValidationAndPlaceOrder: received request","file":"handler.go","line":171}
+{"timestamp":"2025-08-29T05:18:01.415Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SessionID: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"handler.go","line":182}
+{"timestamp":"2025-08-29T05:18:01.416Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SeatIDs: [441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755]","file":"handler.go","line":183}
+{"timestamp":"2025-08-29T05:18:01.417Z","level":"INFO","category":"ORDER","message":"Starting seat validation and order placement process","file":"service.go","line":179}
+{"timestamp":"2025-08-29T05:18:01.420Z","level":"DEBUG","category":"ORDER","message":"Order request: {SessionID:79ad4660-5fbf-48f8-94a4-1994356cc5e4 SeatIDs:[441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755]}","file":"service.go","line":194}
+{"timestamp":"2025-08-29T05:18:01.420Z","level":"DEBUG","category":"AUTH","message":"Requesting M2M token for seat validation","file":"service.go","line":202}
+{"timestamp":"2025-08-29T05:18:01.472Z","level":"DEBUG","category":"ORDER","message":"Generated order ID: bb302bfb-7f63-45af-ab81-3e8eeac54eef","file":"service.go","line":211}
+{"timestamp":"2025-08-29T05:18:01.472Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Session ID: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"service.go","line":220}
+{"timestamp":"2025-08-29T05:18:01.472Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Validation URL: http://localhost:8082/api/event-query/internal/v1/sessions/79ad4660-5fbf-48f8-94a4-1994356cc5e4/seats/validate","file":"service.go","line":226}
+{"timestamp":"2025-08-29T05:18:01.473Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Request body: {\"seatIds\":[\"441e5b1d-9eb5-4e96-8d65-9f8a54eafb36\",\"c6fa2855-932d-4698-ba83-f71525749755\"]}","file":"service.go","line":228}
+{"timestamp":"2025-08-29T05:18:01.475Z","level":"ERROR","category":"SEAT_VALIDATION","message":"Seat validation service error: Post \"http://localhost:8082/api/event-query/internal/v1/sessions/79ad4660-5fbf-48f8-94a4-1994356cc5e4/seats/validate\": dial tcp [::1]:8082: connectex: No connection could be made because the target machine actively refused it.","file":"service.go","line":240}
+{"timestamp":"2025-08-29T05:18:01.476Z","level":"ERROR","category":"API","message":"SeatValidationAndPlaceOrder: seat validation failed: seat validation service error: Post \"http://localhost:8082/api/event-query/internal/v1/sessions/79ad4660-5fbf-48f8-94a4-1994356cc5e4/seats/validate\": dial tcp [::1]:8082: connectex: No connection could be made because the target machine actively refused it.","file":"handler.go","line":188}
+{"timestamp":"2025-08-29T05:18:24.726Z","level":"INFO","category":"API","message":"SeatValidationAndPlaceOrder: received request","file":"handler.go","line":171}
+{"timestamp":"2025-08-29T05:18:24.726Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SessionID: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"handler.go","line":182}
+{"timestamp":"2025-08-29T05:18:24.727Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SeatIDs: [441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755]","file":"handler.go","line":183}
+{"timestamp":"2025-08-29T05:18:24.727Z","level":"INFO","category":"ORDER","message":"Starting seat validation and order placement process","file":"service.go","line":179}
+{"timestamp":"2025-08-29T05:18:24.727Z","level":"DEBUG","category":"ORDER","message":"Order request: {SessionID:79ad4660-5fbf-48f8-94a4-1994356cc5e4 SeatIDs:[441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755]}","file":"service.go","line":194}
+{"timestamp":"2025-08-29T05:18:24.727Z","level":"DEBUG","category":"AUTH","message":"Requesting M2M token for seat validation","file":"service.go","line":202}
+{"timestamp":"2025-08-29T05:18:24.742Z","level":"DEBUG","category":"ORDER","message":"Generated order ID: 7042b382-3dd2-47f5-bb35-707df00c300c","file":"service.go","line":211}
+{"timestamp":"2025-08-29T05:18:24.742Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Session ID: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"service.go","line":220}
+{"timestamp":"2025-08-29T05:18:24.742Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Validation URL: http://localhost:8082/api/event-query/internal/v1/sessions/79ad4660-5fbf-48f8-94a4-1994356cc5e4/seats/validate","file":"service.go","line":226}
+{"timestamp":"2025-08-29T05:18:24.742Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Request body: {\"seatIds\":[\"441e5b1d-9eb5-4e96-8d65-9f8a54eafb36\",\"c6fa2855-932d-4698-ba83-f71525749755\"]}","file":"service.go","line":228}
+{"timestamp":"2025-08-29T05:18:25.415Z","level":"INFO","category":"SEAT_VALIDATION","message":"Seat validation successful","file":"service.go","line":250}
+{"timestamp":"2025-08-29T05:18:25.415Z","level":"DEBUG","category":"REDIS","message":"Attempting to lock seats in Redis","file":"service.go","line":253}
+{"timestamp":"2025-08-29T05:18:25.416Z","level":"INFO","category":"REDIS","message":"Seats locked successfully","file":"service.go","line":265}
+{"timestamp":"2025-08-29T05:18:25.419Z","level":"ERROR","category":"KAFKA","message":"Failed to publish seats locked event: dial tcp [::1]:9092: connectex: No connection could be made because the target machine actively refused it.","file":"service.go","line":436}
+{"timestamp":"2025-08-29T05:18:25.419Z","level":"ERROR","category":"KAFKA","message":"Kafka publish error (seats locked): dial tcp [::1]:9092: connectex: No connection could be made because the target machine actively refused it.","file":"service.go","line":268}
+{"timestamp":"2025-08-29T05:18:25.419Z","level":"DEBUG","category":"SEAT_DETAILS","message":"Requesting seat details for ticket creation","file":"service.go","line":272}
+{"timestamp":"2025-08-29T05:18:25.484Z","level":"INFO","category":"SEAT_DETAILS","message":"Retrieved details for 2 seats","file":"service.go","line":302}
+{"timestamp":"2025-08-29T05:18:25.484Z","level":"INFO","category":"ORDER","message":"Placing order: 7042b382-3dd2-47f5-bb35-707df00c300c for session: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"service.go","line":68}
+{"timestamp":"2025-08-29T05:18:25.484Z","level":"DEBUG","category":"ORDER","message":"Creating order in DB...","file":"service.go","line":70}
+{"timestamp":"2025-08-29T05:18:25.514Z","level":"INFO","category":"KAFKA","message":"Order created successfully, publishing to Kafka...","file":"service.go","line":78}
+{"timestamp":"2025-08-29T05:18:25.515Z","level":"ERROR","category":"KAFKA","message":"Failed to publish order created event: dial tcp [::1]:9092: connectex: No connection could be made because the target machine actively refused it.","file":"service.go","line":382}
+{"timestamp":"2025-08-29T05:18:25.515Z","level":"ERROR","category":"KAFKA","message":"Kafka publish error (order created): dial tcp [::1]:9092: connectex: No connection could be made because the target machine actively refused it.","file":"service.go","line":80}
+{"timestamp":"2025-08-29T05:18:25.515Z","level":"INFO","category":"ORDER","message":"Order 7042b382-3dd2-47f5-bb35-707df00c300c placed successfully","file":"service.go","line":83}
+{"timestamp":"2025-08-29T05:18:25.515Z","level":"INFO","category":"TICKET","message":"Creating tickets for each seat","file":"service.go","line":323}
+{"timestamp":"2025-08-29T05:18:25.544Z","level":"INFO","category":"TICKET","message":"Created ticket 40d6659f-9e2d-4456-a29f-075ab81b0cc2 for seat 441e5b1d-9eb5-4e96-8d65-9f8a54eafb36","file":"service.go","line":345}
+{"timestamp":"2025-08-29T05:18:25.554Z","level":"INFO","category":"TICKET","message":"Created ticket 25f283db-ef76-42bc-9f23-2c4a6e47d9d2 for seat c6fa2855-932d-4698-ba83-f71525749755","file":"service.go","line":345}
+{"timestamp":"2025-08-29T05:18:25.559Z","level":"INFO","category":"ORDER","message":"Updated order price to: $2000.00","file":"service.go","line":358}
+{"timestamp":"2025-08-29T05:18:25.559Z","level":"INFO","category":"ORDER","message":"Order 7042b382-3dd2-47f5-bb35-707df00c300c completed successfully for user f2f96927-7062-459d-9674-ffd5ec726fcf","file":"service.go","line":363}
+{"timestamp":"2025-08-29T05:18:25.559Z","level":"INFO","category":"API","message":"SeatValidationAndPlaceOrder: order created successfully","file":"handler.go","line":197}
+{"timestamp":"2025-08-29T05:21:18.315Z","level":"INFO","category":"API","message":"GetOrder: orderId=7042b382-3dd2-47f5-bb35-707df00c300c","file":"handler.go","line":63}
+{"timestamp":"2025-08-29T05:21:18.315Z","level":"DEBUG","category":"ORDER","message":"Getting order by ID: 7042b382-3dd2-47f5-bb35-707df00c300c","file":"service.go","line":88}
+{"timestamp":"2025-08-29T05:21:18.319Z","level":"DEBUG","category":"API","message":"GetOrder: found order: \u0026{BaseModel:{} OrderID:7042b382-3dd2-47f5-bb35-707df00c300c UserID:f2f96927-7062-459d-9674-ffd5ec726fcf SessionID:79ad4660-5fbf-48f8-94a4-1994356cc5e4 SeatIDs:[441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755] Status:pending Price:2000 CreatedAt:2025-08-29 05:18:25.484654 +0000 +0000}","file":"handler.go","line":71}
+{"timestamp":"2025-08-29T05:21:18.319Z","level":"INFO","category":"API","message":"GetOrder: response sent successfully","file":"handler.go","line":75}
+{"timestamp":"2025-08-29T05:27:49.377Z","level":"INFO","category":"API","message":"SeatValidationAndPlaceOrder: received request","file":"handler.go","line":171}
+{"timestamp":"2025-08-29T05:27:49.378Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SessionID: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"handler.go","line":182}
+{"timestamp":"2025-08-29T05:27:49.378Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SeatIDs: [441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755]","file":"handler.go","line":183}
+{"timestamp":"2025-08-29T05:27:49.378Z","level":"INFO","category":"ORDER","message":"Starting seat validation and order placement process","file":"service.go","line":179}
+{"timestamp":"2025-08-29T05:27:49.378Z","level":"DEBUG","category":"ORDER","message":"Order request: {SessionID:79ad4660-5fbf-48f8-94a4-1994356cc5e4 SeatIDs:[441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755]}","file":"service.go","line":194}
+{"timestamp":"2025-08-29T05:27:49.378Z","level":"DEBUG","category":"AUTH","message":"Requesting M2M token for seat validation","file":"service.go","line":202}
+{"timestamp":"2025-08-29T05:27:49.399Z","level":"DEBUG","category":"ORDER","message":"Generated order ID: 01ca10de-f961-411d-89b5-9fa6c3bef07f","file":"service.go","line":211}
+{"timestamp":"2025-08-29T05:27:49.399Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Session ID: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"service.go","line":220}
+{"timestamp":"2025-08-29T05:27:49.400Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Validation URL: http://localhost:8082/api/event-query/internal/v1/sessions/79ad4660-5fbf-48f8-94a4-1994356cc5e4/seats/validate","file":"service.go","line":226}
+{"timestamp":"2025-08-29T05:27:49.400Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Request body: {\"seatIds\":[\"441e5b1d-9eb5-4e96-8d65-9f8a54eafb36\",\"c6fa2855-932d-4698-ba83-f71525749755\"]}","file":"service.go","line":228}
+{"timestamp":"2025-08-29T05:27:49.401Z","level":"ERROR","category":"SEAT_VALIDATION","message":"Seat validation service error: Post \"http://localhost:8082/api/event-query/internal/v1/sessions/79ad4660-5fbf-48f8-94a4-1994356cc5e4/seats/validate\": dial tcp [::1]:8082: connectex: No connection could be made because the target machine actively refused it.","file":"service.go","line":240}
+{"timestamp":"2025-08-29T05:27:49.402Z","level":"ERROR","category":"API","message":"SeatValidationAndPlaceOrder: seat validation failed: seat validation service error: Post \"http://localhost:8082/api/event-query/internal/v1/sessions/79ad4660-5fbf-48f8-94a4-1994356cc5e4/seats/validate\": dial tcp [::1]:8082: connectex: No connection could be made because the target machine actively refused it.","file":"handler.go","line":188}
+{"timestamp":"2025-08-29T05:28:14.230Z","level":"INFO","category":"API","message":"SeatValidationAndPlaceOrder: received request","file":"handler.go","line":171}
+{"timestamp":"2025-08-29T05:28:14.230Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SessionID: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"handler.go","line":182}
+{"timestamp":"2025-08-29T05:28:14.230Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SeatIDs: [441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755]","file":"handler.go","line":183}
+{"timestamp":"2025-08-29T05:28:14.230Z","level":"INFO","category":"ORDER","message":"Starting seat validation and order placement process","file":"service.go","line":179}
+{"timestamp":"2025-08-29T05:28:14.230Z","level":"DEBUG","category":"ORDER","message":"Order request: {SessionID:79ad4660-5fbf-48f8-94a4-1994356cc5e4 SeatIDs:[441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755]}","file":"service.go","line":194}
+{"timestamp":"2025-08-29T05:28:14.230Z","level":"DEBUG","category":"AUTH","message":"Requesting M2M token for seat validation","file":"service.go","line":202}
+{"timestamp":"2025-08-29T05:28:14.243Z","level":"DEBUG","category":"ORDER","message":"Generated order ID: a9c62874-6d7d-4271-a205-8e7f3089f4ec","file":"service.go","line":211}
+{"timestamp":"2025-08-29T05:28:14.243Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Session ID: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"service.go","line":220}
+{"timestamp":"2025-08-29T05:28:14.243Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Validation URL: http://localhost:8082/api/event-query/internal/v1/sessions/79ad4660-5fbf-48f8-94a4-1994356cc5e4/seats/validate","file":"service.go","line":226}
+{"timestamp":"2025-08-29T05:28:14.243Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Request body: {\"seatIds\":[\"441e5b1d-9eb5-4e96-8d65-9f8a54eafb36\",\"c6fa2855-932d-4698-ba83-f71525749755\"]}","file":"service.go","line":228}
+{"timestamp":"2025-08-29T05:28:15.016Z","level":"INFO","category":"SEAT_VALIDATION","message":"Seat validation successful","file":"service.go","line":250}
+{"timestamp":"2025-08-29T05:28:15.016Z","level":"DEBUG","category":"REDIS","message":"Attempting to lock seats in Redis","file":"service.go","line":253}
+{"timestamp":"2025-08-29T05:28:15.019Z","level":"INFO","category":"REDIS","message":"Seats locked successfully","file":"service.go","line":265}
+{"timestamp":"2025-08-29T05:28:15.020Z","level":"ERROR","category":"KAFKA","message":"Failed to publish seats locked event: [3] Unknown Topic Or Partition: the request is for a topic or partition that does not exist on this broker","file":"service.go","line":436}
+{"timestamp":"2025-08-29T05:28:15.020Z","level":"ERROR","category":"KAFKA","message":"Kafka publish error (seats locked): [3] Unknown Topic Or Partition: the request is for a topic or partition that does not exist on this broker","file":"service.go","line":268}
+{"timestamp":"2025-08-29T05:28:15.020Z","level":"DEBUG","category":"SEAT_DETAILS","message":"Requesting seat details for ticket creation","file":"service.go","line":272}
+{"timestamp":"2025-08-29T05:28:15.095Z","level":"INFO","category":"SEAT_DETAILS","message":"Retrieved details for 2 seats","file":"service.go","line":302}
+{"timestamp":"2025-08-29T05:28:15.095Z","level":"INFO","category":"ORDER","message":"Placing order: a9c62874-6d7d-4271-a205-8e7f3089f4ec for session: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"service.go","line":68}
+{"timestamp":"2025-08-29T05:28:15.096Z","level":"DEBUG","category":"ORDER","message":"Creating order in DB...","file":"service.go","line":70}
+{"timestamp":"2025-08-29T05:28:15.099Z","level":"INFO","category":"KAFKA","message":"Order created successfully, publishing to Kafka...","file":"service.go","line":78}
+{"timestamp":"2025-08-29T05:28:15.099Z","level":"ERROR","category":"KAFKA","message":"Failed to publish order created event: [3] Unknown Topic Or Partition: the request is for a topic or partition that does not exist on this broker","file":"service.go","line":382}
+{"timestamp":"2025-08-29T05:28:15.099Z","level":"ERROR","category":"KAFKA","message":"Kafka publish error (order created): [3] Unknown Topic Or Partition: the request is for a topic or partition that does not exist on this broker","file":"service.go","line":80}
+{"timestamp":"2025-08-29T05:28:15.099Z","level":"INFO","category":"ORDER","message":"Order a9c62874-6d7d-4271-a205-8e7f3089f4ec placed successfully","file":"service.go","line":83}
+{"timestamp":"2025-08-29T05:28:15.099Z","level":"INFO","category":"TICKET","message":"Creating tickets for each seat","file":"service.go","line":323}
+{"timestamp":"2025-08-29T05:28:15.110Z","level":"INFO","category":"TICKET","message":"Created ticket e9a906b6-e24c-4947-8ad8-090be3e51d29 for seat 441e5b1d-9eb5-4e96-8d65-9f8a54eafb36","file":"service.go","line":345}
+{"timestamp":"2025-08-29T05:28:15.121Z","level":"INFO","category":"TICKET","message":"Created ticket 9cda866a-8e6b-44ca-a10d-db7cbc873cf2 for seat c6fa2855-932d-4698-ba83-f71525749755","file":"service.go","line":345}
+{"timestamp":"2025-08-29T05:28:15.123Z","level":"INFO","category":"ORDER","message":"Updated order price to: $2000.00","file":"service.go","line":358}
+{"timestamp":"2025-08-29T05:28:15.124Z","level":"INFO","category":"ORDER","message":"Order a9c62874-6d7d-4271-a205-8e7f3089f4ec completed successfully for user f2f96927-7062-459d-9674-ffd5ec726fcf","file":"service.go","line":363}
+{"timestamp":"2025-08-29T05:28:15.124Z","level":"INFO","category":"API","message":"SeatValidationAndPlaceOrder: order created successfully","file":"handler.go","line":197}
+{"timestamp":"2025-08-29T05:46:29.008Z","level":"INFO","category":"APP","message":"Shutdown signal received, initiating graceful shutdown","file":"main.go","line":235}
+{"timestamp":"2025-08-29T05:46:29.008Z","level":"INFO","category":"HTTP","message":"✅ Order Service shutdown complete","file":"main.go","line":242}
+{"timestamp":"2025-08-29T05:46:29.008Z","level":"INFO","category":"DATABASE","message":"Redis connection closed","file":"main.go","line":152}
+{"timestamp":"2025-08-29T05:46:29.009Z","level":"INFO","category":"DATABASE","message":"PostgreSQL connection closed","file":"main.go","line":148}
+{"timestamp":"2025-08-29T05:46:29.009Z","level":"INFO","category":"LOGGER","message":"Closing log file","file":"logger.go","line":216}
+{"timestamp":"2025-08-29T05:46:40.787Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T05:46:40.788Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T05:46:40.788Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":142}
+{"timestamp":"2025-08-29T05:46:40.796Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":148}
+{"timestamp":"2025-08-29T05:46:40.796Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":156}
+{"timestamp":"2025-08-29T05:46:40.839Z","level":"INFO","category":"DATABASE","message":"✅ PostgreSQL connection successful","file":"main.go","line":109}
+{"timestamp":"2025-08-29T05:46:40.841Z","level":"INFO","category":"DATABASE","message":"✅ Redis connection successful","file":"main.go","line":125}
+{"timestamp":"2025-08-29T05:46:40.841Z","level":"INFO","category":"KAFKA","message":"Initializing Kafka producer","file":"main.go","line":168}
+{"timestamp":"2025-08-29T05:46:40.841Z","level":"INFO","category":"KAFKA","message":"Kafka producer initialized successfully","file":"main.go","line":172}
+{"timestamp":"2025-08-29T05:46:40.841Z","level":"INFO","category":"KAFKA","message":"Ensuring required topics exist","file":"main.go","line":175}
+{"timestamp":"2025-08-29T05:46:42.068Z","level":"INFO","category":"KAFKA","message":"Required topics ensured successfully","file":"main.go","line":188}
+{"timestamp":"2025-08-29T05:46:42.068Z","level":"INFO","category":"SERVICE","message":"Initializing ticket service","file":"main.go","line":191}
+{"timestamp":"2025-08-29T05:46:42.068Z","level":"INFO","category":"SERVICE","message":"Initializing order service","file":"main.go","line":194}
+{"timestamp":"2025-08-29T05:46:42.069Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T05:46:42.069Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T05:46:42.070Z","level":"INFO","category":"HTTP","message":"Setting up router and middleware","file":"main.go","line":213}
+{"timestamp":"2025-08-29T05:46:42.087Z","level":"INFO","category":"AUTH","message":"JWT middleware applied globally","file":"main.go","line":219}
+{"timestamp":"2025-08-29T05:46:42.088Z","level":"INFO","category":"ROUTER","message":"Order routes registered","file":"main.go","line":231}
+{"timestamp":"2025-08-29T05:46:42.088Z","level":"INFO","category":"ROUTER","message":"Ticket routes registered","file":"main.go","line":240}
+{"timestamp":"2025-08-29T05:46:42.088Z","level":"INFO","category":"REDIS","message":"Starting seat unlock subscription","file":"main.go","line":249}
+{"timestamp":"2025-08-29T05:46:42.089Z","level":"INFO","category":"APP","message":"Service started successfully, waiting for shutdown signal","file":"main.go","line":263}
+{"timestamp":"2025-08-29T05:46:42.089Z","level":"INFO","category":"HTTP","message":"🚀 Order Service running on :8083","file":"main.go","line":254}
+{"timestamp":"2025-08-29T05:46:54.418Z","level":"INFO","category":"API","message":"SeatValidationAndPlaceOrder: received request","file":"handler.go","line":171}
+{"timestamp":"2025-08-29T05:46:54.418Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SessionID: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"handler.go","line":182}
+{"timestamp":"2025-08-29T05:46:54.418Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SeatIDs: [441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755]","file":"handler.go","line":183}
+{"timestamp":"2025-08-29T05:46:54.419Z","level":"INFO","category":"ORDER","message":"Starting seat validation and order placement process","file":"service.go","line":179}
+{"timestamp":"2025-08-29T05:46:54.419Z","level":"DEBUG","category":"ORDER","message":"Order request: {SessionID:79ad4660-5fbf-48f8-94a4-1994356cc5e4 SeatIDs:[441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755]}","file":"service.go","line":194}
+{"timestamp":"2025-08-29T05:46:54.419Z","level":"DEBUG","category":"AUTH","message":"Requesting M2M token for seat validation","file":"service.go","line":202}
+{"timestamp":"2025-08-29T05:46:54.436Z","level":"DEBUG","category":"ORDER","message":"Generated order ID: e5c3bcf5-0c1d-4925-b279-22a3879e6d75","file":"service.go","line":211}
+{"timestamp":"2025-08-29T05:46:54.436Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Session ID: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"service.go","line":220}
+{"timestamp":"2025-08-29T05:46:54.436Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Validation URL: http://localhost:8082/api/event-query/internal/v1/sessions/79ad4660-5fbf-48f8-94a4-1994356cc5e4/seats/validate","file":"service.go","line":226}
+{"timestamp":"2025-08-29T05:46:54.437Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Request body: {\"seatIds\":[\"441e5b1d-9eb5-4e96-8d65-9f8a54eafb36\",\"c6fa2855-932d-4698-ba83-f71525749755\"]}","file":"service.go","line":228}
+{"timestamp":"2025-08-29T05:46:54.489Z","level":"INFO","category":"SEAT_VALIDATION","message":"Seat validation successful","file":"service.go","line":250}
+{"timestamp":"2025-08-29T05:46:54.489Z","level":"DEBUG","category":"REDIS","message":"Attempting to lock seats in Redis","file":"service.go","line":253}
+{"timestamp":"2025-08-29T05:46:54.490Z","level":"INFO","category":"REDIS","message":"Seats locked successfully","file":"service.go","line":265}
+{"timestamp":"2025-08-29T05:46:55.519Z","level":"INFO","category":"KAFKA","message":"Published seats locked event for 2 seats","file":"service.go","line":438}
+{"timestamp":"2025-08-29T05:46:55.519Z","level":"DEBUG","category":"SEAT_DETAILS","message":"Requesting seat details for ticket creation","file":"service.go","line":272}
+{"timestamp":"2025-08-29T05:46:55.565Z","level":"INFO","category":"SEAT_DETAILS","message":"Retrieved details for 2 seats","file":"service.go","line":302}
+{"timestamp":"2025-08-29T05:46:55.570Z","level":"INFO","category":"ORDER","message":"Placing order: e5c3bcf5-0c1d-4925-b279-22a3879e6d75 for session: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"service.go","line":68}
+{"timestamp":"2025-08-29T05:46:55.570Z","level":"DEBUG","category":"ORDER","message":"Creating order in DB...","file":"service.go","line":70}
+{"timestamp":"2025-08-29T05:46:55.581Z","level":"INFO","category":"KAFKA","message":"Order created successfully, publishing to Kafka...","file":"service.go","line":78}
+{"timestamp":"2025-08-29T05:46:56.599Z","level":"INFO","category":"KAFKA","message":"Published order created event for order: e5c3bcf5-0c1d-4925-b279-22a3879e6d75","file":"service.go","line":384}
+{"timestamp":"2025-08-29T05:46:56.600Z","level":"INFO","category":"ORDER","message":"Order e5c3bcf5-0c1d-4925-b279-22a3879e6d75 placed successfully","file":"service.go","line":83}
+{"timestamp":"2025-08-29T05:46:56.600Z","level":"INFO","category":"TICKET","message":"Creating tickets for each seat","file":"service.go","line":323}
+{"timestamp":"2025-08-29T05:46:56.612Z","level":"INFO","category":"TICKET","message":"Created ticket 180144ae-5e4d-4966-a292-8ab84b7be0f5 for seat 441e5b1d-9eb5-4e96-8d65-9f8a54eafb36","file":"service.go","line":345}
+{"timestamp":"2025-08-29T05:46:56.621Z","level":"INFO","category":"TICKET","message":"Created ticket 61b4bd35-de59-4967-8f54-4277f86c7d2d for seat c6fa2855-932d-4698-ba83-f71525749755","file":"service.go","line":345}
+{"timestamp":"2025-08-29T05:46:56.625Z","level":"INFO","category":"ORDER","message":"Updated order price to: $2000.00","file":"service.go","line":358}
+{"timestamp":"2025-08-29T05:46:56.625Z","level":"INFO","category":"ORDER","message":"Order e5c3bcf5-0c1d-4925-b279-22a3879e6d75 completed successfully for user f2f96927-7062-459d-9674-ffd5ec726fcf","file":"service.go","line":363}
+{"timestamp":"2025-08-29T05:46:56.625Z","level":"INFO","category":"API","message":"SeatValidationAndPlaceOrder: order created successfully","file":"handler.go","line":197}
+{"timestamp":"2025-08-29T05:53:42.142Z","level":"INFO","category":"APP","message":"Shutdown signal received, initiating graceful shutdown","file":"main.go","line":266}
+{"timestamp":"2025-08-29T05:53:42.142Z","level":"INFO","category":"HTTP","message":"✅ Order Service shutdown complete","file":"main.go","line":273}
+{"timestamp":"2025-08-29T05:53:42.143Z","level":"INFO","category":"DATABASE","message":"Redis connection closed","file":"main.go","line":165}
+{"timestamp":"2025-08-29T05:53:42.143Z","level":"INFO","category":"DATABASE","message":"PostgreSQL connection closed","file":"main.go","line":161}
+{"timestamp":"2025-08-29T05:53:42.143Z","level":"INFO","category":"LOGGER","message":"Closing log file","file":"logger.go","line":216}
+{"timestamp":"2025-08-29T05:53:52.487Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T05:53:52.487Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T05:53:52.487Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":142}
+{"timestamp":"2025-08-29T05:53:52.488Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":148}
+{"timestamp":"2025-08-29T05:53:52.488Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":156}
+{"timestamp":"2025-08-29T05:53:52.510Z","level":"INFO","category":"DATABASE","message":"✅ PostgreSQL connection successful","file":"main.go","line":109}
+{"timestamp":"2025-08-29T05:53:52.513Z","level":"INFO","category":"DATABASE","message":"✅ Redis connection successful","file":"main.go","line":125}
+{"timestamp":"2025-08-29T05:53:52.513Z","level":"INFO","category":"KAFKA","message":"Initializing Kafka producer","file":"main.go","line":168}
+{"timestamp":"2025-08-29T05:53:52.514Z","level":"INFO","category":"KAFKA","message":"Kafka producer initialized successfully","file":"main.go","line":172}
+{"timestamp":"2025-08-29T05:53:52.514Z","level":"INFO","category":"KAFKA","message":"Ensuring required topics exist","file":"main.go","line":175}
+{"timestamp":"2025-08-29T05:53:53.536Z","level":"INFO","category":"KAFKA","message":"Required topics ensured successfully","file":"main.go","line":188}
+{"timestamp":"2025-08-29T05:53:53.536Z","level":"INFO","category":"SERVICE","message":"Initializing ticket service","file":"main.go","line":191}
+{"timestamp":"2025-08-29T05:53:53.537Z","level":"INFO","category":"SERVICE","message":"Initializing order service","file":"main.go","line":194}
+{"timestamp":"2025-08-29T05:53:53.537Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T05:53:53.537Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T05:53:53.537Z","level":"INFO","category":"HTTP","message":"Setting up router and middleware","file":"main.go","line":213}
+{"timestamp":"2025-08-29T05:53:53.553Z","level":"INFO","category":"AUTH","message":"JWT middleware applied globally","file":"main.go","line":219}
+{"timestamp":"2025-08-29T05:53:53.553Z","level":"INFO","category":"ROUTER","message":"Order routes registered","file":"main.go","line":231}
+{"timestamp":"2025-08-29T05:53:53.554Z","level":"INFO","category":"ROUTER","message":"Ticket routes registered","file":"main.go","line":240}
+{"timestamp":"2025-08-29T05:53:53.554Z","level":"INFO","category":"REDIS","message":"Starting seat unlock subscription","file":"main.go","line":249}
+{"timestamp":"2025-08-29T05:53:53.555Z","level":"INFO","category":"APP","message":"Service started successfully, waiting for shutdown signal","file":"main.go","line":263}
+{"timestamp":"2025-08-29T05:53:53.555Z","level":"INFO","category":"HTTP","message":"🚀 Order Service running on :8083","file":"main.go","line":254}
+{"timestamp":"2025-08-29T05:54:05.648Z","level":"INFO","category":"API","message":"SeatValidationAndPlaceOrder: received request","file":"handler.go","line":171}
+{"timestamp":"2025-08-29T05:54:05.648Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SessionID: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"handler.go","line":182}
+{"timestamp":"2025-08-29T05:54:05.648Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SeatIDs: [441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755]","file":"handler.go","line":183}
+{"timestamp":"2025-08-29T05:54:05.648Z","level":"INFO","category":"ORDER","message":"Starting seat validation and order placement process","file":"service.go","line":179}
+{"timestamp":"2025-08-29T05:54:05.649Z","level":"DEBUG","category":"ORDER","message":"Order request: {SessionID:79ad4660-5fbf-48f8-94a4-1994356cc5e4 SeatIDs:[441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755]}","file":"service.go","line":194}
+{"timestamp":"2025-08-29T05:54:05.649Z","level":"DEBUG","category":"AUTH","message":"Requesting M2M token for seat validation","file":"service.go","line":202}
+{"timestamp":"2025-08-29T05:54:05.660Z","level":"DEBUG","category":"ORDER","message":"Generated order ID: fe0e8a55-afc3-46a5-bfab-3c43b0643825","file":"service.go","line":211}
+{"timestamp":"2025-08-29T05:54:05.660Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Session ID: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"service.go","line":220}
+{"timestamp":"2025-08-29T05:54:05.660Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Validation URL: http://localhost:8082/api/event-query/internal/v1/sessions/79ad4660-5fbf-48f8-94a4-1994356cc5e4/seats/validate","file":"service.go","line":226}
+{"timestamp":"2025-08-29T05:54:05.660Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Request body: {\"seatIds\":[\"441e5b1d-9eb5-4e96-8d65-9f8a54eafb36\",\"c6fa2855-932d-4698-ba83-f71525749755\"]}","file":"service.go","line":228}
+{"timestamp":"2025-08-29T05:54:05.708Z","level":"INFO","category":"SEAT_VALIDATION","message":"Seat validation successful","file":"service.go","line":250}
+{"timestamp":"2025-08-29T05:54:05.708Z","level":"DEBUG","category":"REDIS","message":"Attempting to lock seats in Redis","file":"service.go","line":253}
+{"timestamp":"2025-08-29T05:54:05.709Z","level":"INFO","category":"REDIS","message":"Seats locked successfully","file":"service.go","line":265}
+{"timestamp":"2025-08-29T05:54:06.724Z","level":"INFO","category":"KAFKA","message":"Published seats locked event for 2 seats","file":"service.go","line":444}
+{"timestamp":"2025-08-29T05:54:06.724Z","level":"DEBUG","category":"SEAT_DETAILS","message":"Requesting seat details for ticket creation","file":"service.go","line":272}
+{"timestamp":"2025-08-29T05:54:06.745Z","level":"INFO","category":"SEAT_DETAILS","message":"Retrieved details for 2 seats","file":"service.go","line":302}
+{"timestamp":"2025-08-29T05:54:06.745Z","level":"INFO","category":"ORDER","message":"Placing order: fe0e8a55-afc3-46a5-bfab-3c43b0643825 for session: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"service.go","line":68}
+{"timestamp":"2025-08-29T05:54:06.745Z","level":"DEBUG","category":"ORDER","message":"Creating order in DB...","file":"service.go","line":70}
+{"timestamp":"2025-08-29T05:54:06.749Z","level":"INFO","category":"KAFKA","message":"Order created successfully, publishing to Kafka...","file":"service.go","line":78}
+{"timestamp":"2025-08-29T05:54:07.761Z","level":"INFO","category":"KAFKA","message":"Published order created event for order: fe0e8a55-afc3-46a5-bfab-3c43b0643825","file":"service.go","line":384}
+{"timestamp":"2025-08-29T05:54:07.761Z","level":"INFO","category":"ORDER","message":"Order fe0e8a55-afc3-46a5-bfab-3c43b0643825 placed successfully","file":"service.go","line":83}
+{"timestamp":"2025-08-29T05:54:07.761Z","level":"INFO","category":"TICKET","message":"Creating tickets for each seat","file":"service.go","line":323}
+{"timestamp":"2025-08-29T05:54:07.772Z","level":"INFO","category":"TICKET","message":"Created ticket ecafb5ec-2391-4f06-b04c-527f59def04b for seat 441e5b1d-9eb5-4e96-8d65-9f8a54eafb36","file":"service.go","line":345}
+{"timestamp":"2025-08-29T05:54:07.782Z","level":"INFO","category":"TICKET","message":"Created ticket 84f9077a-ad7e-4cba-868e-2483e5b1e850 for seat c6fa2855-932d-4698-ba83-f71525749755","file":"service.go","line":345}
+{"timestamp":"2025-08-29T05:54:07.785Z","level":"INFO","category":"ORDER","message":"Updated order price to: $2000.00","file":"service.go","line":358}
+{"timestamp":"2025-08-29T05:54:07.785Z","level":"INFO","category":"ORDER","message":"Order fe0e8a55-afc3-46a5-bfab-3c43b0643825 completed successfully for user f2f96927-7062-459d-9674-ffd5ec726fcf","file":"service.go","line":363}
+{"timestamp":"2025-08-29T05:54:07.785Z","level":"INFO","category":"API","message":"SeatValidationAndPlaceOrder: order created successfully","file":"handler.go","line":197}
+{"timestamp":"2025-08-29T06:01:29.745Z","level":"INFO","category":"API","message":"UpdateOrder: orderId=a9c62874-6d7d-4271-a205-8e7f3089f4ec","file":"handler.go","line":80}
+{"timestamp":"2025-08-29T06:01:29.745Z","level":"DEBUG","category":"API","message":"UpdateOrder: decoded update data: {BaseModel:{} OrderID: UserID: SessionID: SeatIDs:[] Status:confirmed Price:0 CreatedAt:0001-01-01 00:00:00 +0000 UTC}","file":"handler.go","line":88}
+{"timestamp":"2025-08-29T06:01:29.745Z","level":"INFO","category":"ORDER","message":"Updating order: a9c62874-6d7d-4271-a205-8e7f3089f4ec","file":"service.go","line":93}
+{"timestamp":"2025-08-29T06:01:29.750Z","level":"ERROR","category":"ORDER","message":"Failed to update order a9c62874-6d7d-4271-a205-8e7f3089f4ec: pq: invalid input syntax for type uuid: \"\"","file":"service.go","line":109}
+{"timestamp":"2025-08-29T06:01:29.750Z","level":"ERROR","category":"API","message":"UpdateOrder: failed to update order: failed to update order: pq: invalid input syntax for type uuid: \"\"","file":"handler.go","line":94}
+{"timestamp":"2025-08-29T06:02:02.658Z","level":"INFO","category":"API","message":"UpdateOrder: orderId=a9c62874-6d7d-4271-a205-8e7f3089f4ec","file":"handler.go","line":80}
+{"timestamp":"2025-08-29T06:02:02.658Z","level":"DEBUG","category":"API","message":"UpdateOrder: decoded update data: {BaseModel:{} OrderID: UserID: SessionID: SeatIDs:[] Status:confirmed Price:0 CreatedAt:0001-01-01 00:00:00 +0000 UTC}","file":"handler.go","line":88}
+{"timestamp":"2025-08-29T06:02:02.658Z","level":"INFO","category":"ORDER","message":"Updating order: a9c62874-6d7d-4271-a205-8e7f3089f4ec","file":"service.go","line":93}
+{"timestamp":"2025-08-29T06:02:02.660Z","level":"ERROR","category":"ORDER","message":"Failed to update order a9c62874-6d7d-4271-a205-8e7f3089f4ec: pq: invalid input syntax for type uuid: \"\"","file":"service.go","line":109}
+{"timestamp":"2025-08-29T06:02:02.660Z","level":"ERROR","category":"API","message":"UpdateOrder: failed to update order: failed to update order: pq: invalid input syntax for type uuid: \"\"","file":"handler.go","line":94}
+{"timestamp":"2025-08-29T06:02:04.987Z","level":"INFO","category":"API","message":"UpdateOrder: orderId=a9c62874-6d7d-4271-a205-8e7f3089f4ec","file":"handler.go","line":80}
+{"timestamp":"2025-08-29T06:02:04.987Z","level":"DEBUG","category":"API","message":"UpdateOrder: decoded update data: {BaseModel:{} OrderID: UserID: SessionID: SeatIDs:[] Status:confirmed Price:0 CreatedAt:0001-01-01 00:00:00 +0000 UTC}","file":"handler.go","line":88}
+{"timestamp":"2025-08-29T06:02:04.987Z","level":"INFO","category":"ORDER","message":"Updating order: a9c62874-6d7d-4271-a205-8e7f3089f4ec","file":"service.go","line":93}
+{"timestamp":"2025-08-29T06:02:04.989Z","level":"ERROR","category":"ORDER","message":"Failed to update order a9c62874-6d7d-4271-a205-8e7f3089f4ec: pq: invalid input syntax for type uuid: \"\"","file":"service.go","line":109}
+{"timestamp":"2025-08-29T06:02:04.989Z","level":"ERROR","category":"API","message":"UpdateOrder: failed to update order: failed to update order: pq: invalid input syntax for type uuid: \"\"","file":"handler.go","line":94}
+{"timestamp":"2025-08-29T06:05:33.321Z","level":"INFO","category":"APP","message":"Shutdown signal received, initiating graceful shutdown","file":"main.go","line":266}
+{"timestamp":"2025-08-29T06:05:33.321Z","level":"INFO","category":"HTTP","message":"✅ Order Service shutdown complete","file":"main.go","line":273}
+{"timestamp":"2025-08-29T06:05:33.321Z","level":"INFO","category":"DATABASE","message":"Redis connection closed","file":"main.go","line":165}
+{"timestamp":"2025-08-29T06:05:33.323Z","level":"INFO","category":"DATABASE","message":"PostgreSQL connection closed","file":"main.go","line":161}
+{"timestamp":"2025-08-29T06:05:33.323Z","level":"INFO","category":"LOGGER","message":"Closing log file","file":"logger.go","line":216}
+{"timestamp":"2025-08-29T06:05:38.004Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T06:05:38.004Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T06:05:38.004Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":142}
+{"timestamp":"2025-08-29T06:05:38.004Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":148}
+{"timestamp":"2025-08-29T06:05:38.004Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":156}
+{"timestamp":"2025-08-29T06:05:38.027Z","level":"INFO","category":"DATABASE","message":"✅ PostgreSQL connection successful","file":"main.go","line":109}
+{"timestamp":"2025-08-29T06:05:38.031Z","level":"INFO","category":"DATABASE","message":"✅ Redis connection successful","file":"main.go","line":125}
+{"timestamp":"2025-08-29T06:05:38.031Z","level":"INFO","category":"KAFKA","message":"Initializing Kafka producer","file":"main.go","line":168}
+{"timestamp":"2025-08-29T06:05:38.031Z","level":"INFO","category":"KAFKA","message":"Kafka producer initialized successfully","file":"main.go","line":172}
+{"timestamp":"2025-08-29T06:05:38.032Z","level":"INFO","category":"KAFKA","message":"Ensuring required topics exist","file":"main.go","line":175}
+{"timestamp":"2025-08-29T06:05:39.059Z","level":"INFO","category":"KAFKA","message":"Required topics ensured successfully","file":"main.go","line":188}
+{"timestamp":"2025-08-29T06:05:39.059Z","level":"INFO","category":"SERVICE","message":"Initializing ticket service","file":"main.go","line":191}
+{"timestamp":"2025-08-29T06:05:39.059Z","level":"INFO","category":"SERVICE","message":"Initializing order service","file":"main.go","line":194}
+{"timestamp":"2025-08-29T06:05:39.060Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T06:05:39.060Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T06:05:39.060Z","level":"INFO","category":"HTTP","message":"Setting up router and middleware","file":"main.go","line":213}
+{"timestamp":"2025-08-29T06:05:39.072Z","level":"INFO","category":"AUTH","message":"JWT middleware applied globally","file":"main.go","line":219}
+{"timestamp":"2025-08-29T06:05:39.072Z","level":"INFO","category":"ROUTER","message":"Order routes registered","file":"main.go","line":231}
+{"timestamp":"2025-08-29T06:05:39.072Z","level":"INFO","category":"ROUTER","message":"Ticket routes registered","file":"main.go","line":240}
+{"timestamp":"2025-08-29T06:05:39.072Z","level":"INFO","category":"REDIS","message":"Starting seat unlock subscription","file":"main.go","line":249}
+{"timestamp":"2025-08-29T06:05:39.073Z","level":"INFO","category":"APP","message":"Service started successfully, waiting for shutdown signal","file":"main.go","line":263}
+{"timestamp":"2025-08-29T06:05:39.073Z","level":"INFO","category":"HTTP","message":"🚀 Order Service running on :8083","file":"main.go","line":254}
+{"timestamp":"2025-08-29T06:05:50.664Z","level":"INFO","category":"API","message":"UpdateOrder: orderId=a9c62874-6d7d-4271-a205-8e7f3089f4ec","file":"handler.go","line":81}
+{"timestamp":"2025-08-29T06:05:50.665Z","level":"DEBUG","category":"API","message":"UpdateOrder: raw request data: map[order_id:a9c62874-6d7d-4271-a205-8e7f3089f4ec seat_id:[441e5b1d-9eb5-4e96-8d65-9f8a54eafb36,c6fa2855-932d-4698-ba83-f71525749755] status:confirmed user_id:f2f96927-7062-459d-9674-ffd5ec726fcf]","file":"handler.go","line":90}
+{"timestamp":"2025-08-29T06:05:50.665Z","level":"DEBUG","category":"API","message":"UpdateOrder: processed update data: {BaseModel:{} OrderID:a9c62874-6d7d-4271-a205-8e7f3089f4ec UserID:f2f96927-7062-459d-9674-ffd5ec726fcf SessionID: SeatIDs:[441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755] Status:confirmed Price:0 CreatedAt:0001-01-01 00:00:00 +0000 UTC}","file":"handler.go","line":154}
+{"timestamp":"2025-08-29T06:05:50.666Z","level":"DEBUG","category":"ORDER","message":"Getting order by ID: a9c62874-6d7d-4271-a205-8e7f3089f4ec","file":"service.go","line":88}
+{"timestamp":"2025-08-29T06:05:50.669Z","level":"DEBUG","category":"API","message":"UpdateOrder: current order data: \u0026{BaseModel:{} OrderID:a9c62874-6d7d-4271-a205-8e7f3089f4ec UserID:f2f96927-7062-459d-9674-ffd5ec726fcf SessionID:79ad4660-5fbf-48f8-94a4-1994356cc5e4 SeatIDs:[441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755] Status:pending Price:2000 CreatedAt:2025-08-29 05:28:15.095525 +0000 +0000}","file":"handler.go","line":164}
+{"timestamp":"2025-08-29T06:05:50.670Z","level":"INFO","category":"ORDER","message":"Updating order: a9c62874-6d7d-4271-a205-8e7f3089f4ec","file":"service.go","line":93}
+{"timestamp":"2025-08-29T06:05:50.671Z","level":"DEBUG","category":"ORDER","message":"Merged order data: {BaseModel:{} OrderID:a9c62874-6d7d-4271-a205-8e7f3089f4ec UserID:f2f96927-7062-459d-9674-ffd5ec726fcf SessionID:79ad4660-5fbf-48f8-94a4-1994356cc5e4 SeatIDs:[441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755] Status:confirmed Price:2000 CreatedAt:2025-08-29 05:28:15.095525 +0000 +0000}","file":"service.go","line":122}
+{"timestamp":"2025-08-29T06:05:51.707Z","level":"INFO","category":"KAFKA","message":"Published order updated event for order: a9c62874-6d7d-4271-a205-8e7f3089f4ec","file":"service.go","line":416}
+{"timestamp":"2025-08-29T06:05:51.707Z","level":"INFO","category":"ORDER","message":"Order a9c62874-6d7d-4271-a205-8e7f3089f4ec updated successfully","file":"service.go","line":133}
+{"timestamp":"2025-08-29T06:05:51.707Z","level":"INFO","category":"API","message":"UpdateOrder: order updated successfully","file":"handler.go","line":172}
+{"timestamp":"2025-08-29T06:05:51.707Z","level":"DEBUG","category":"ORDER","message":"Getting order by ID: a9c62874-6d7d-4271-a205-8e7f3089f4ec","file":"service.go","line":88}
+{"timestamp":"2025-08-29T06:05:51.708Z","level":"INFO","category":"API","message":"UpdateOrder: response sent successfully","file":"handler.go","line":185}
+{"timestamp":"2025-08-29T06:07:50.133Z","level":"INFO","category":"API","message":"DeleteOrder: orderId=a9c62874-6d7d-4271-a205-8e7f3089f4ec","file":"handler.go","line":190}
+{"timestamp":"2025-08-29T06:07:50.133Z","level":"INFO","category":"ORDER","message":"Cancelling order: a9c62874-6d7d-4271-a205-8e7f3089f4ec","file":"service.go","line":138}
+{"timestamp":"2025-08-29T06:07:50.135Z","level":"WARN","category":"ORDER","message":"Cannot cancel non-pending order: a9c62874-6d7d-4271-a205-8e7f3089f4ec (status: confirmed)","file":"service.go","line":145}
+{"timestamp":"2025-08-29T06:07:50.135Z","level":"ERROR","category":"API","message":"DeleteOrder: failed to cancel order: cannot cancel a non-pending order","file":"handler.go","line":194}
+{"timestamp":"2025-08-29T06:08:19.636Z","level":"INFO","category":"API","message":"DeleteOrder: orderId=e5c3bcf5-0c1d-4925-b279-22a3879e6d75","file":"handler.go","line":190}
+{"timestamp":"2025-08-29T06:08:19.636Z","level":"INFO","category":"ORDER","message":"Cancelling order: e5c3bcf5-0c1d-4925-b279-22a3879e6d75","file":"service.go","line":138}
+{"timestamp":"2025-08-29T06:08:19.642Z","level":"INFO","category":"REDIS","message":"Seats unlocked for cancelled order e5c3bcf5-0c1d-4925-b279-22a3879e6d75","file":"service.go","line":159}
+{"timestamp":"2025-08-29T06:08:20.669Z","level":"INFO","category":"KAFKA","message":"Published order cancelled event for order: e5c3bcf5-0c1d-4925-b279-22a3879e6d75","file":"service.go","line":432}
+{"timestamp":"2025-08-29T06:08:20.669Z","level":"INFO","category":"ORDER","message":"Order e5c3bcf5-0c1d-4925-b279-22a3879e6d75 cancelled successfully","file":"service.go","line":166}
+{"timestamp":"2025-08-29T06:08:20.669Z","level":"INFO","category":"API","message":"DeleteOrder: order cancelled successfully","file":"handler.go","line":198}
+{"timestamp":"2025-08-29T06:08:20.669Z","level":"INFO","category":"API","message":"DeleteOrder: response sent successfully","file":"handler.go","line":201}
+{"timestamp":"2025-08-29T06:11:47.764Z","level":"INFO","category":"APP","message":"Shutdown signal received, initiating graceful shutdown","file":"main.go","line":266}
+{"timestamp":"2025-08-29T06:11:47.765Z","level":"INFO","category":"HTTP","message":"✅ Order Service shutdown complete","file":"main.go","line":273}
+{"timestamp":"2025-08-29T06:11:47.765Z","level":"INFO","category":"DATABASE","message":"Redis connection closed","file":"main.go","line":165}
+{"timestamp":"2025-08-29T06:11:47.765Z","level":"INFO","category":"DATABASE","message":"PostgreSQL connection closed","file":"main.go","line":161}
+{"timestamp":"2025-08-29T06:11:47.765Z","level":"INFO","category":"LOGGER","message":"Closing log file","file":"logger.go","line":216}
+{"timestamp":"2025-08-29T06:11:56.458Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T06:11:56.458Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T06:11:56.458Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":142}
+{"timestamp":"2025-08-29T06:11:56.467Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":148}
+{"timestamp":"2025-08-29T06:11:56.468Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":156}
+{"timestamp":"2025-08-29T06:11:56.492Z","level":"INFO","category":"DATABASE","message":"✅ PostgreSQL connection successful","file":"main.go","line":109}
+{"timestamp":"2025-08-29T06:11:56.495Z","level":"INFO","category":"DATABASE","message":"✅ Redis connection successful","file":"main.go","line":125}
+{"timestamp":"2025-08-29T06:11:56.495Z","level":"INFO","category":"KAFKA","message":"Initializing Kafka producer","file":"main.go","line":168}
+{"timestamp":"2025-08-29T06:11:56.495Z","level":"INFO","category":"KAFKA","message":"Kafka producer initialized successfully","file":"main.go","line":173}
+{"timestamp":"2025-08-29T06:11:56.496Z","level":"INFO","category":"KAFKA","message":"Ensuring required topics exist","file":"main.go","line":176}
+{"timestamp":"2025-08-29T06:11:57.518Z","level":"INFO","category":"KAFKA","message":"Required topics ensured successfully","file":"main.go","line":189}
+{"timestamp":"2025-08-29T06:11:57.518Z","level":"INFO","category":"SERVICE","message":"Initializing ticket service","file":"main.go","line":192}
+{"timestamp":"2025-08-29T06:11:57.518Z","level":"INFO","category":"SERVICE","message":"Initializing order service","file":"main.go","line":195}
+{"timestamp":"2025-08-29T06:11:57.519Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T06:11:57.519Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T06:11:57.519Z","level":"INFO","category":"HTTP","message":"Setting up router and middleware","file":"main.go","line":214}
+{"timestamp":"2025-08-29T06:11:57.537Z","level":"INFO","category":"AUTH","message":"JWT middleware applied globally","file":"main.go","line":220}
+{"timestamp":"2025-08-29T06:11:57.537Z","level":"INFO","category":"ROUTER","message":"Order routes registered","file":"main.go","line":232}
+{"timestamp":"2025-08-29T06:11:57.537Z","level":"INFO","category":"ROUTER","message":"Ticket routes registered","file":"main.go","line":241}
+{"timestamp":"2025-08-29T06:11:57.537Z","level":"INFO","category":"REDIS","message":"Starting seat unlock subscription","file":"main.go","line":250}
+{"timestamp":"2025-08-29T06:11:57.538Z","level":"INFO","category":"APP","message":"Service started successfully, waiting for shutdown signal","file":"main.go","line":264}
+{"timestamp":"2025-08-29T06:11:57.538Z","level":"INFO","category":"HTTP","message":"🚀 Order Service running on :8083","file":"main.go","line":255}
+{"timestamp":"2025-08-29T06:12:28.095Z","level":"INFO","category":"API","message":"SeatValidationAndPlaceOrder: received request","file":"handler.go","line":254}
+{"timestamp":"2025-08-29T06:12:28.095Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SessionID: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"handler.go","line":265}
+{"timestamp":"2025-08-29T06:12:28.096Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SeatIDs: [441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755]","file":"handler.go","line":266}
+{"timestamp":"2025-08-29T06:12:28.096Z","level":"INFO","category":"ORDER","message":"Starting seat validation and order placement process","file":"service.go","line":195}
+{"timestamp":"2025-08-29T06:12:28.096Z","level":"DEBUG","category":"ORDER","message":"Order request: {SessionID:79ad4660-5fbf-48f8-94a4-1994356cc5e4 SeatIDs:[441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755]}","file":"service.go","line":210}
+{"timestamp":"2025-08-29T06:12:28.096Z","level":"DEBUG","category":"AUTH","message":"Requesting M2M token for seat validation","file":"service.go","line":218}
+{"timestamp":"2025-08-29T06:12:28.108Z","level":"DEBUG","category":"ORDER","message":"Generated order ID: 84ddeb92-617f-460b-9cfe-328c28728fa6","file":"service.go","line":227}
+{"timestamp":"2025-08-29T06:12:28.109Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Session ID: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"service.go","line":236}
+{"timestamp":"2025-08-29T06:12:28.109Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Validation URL: http://localhost:8082/api/event-query/internal/v1/sessions/79ad4660-5fbf-48f8-94a4-1994356cc5e4/seats/validate","file":"service.go","line":242}
+{"timestamp":"2025-08-29T06:12:28.109Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Request body: {\"seatIds\":[\"441e5b1d-9eb5-4e96-8d65-9f8a54eafb36\",\"c6fa2855-932d-4698-ba83-f71525749755\"]}","file":"service.go","line":244}
+{"timestamp":"2025-08-29T06:12:28.170Z","level":"INFO","category":"SEAT_VALIDATION","message":"Seat validation successful","file":"service.go","line":266}
+{"timestamp":"2025-08-29T06:12:28.170Z","level":"DEBUG","category":"REDIS","message":"Attempting to lock seats in Redis","file":"service.go","line":269}
+{"timestamp":"2025-08-29T06:12:28.171Z","level":"INFO","category":"REDIS","message":"Seats locked successfully","file":"service.go","line":281}
+{"timestamp":"2025-08-29T06:12:29.188Z","level":"INFO","category":"KAFKA","message":"Published seats locked event for 2 seats","file":"service.go","line":460}
+{"timestamp":"2025-08-29T06:12:29.188Z","level":"DEBUG","category":"SEAT_DETAILS","message":"Requesting seat details for ticket creation","file":"service.go","line":288}
+{"timestamp":"2025-08-29T06:12:29.210Z","level":"INFO","category":"SEAT_DETAILS","message":"Retrieved details for 2 seats","file":"service.go","line":318}
+{"timestamp":"2025-08-29T06:12:29.210Z","level":"INFO","category":"ORDER","message":"Placing order: 84ddeb92-617f-460b-9cfe-328c28728fa6 for session: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"service.go","line":68}
+{"timestamp":"2025-08-29T06:12:29.210Z","level":"DEBUG","category":"ORDER","message":"Creating order in DB...","file":"service.go","line":70}
+{"timestamp":"2025-08-29T06:12:29.215Z","level":"INFO","category":"KAFKA","message":"Order created successfully, publishing to Kafka...","file":"service.go","line":78}
+{"timestamp":"2025-08-29T06:12:30.233Z","level":"INFO","category":"KAFKA","message":"Published order created event for order: 84ddeb92-617f-460b-9cfe-328c28728fa6","file":"service.go","line":400}
+{"timestamp":"2025-08-29T06:12:30.233Z","level":"INFO","category":"ORDER","message":"Order 84ddeb92-617f-460b-9cfe-328c28728fa6 placed successfully","file":"service.go","line":83}
+{"timestamp":"2025-08-29T06:12:30.233Z","level":"INFO","category":"TICKET","message":"Creating tickets for each seat","file":"service.go","line":339}
+{"timestamp":"2025-08-29T06:12:30.244Z","level":"INFO","category":"TICKET","message":"Created ticket c68b24bb-23f0-4894-a1e2-04943b28d945 for seat 441e5b1d-9eb5-4e96-8d65-9f8a54eafb36","file":"service.go","line":361}
+{"timestamp":"2025-08-29T06:12:30.255Z","level":"INFO","category":"TICKET","message":"Created ticket 0e1e5d04-2ad0-49cb-8759-15924d3ff767 for seat c6fa2855-932d-4698-ba83-f71525749755","file":"service.go","line":361}
+{"timestamp":"2025-08-29T06:12:30.259Z","level":"INFO","category":"ORDER","message":"Updated order price to: $2000.00","file":"service.go","line":374}
+{"timestamp":"2025-08-29T06:12:30.259Z","level":"INFO","category":"ORDER","message":"Order 84ddeb92-617f-460b-9cfe-328c28728fa6 completed successfully for user f2f96927-7062-459d-9674-ffd5ec726fcf","file":"service.go","line":379}
+{"timestamp":"2025-08-29T06:12:30.259Z","level":"INFO","category":"API","message":"SeatValidationAndPlaceOrder: order created successfully","file":"handler.go","line":280}
+{"timestamp":"2025-08-29T06:12:43.379Z","level":"INFO","category":"APP","message":"Shutdown signal received, initiating graceful shutdown","file":"main.go","line":267}
+{"timestamp":"2025-08-29T06:12:43.379Z","level":"INFO","category":"HTTP","message":"✅ Order Service shutdown complete","file":"main.go","line":274}
+{"timestamp":"2025-08-29T06:12:43.379Z","level":"INFO","category":"DATABASE","message":"Redis connection closed","file":"main.go","line":165}
+{"timestamp":"2025-08-29T06:12:43.380Z","level":"INFO","category":"DATABASE","message":"PostgreSQL connection closed","file":"main.go","line":161}
+{"timestamp":"2025-08-29T06:12:43.380Z","level":"INFO","category":"LOGGER","message":"Closing log file","file":"logger.go","line":216}
+{"timestamp":"2025-08-29T07:18:49.648Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T07:18:49.649Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T07:18:49.649Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":142}
+{"timestamp":"2025-08-29T07:18:49.657Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":148}
+{"timestamp":"2025-08-29T07:18:49.657Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":156}
+{"timestamp":"2025-08-29T07:18:49.683Z","level":"INFO","category":"DATABASE","message":"✅ PostgreSQL connection successful","file":"main.go","line":109}
+{"timestamp":"2025-08-29T07:18:49.688Z","level":"INFO","category":"DATABASE","message":"✅ Redis connection successful","file":"main.go","line":125}
+{"timestamp":"2025-08-29T07:18:49.688Z","level":"INFO","category":"KAFKA","message":"Initializing Kafka producer","file":"main.go","line":168}
+{"timestamp":"2025-08-29T07:18:49.688Z","level":"INFO","category":"KAFKA","message":"Kafka producer initialized successfully","file":"main.go","line":173}
+{"timestamp":"2025-08-29T07:18:49.688Z","level":"INFO","category":"KAFKA","message":"Ensuring required topics exist","file":"main.go","line":176}
+{"timestamp":"2025-08-29T07:18:50.714Z","level":"INFO","category":"KAFKA","message":"Required topics ensured successfully","file":"main.go","line":189}
+{"timestamp":"2025-08-29T07:18:50.714Z","level":"INFO","category":"SERVICE","message":"Initializing ticket service","file":"main.go","line":192}
+{"timestamp":"2025-08-29T07:18:50.715Z","level":"INFO","category":"SERVICE","message":"Initializing order service","file":"main.go","line":195}
+{"timestamp":"2025-08-29T07:18:50.715Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T07:18:50.715Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T07:18:50.715Z","level":"INFO","category":"HTTP","message":"Setting up router and middleware","file":"main.go","line":214}
+{"timestamp":"2025-08-29T07:18:50.730Z","level":"INFO","category":"AUTH","message":"JWT middleware applied globally","file":"main.go","line":220}
+{"timestamp":"2025-08-29T07:18:50.731Z","level":"INFO","category":"ROUTER","message":"Order routes registered under /api/order","file":"main.go","line":234}
+{"timestamp":"2025-08-29T07:18:50.731Z","level":"INFO","category":"ROUTER","message":"Ticket routes registered under /api/order/ticket","file":"main.go","line":244}
+{"timestamp":"2025-08-29T07:18:50.731Z","level":"INFO","category":"REDIS","message":"Starting seat unlock subscription","file":"main.go","line":254}
+{"timestamp":"2025-08-29T07:18:50.732Z","level":"INFO","category":"APP","message":"Service started successfully, waiting for shutdown signal","file":"main.go","line":268}
+{"timestamp":"2025-08-29T07:18:50.733Z","level":"INFO","category":"HTTP","message":"🚀 Order Service running on :8084","file":"main.go","line":259}
+{"timestamp":"2025-08-29T07:19:40.264Z","level":"INFO","category":"API","message":"SeatValidationAndPlaceOrder: received request","file":"handler.go","line":254}
+{"timestamp":"2025-08-29T07:19:40.264Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SessionID: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"handler.go","line":265}
+{"timestamp":"2025-08-29T07:19:40.264Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SeatIDs: [441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755]","file":"handler.go","line":266}
+{"timestamp":"2025-08-29T07:19:40.264Z","level":"INFO","category":"ORDER","message":"Starting seat validation and order placement process","file":"service.go","line":195}
+{"timestamp":"2025-08-29T07:19:40.264Z","level":"DEBUG","category":"ORDER","message":"Order request: {SessionID:79ad4660-5fbf-48f8-94a4-1994356cc5e4 SeatIDs:[441e5b1d-9eb5-4e96-8d65-9f8a54eafb36 c6fa2855-932d-4698-ba83-f71525749755]}","file":"service.go","line":210}
+{"timestamp":"2025-08-29T07:19:40.265Z","level":"DEBUG","category":"AUTH","message":"Requesting M2M token for seat validation","file":"service.go","line":218}
+{"timestamp":"2025-08-29T07:19:40.278Z","level":"DEBUG","category":"ORDER","message":"Generated order ID: d2184274-9d8f-437a-9c0a-f3a137adca7a","file":"service.go","line":227}
+{"timestamp":"2025-08-29T07:19:40.278Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Session ID: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"service.go","line":236}
+{"timestamp":"2025-08-29T07:19:40.278Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Validation URL: http://localhost:8082/api/event-query/internal/v1/sessions/79ad4660-5fbf-48f8-94a4-1994356cc5e4/seats/validate","file":"service.go","line":242}
+{"timestamp":"2025-08-29T07:19:40.278Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Request body: {\"seatIds\":[\"441e5b1d-9eb5-4e96-8d65-9f8a54eafb36\",\"c6fa2855-932d-4698-ba83-f71525749755\"]}","file":"service.go","line":244}
+{"timestamp":"2025-08-29T07:19:40.440Z","level":"INFO","category":"SEAT_VALIDATION","message":"Seat validation successful","file":"service.go","line":266}
+{"timestamp":"2025-08-29T07:19:40.440Z","level":"DEBUG","category":"REDIS","message":"Attempting to lock seats in Redis","file":"service.go","line":269}
+{"timestamp":"2025-08-29T07:19:40.442Z","level":"INFO","category":"REDIS","message":"Seats locked successfully","file":"service.go","line":281}
+{"timestamp":"2025-08-29T07:19:41.459Z","level":"INFO","category":"KAFKA","message":"Published seats locked event for 2 seats","file":"service.go","line":460}
+{"timestamp":"2025-08-29T07:19:41.459Z","level":"DEBUG","category":"SEAT_DETAILS","message":"Requesting seat details for ticket creation","file":"service.go","line":288}
+{"timestamp":"2025-08-29T07:19:41.497Z","level":"INFO","category":"SEAT_DETAILS","message":"Retrieved details for 2 seats","file":"service.go","line":318}
+{"timestamp":"2025-08-29T07:19:41.497Z","level":"INFO","category":"ORDER","message":"Placing order: d2184274-9d8f-437a-9c0a-f3a137adca7a for session: 79ad4660-5fbf-48f8-94a4-1994356cc5e4","file":"service.go","line":68}
+{"timestamp":"2025-08-29T07:19:41.497Z","level":"DEBUG","category":"ORDER","message":"Creating order in DB...","file":"service.go","line":70}
+{"timestamp":"2025-08-29T07:19:41.506Z","level":"INFO","category":"KAFKA","message":"Order created successfully, publishing to Kafka...","file":"service.go","line":78}
+{"timestamp":"2025-08-29T07:19:42.519Z","level":"INFO","category":"KAFKA","message":"Published order created event for order: d2184274-9d8f-437a-9c0a-f3a137adca7a","file":"service.go","line":400}
+{"timestamp":"2025-08-29T07:19:42.519Z","level":"INFO","category":"ORDER","message":"Order d2184274-9d8f-437a-9c0a-f3a137adca7a placed successfully","file":"service.go","line":83}
+{"timestamp":"2025-08-29T07:19:42.519Z","level":"INFO","category":"TICKET","message":"Creating tickets for each seat","file":"service.go","line":339}
+{"timestamp":"2025-08-29T07:19:42.534Z","level":"INFO","category":"TICKET","message":"Created ticket 6e6f3dc5-ecc8-4390-ae78-ad71d08c988d for seat 441e5b1d-9eb5-4e96-8d65-9f8a54eafb36","file":"service.go","line":361}
+{"timestamp":"2025-08-29T07:19:42.547Z","level":"INFO","category":"TICKET","message":"Created ticket 76455434-a459-45f2-8fe0-4538aab5d9a3 for seat c6fa2855-932d-4698-ba83-f71525749755","file":"service.go","line":361}
+{"timestamp":"2025-08-29T07:19:42.551Z","level":"INFO","category":"ORDER","message":"Updated order price to: $2000.00","file":"service.go","line":374}
+{"timestamp":"2025-08-29T07:19:42.551Z","level":"INFO","category":"ORDER","message":"Order d2184274-9d8f-437a-9c0a-f3a137adca7a completed successfully for user f2f96927-7062-459d-9674-ffd5ec726fcf","file":"service.go","line":379}
+{"timestamp":"2025-08-29T07:19:42.552Z","level":"INFO","category":"API","message":"SeatValidationAndPlaceOrder: order created successfully","file":"handler.go","line":280}
+{"timestamp":"2025-08-29T07:24:18.533Z","level":"INFO","category":"APP","message":"Shutdown signal received, initiating graceful shutdown","file":"main.go","line":271}
+{"timestamp":"2025-08-29T07:24:18.533Z","level":"INFO","category":"HTTP","message":"✅ Order Service shutdown complete","file":"main.go","line":278}
+{"timestamp":"2025-08-29T07:24:18.534Z","level":"INFO","category":"DATABASE","message":"Redis connection closed","file":"main.go","line":165}
+{"timestamp":"2025-08-29T07:24:18.534Z","level":"INFO","category":"DATABASE","message":"PostgreSQL connection closed","file":"main.go","line":161}
+{"timestamp":"2025-08-29T07:24:18.535Z","level":"INFO","category":"LOGGER","message":"Closing log file","file":"logger.go","line":216}
+{"timestamp":"2025-08-29T08:28:47.695Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T08:28:47.696Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T08:28:47.697Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":142}
+{"timestamp":"2025-08-29T08:28:47.698Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":148}
+{"timestamp":"2025-08-29T08:28:47.699Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":156}
+{"timestamp":"2025-08-29T08:28:47.957Z","level":"FATAL","category":"DATABASE","message":"Failed to connect to PostgreSQL: pq: password authentication failed for user \"appuser\"","file":"main.go","line":107}
+{"timestamp":"2025-08-29T08:30:14.744Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T08:30:14.744Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T08:30:14.745Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":142}
+{"timestamp":"2025-08-29T08:30:14.745Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":148}
+{"timestamp":"2025-08-29T08:30:14.746Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":156}
+{"timestamp":"2025-08-29T08:30:14.839Z","level":"INFO","category":"DATABASE","message":"✅ PostgreSQL connection successful","file":"main.go","line":109}
+{"timestamp":"2025-08-29T08:30:14.849Z","level":"INFO","category":"DATABASE","message":"✅ Redis connection successful","file":"main.go","line":125}
+{"timestamp":"2025-08-29T08:30:14.849Z","level":"INFO","category":"KAFKA","message":"Initializing Kafka producer","file":"main.go","line":168}
+{"timestamp":"2025-08-29T08:30:14.850Z","level":"INFO","category":"KAFKA","message":"Kafka producer initialized successfully","file":"main.go","line":173}
+{"timestamp":"2025-08-29T08:30:14.850Z","level":"INFO","category":"KAFKA","message":"Ensuring required topics exist","file":"main.go","line":176}
+{"timestamp":"2025-08-29T08:30:16.074Z","level":"INFO","category":"KAFKA","message":"Required topics ensured successfully","file":"main.go","line":189}
+{"timestamp":"2025-08-29T08:30:16.075Z","level":"INFO","category":"SERVICE","message":"Initializing ticket service","file":"main.go","line":192}
+{"timestamp":"2025-08-29T08:30:16.076Z","level":"INFO","category":"SERVICE","message":"Initializing order service","file":"main.go","line":195}
+{"timestamp":"2025-08-29T08:30:16.079Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T08:30:16.079Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T08:30:16.080Z","level":"INFO","category":"HTTP","message":"Setting up router and middleware","file":"main.go","line":214}
+{"timestamp":"2025-08-29T08:30:16.103Z","level":"INFO","category":"AUTH","message":"JWT middleware applied globally","file":"main.go","line":220}
+{"timestamp":"2025-08-29T08:30:16.105Z","level":"INFO","category":"ROUTER","message":"Order routes registered under /api/order","file":"main.go","line":234}
+{"timestamp":"2025-08-29T08:30:16.108Z","level":"INFO","category":"ROUTER","message":"Ticket routes registered under /api/order/ticket","file":"main.go","line":244}
+{"timestamp":"2025-08-29T08:30:16.109Z","level":"INFO","category":"REDIS","message":"Starting seat unlock subscription","file":"main.go","line":254}
+{"timestamp":"2025-08-29T08:30:16.112Z","level":"INFO","category":"APP","message":"Service started successfully, waiting for shutdown signal","file":"main.go","line":268}
+{"timestamp":"2025-08-29T08:30:16.112Z","level":"INFO","category":"HTTP","message":"🚀 Order Service running on :8084","file":"main.go","line":259}
+{"timestamp":"2025-08-29T08:31:33.243Z","level":"INFO","category":"APP","message":"Shutdown signal received, initiating graceful shutdown","file":"main.go","line":271}
+{"timestamp":"2025-08-29T08:31:33.243Z","level":"INFO","category":"HTTP","message":"✅ Order Service shutdown complete","file":"main.go","line":278}
+{"timestamp":"2025-08-29T08:31:33.246Z","level":"INFO","category":"DATABASE","message":"Redis connection closed","file":"main.go","line":165}
+{"timestamp":"2025-08-29T08:31:33.246Z","level":"INFO","category":"DATABASE","message":"PostgreSQL connection closed","file":"main.go","line":161}
+{"timestamp":"2025-08-29T08:31:33.247Z","level":"INFO","category":"LOGGER","message":"Closing log file","file":"logger.go","line":216}
+{"timestamp":"2025-08-29T08:34:17.294Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T08:34:17.295Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T08:34:17.295Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":142}
+{"timestamp":"2025-08-29T08:34:17.296Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":148}
+{"timestamp":"2025-08-29T08:34:17.297Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":156}
+{"timestamp":"2025-08-29T08:34:17.349Z","level":"INFO","category":"DATABASE","message":"✅ PostgreSQL connection successful","file":"main.go","line":109}
+{"timestamp":"2025-08-29T08:34:17.374Z","level":"INFO","category":"DATABASE","message":"✅ Redis connection successful","file":"main.go","line":125}
+{"timestamp":"2025-08-29T08:34:17.374Z","level":"INFO","category":"KAFKA","message":"Initializing Kafka producer","file":"main.go","line":168}
+{"timestamp":"2025-08-29T08:34:17.374Z","level":"INFO","category":"KAFKA","message":"Kafka producer initialized successfully","file":"main.go","line":173}
+{"timestamp":"2025-08-29T08:34:17.375Z","level":"INFO","category":"KAFKA","message":"Ensuring required topics exist","file":"main.go","line":176}
+{"timestamp":"2025-08-29T08:34:18.449Z","level":"INFO","category":"KAFKA","message":"Required topics ensured successfully","file":"main.go","line":189}
+{"timestamp":"2025-08-29T08:34:18.451Z","level":"INFO","category":"SERVICE","message":"Initializing ticket service","file":"main.go","line":192}
+{"timestamp":"2025-08-29T08:34:18.451Z","level":"INFO","category":"SERVICE","message":"Initializing order service","file":"main.go","line":195}
+{"timestamp":"2025-08-29T08:34:18.452Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T08:34:18.453Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T08:34:18.453Z","level":"INFO","category":"HTTP","message":"Setting up router and middleware","file":"main.go","line":214}
+{"timestamp":"2025-08-29T08:34:18.467Z","level":"INFO","category":"AUTH","message":"JWT middleware applied globally","file":"main.go","line":220}
+{"timestamp":"2025-08-29T08:34:18.468Z","level":"INFO","category":"ROUTER","message":"Order routes registered under /api/order","file":"main.go","line":234}
+{"timestamp":"2025-08-29T08:34:18.468Z","level":"INFO","category":"ROUTER","message":"Ticket routes registered under /api/order/ticket","file":"main.go","line":244}
+{"timestamp":"2025-08-29T08:34:18.468Z","level":"INFO","category":"REDIS","message":"Starting seat unlock subscription","file":"main.go","line":254}
+{"timestamp":"2025-08-29T08:34:18.471Z","level":"INFO","category":"APP","message":"Service started successfully, waiting for shutdown signal","file":"main.go","line":268}
+{"timestamp":"2025-08-29T08:34:18.471Z","level":"INFO","category":"HTTP","message":"🚀 Order Service running on :8084","file":"main.go","line":259}
+{"timestamp":"2025-08-29T08:34:39.289Z","level":"INFO","category":"API","message":"SeatValidationAndPlaceOrder: received request","file":"handler.go","line":254}
+{"timestamp":"2025-08-29T08:34:39.289Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SessionID: aafb31e0-9aaf-4430-8ec2-eb21ce11f55e","file":"handler.go","line":265}
+{"timestamp":"2025-08-29T08:34:39.289Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SeatIDs: [6f5de419-52c2-4453-acea-877e53e12dc4 b1dba05b-e937-4e37-be66-2a8fda88a1c6]","file":"handler.go","line":266}
+{"timestamp":"2025-08-29T08:34:39.289Z","level":"INFO","category":"ORDER","message":"Starting seat validation and order placement process","file":"service.go","line":195}
+{"timestamp":"2025-08-29T08:34:39.290Z","level":"DEBUG","category":"ORDER","message":"Order request: {SessionID:aafb31e0-9aaf-4430-8ec2-eb21ce11f55e SeatIDs:[6f5de419-52c2-4453-acea-877e53e12dc4 b1dba05b-e937-4e37-be66-2a8fda88a1c6]}","file":"service.go","line":210}
+{"timestamp":"2025-08-29T08:34:39.290Z","level":"DEBUG","category":"AUTH","message":"Requesting M2M token for seat validation","file":"service.go","line":218}
+{"timestamp":"2025-08-29T08:34:39.318Z","level":"ERROR","category":"AUTH","message":"Failed to get M2M token: failed to get token, status: 401 Unauthorized","file":"service.go","line":221}
+{"timestamp":"2025-08-29T08:34:39.318Z","level":"ERROR","category":"API","message":"SeatValidationAndPlaceOrder: seat validation failed: failed to get M2M token: failed to get token, status: 401 Unauthorized","file":"handler.go","line":271}
+{"timestamp":"2025-08-29T08:34:47.164Z","level":"INFO","category":"APP","message":"Shutdown signal received, initiating graceful shutdown","file":"main.go","line":271}
+{"timestamp":"2025-08-29T08:34:47.165Z","level":"INFO","category":"HTTP","message":"✅ Order Service shutdown complete","file":"main.go","line":278}
+{"timestamp":"2025-08-29T08:34:47.168Z","level":"INFO","category":"DATABASE","message":"Redis connection closed","file":"main.go","line":165}
+{"timestamp":"2025-08-29T08:34:47.170Z","level":"INFO","category":"DATABASE","message":"PostgreSQL connection closed","file":"main.go","line":161}
+{"timestamp":"2025-08-29T08:34:47.173Z","level":"INFO","category":"LOGGER","message":"Closing log file","file":"logger.go","line":216}
+{"timestamp":"2025-08-29T08:35:09.224Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T08:35:09.225Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T08:35:09.225Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":142}
+{"timestamp":"2025-08-29T08:35:09.226Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":148}
+{"timestamp":"2025-08-29T08:35:09.227Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":156}
+{"timestamp":"2025-08-29T08:35:09.277Z","level":"INFO","category":"DATABASE","message":"✅ PostgreSQL connection successful","file":"main.go","line":109}
+{"timestamp":"2025-08-29T08:35:09.289Z","level":"INFO","category":"DATABASE","message":"✅ Redis connection successful","file":"main.go","line":125}
+{"timestamp":"2025-08-29T08:35:09.290Z","level":"INFO","category":"KAFKA","message":"Initializing Kafka producer","file":"main.go","line":168}
+{"timestamp":"2025-08-29T08:35:09.290Z","level":"INFO","category":"KAFKA","message":"Kafka producer initialized successfully","file":"main.go","line":173}
+{"timestamp":"2025-08-29T08:35:09.290Z","level":"INFO","category":"KAFKA","message":"Ensuring required topics exist","file":"main.go","line":176}
+{"timestamp":"2025-08-29T08:35:10.334Z","level":"INFO","category":"KAFKA","message":"Required topics ensured successfully","file":"main.go","line":189}
+{"timestamp":"2025-08-29T08:35:10.334Z","level":"INFO","category":"SERVICE","message":"Initializing ticket service","file":"main.go","line":192}
+{"timestamp":"2025-08-29T08:35:10.335Z","level":"INFO","category":"SERVICE","message":"Initializing order service","file":"main.go","line":195}
+{"timestamp":"2025-08-29T08:35:10.335Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-08-29T08:35:10.336Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-08-29.log","file":"logger.go","line":69}
+{"timestamp":"2025-08-29T08:35:10.336Z","level":"INFO","category":"HTTP","message":"Setting up router and middleware","file":"main.go","line":214}
+{"timestamp":"2025-08-29T08:35:10.348Z","level":"INFO","category":"AUTH","message":"JWT middleware applied globally","file":"main.go","line":220}
+{"timestamp":"2025-08-29T08:35:10.348Z","level":"INFO","category":"ROUTER","message":"Order routes registered under /api/order","file":"main.go","line":234}
+{"timestamp":"2025-08-29T08:35:10.349Z","level":"INFO","category":"ROUTER","message":"Ticket routes registered under /api/order/ticket","file":"main.go","line":244}
+{"timestamp":"2025-08-29T08:35:10.349Z","level":"INFO","category":"REDIS","message":"Starting seat unlock subscription","file":"main.go","line":254}
+{"timestamp":"2025-08-29T08:35:10.351Z","level":"INFO","category":"HTTP","message":"🚀 Order Service running on :8084","file":"main.go","line":259}
+{"timestamp":"2025-08-29T08:35:10.351Z","level":"INFO","category":"APP","message":"Service started successfully, waiting for shutdown signal","file":"main.go","line":268}
+{"timestamp":"2025-08-29T08:35:16.385Z","level":"INFO","category":"API","message":"SeatValidationAndPlaceOrder: received request","file":"handler.go","line":254}
+{"timestamp":"2025-08-29T08:35:16.386Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SessionID: aafb31e0-9aaf-4430-8ec2-eb21ce11f55e","file":"handler.go","line":265}
+{"timestamp":"2025-08-29T08:35:16.386Z","level":"DEBUG","category":"API","message":"SeatValidationAndPlaceOrder: SeatIDs: [6f5de419-52c2-4453-acea-877e53e12dc4 b1dba05b-e937-4e37-be66-2a8fda88a1c6]","file":"handler.go","line":266}
+{"timestamp":"2025-08-29T08:35:16.386Z","level":"INFO","category":"ORDER","message":"Starting seat validation and order placement process","file":"service.go","line":195}
+{"timestamp":"2025-08-29T08:35:16.386Z","level":"DEBUG","category":"ORDER","message":"Order request: {SessionID:aafb31e0-9aaf-4430-8ec2-eb21ce11f55e SeatIDs:[6f5de419-52c2-4453-acea-877e53e12dc4 b1dba05b-e937-4e37-be66-2a8fda88a1c6]}","file":"service.go","line":210}
+{"timestamp":"2025-08-29T08:35:16.386Z","level":"DEBUG","category":"AUTH","message":"Requesting M2M token for seat validation","file":"service.go","line":218}
+{"timestamp":"2025-08-29T08:35:16.413Z","level":"DEBUG","category":"ORDER","message":"Generated order ID: 4083a95e-3032-45ff-92d0-7804404d79f1","file":"service.go","line":227}
+{"timestamp":"2025-08-29T08:35:16.413Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Session ID: aafb31e0-9aaf-4430-8ec2-eb21ce11f55e","file":"service.go","line":236}
+{"timestamp":"2025-08-29T08:35:16.413Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Validation URL: http://localhost:8082/api/event-query/internal/v1/sessions/aafb31e0-9aaf-4430-8ec2-eb21ce11f55e/seats/validate","file":"service.go","line":242}
+{"timestamp":"2025-08-29T08:35:16.414Z","level":"DEBUG","category":"SEAT_VALIDATION","message":"Request body: {\"seatIds\":[\"6f5de419-52c2-4453-acea-877e53e12dc4\",\"b1dba05b-e937-4e37-be66-2a8fda88a1c6\"]}","file":"service.go","line":244}
+{"timestamp":"2025-08-29T08:35:16.875Z","level":"INFO","category":"SEAT_VALIDATION","message":"Seat validation successful","file":"service.go","line":266}
+{"timestamp":"2025-08-29T08:35:16.875Z","level":"DEBUG","category":"REDIS","message":"Attempting to lock seats in Redis","file":"service.go","line":269}
+{"timestamp":"2025-08-29T08:35:16.878Z","level":"INFO","category":"REDIS","message":"Seats locked successfully","file":"service.go","line":281}
+{"timestamp":"2025-08-29T08:35:17.910Z","level":"INFO","category":"KAFKA","message":"Published seats locked event for 2 seats","file":"service.go","line":460}
+{"timestamp":"2025-08-29T08:35:17.910Z","level":"DEBUG","category":"SEAT_DETAILS","message":"Requesting seat details for ticket creation","file":"service.go","line":288}
+{"timestamp":"2025-08-29T08:35:17.984Z","level":"INFO","category":"SEAT_DETAILS","message":"Retrieved details for 2 seats","file":"service.go","line":318}
+{"timestamp":"2025-08-29T08:35:17.984Z","level":"INFO","category":"ORDER","message":"Placing order: 4083a95e-3032-45ff-92d0-7804404d79f1 for session: aafb31e0-9aaf-4430-8ec2-eb21ce11f55e","file":"service.go","line":68}
+{"timestamp":"2025-08-29T08:35:17.984Z","level":"DEBUG","category":"ORDER","message":"Creating order in DB...","file":"service.go","line":70}
+{"timestamp":"2025-08-29T08:35:17.994Z","level":"INFO","category":"KAFKA","message":"Order created successfully, publishing to Kafka...","file":"service.go","line":78}
+{"timestamp":"2025-08-29T08:35:19.105Z","level":"INFO","category":"KAFKA","message":"Published order created event for order: 4083a95e-3032-45ff-92d0-7804404d79f1","file":"service.go","line":400}
+{"timestamp":"2025-08-29T08:35:19.105Z","level":"INFO","category":"ORDER","message":"Order 4083a95e-3032-45ff-92d0-7804404d79f1 placed successfully","file":"service.go","line":83}
+{"timestamp":"2025-08-29T08:35:19.106Z","level":"INFO","category":"TICKET","message":"Creating tickets for each seat","file":"service.go","line":339}
+{"timestamp":"2025-08-29T08:35:19.132Z","level":"INFO","category":"TICKET","message":"Created ticket 61631f36-356c-4f20-b356-e3caf4ee03bb for seat 6f5de419-52c2-4453-acea-877e53e12dc4","file":"service.go","line":361}
+{"timestamp":"2025-08-29T08:35:19.151Z","level":"INFO","category":"TICKET","message":"Created ticket 5bc72d2f-325c-468e-adf6-ed5bbc9e4b8a for seat b1dba05b-e937-4e37-be66-2a8fda88a1c6","file":"service.go","line":361}
+{"timestamp":"2025-08-29T08:35:19.156Z","level":"INFO","category":"ORDER","message":"Updated order price to: $2000.00","file":"service.go","line":374}
+{"timestamp":"2025-08-29T08:35:19.156Z","level":"INFO","category":"ORDER","message":"Order 4083a95e-3032-45ff-92d0-7804404d79f1 completed successfully for user 435d6b72-e79e-478a-a7b4-8845cd1bd563","file":"service.go","line":379}
+{"timestamp":"2025-08-29T08:35:19.157Z","level":"INFO","category":"API","message":"SeatValidationAndPlaceOrder: order created successfully","file":"handler.go","line":280}
+{"timestamp":"2025-08-29T08:35:41.268Z","level":"INFO","category":"APP","message":"Shutdown signal received, initiating graceful shutdown","file":"main.go","line":271}
+{"timestamp":"2025-08-29T08:35:41.268Z","level":"INFO","category":"HTTP","message":"✅ Order Service shutdown complete","file":"main.go","line":278}
+{"timestamp":"2025-08-29T08:35:41.270Z","level":"INFO","category":"DATABASE","message":"Redis connection closed","file":"main.go","line":165}
+{"timestamp":"2025-08-29T08:35:41.271Z","level":"INFO","category":"DATABASE","message":"PostgreSQL connection closed","file":"main.go","line":161}
+{"timestamp":"2025-08-29T08:35:41.271Z","level":"INFO","category":"LOGGER","message":"Closing log file","file":"logger.go","line":216}

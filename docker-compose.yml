@@ -1,0 +1,115 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: secretpass
+      POSTGRES_DB: appdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appuser -d appdb"]
+      interval: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    container_name: ms-redis
+    ports:
+      - "6379:6379"
+    # Enable keyspace notifications for Redis expiry events
+    command: redis-server --notify-keyspace-events KEA
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:6.2.9
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    depends_on:
+      - kafka
+    ports:
+      - "8081:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local-kafka
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      
+  # Ticketing Service
+  ms-ticketing:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ms-ticketing
+    ports:
+      - "8084:8084"
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    environment:
+      # Database
+      POSTGRES_DSN: postgres://appuser:secretpass@postgres:5432/appdb?sslmode=disable
+      # Redis
+      REDIS_ADDR: redis:6379
+      # Kafka
+      KAFKA_ADDR: kafka:9092
+      # Authentication (update with your actual values)
+      OIDC_ISSUER: ${OIDC_ISSUER}
+      KEYCLOAK_URL: ${KEYCLOAK_URL}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM}
+      # Service URLs
+      SEAT_SERVICE_URL: ${SEAT_SERVICE_URL}
+      # Other env vars
+      QR_SECRET_KEY: ${QR_SECRET_KEY}
+      TICKET_CLIENT_SECRET: ${TICKET_CLIENT_SECRET}
+      TICKET_CLIENT_ID: ${TICKET_CLIENT_ID}
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+  # Migration Service (run once to set up the database)
+  migration:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrate
+    container_name: ms-ticketing-migrate
+    depends_on:
+      - postgres
+    environment:
+      # Database
+      POSTGRES_DSN: postgres://appuser:secretpass@postgres:5432/appdb?sslmode=disable
+    # This service is designed to run and exit, not to stay running
+    restart: "no"
+    profiles:
+      - migrate
+
+volumes:
+  postgres_data:

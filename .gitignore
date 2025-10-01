@@ -1,0 +1,6 @@
+.idea/
+go.sum
+tmp/
+.env.docker
+.env
+.env.example

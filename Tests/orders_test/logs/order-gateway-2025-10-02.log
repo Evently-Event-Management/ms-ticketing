@@ -1,0 +1,56 @@
+{"timestamp":"2025-10-01T18:36:34.571Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-10-01T18:36:34.571Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-10-02.log","file":"logger.go","line":69}
+{"timestamp":"2025-10-01T18:36:34.571Z","level":"INFO","category":"ORDER","message":"Placing order: test-order-id for session: test-session-id","file":"service.go","line":69}
+{"timestamp":"2025-10-01T18:36:34.571Z","level":"DEBUG","category":"ORDER","message":"Locking seats...","file":"service.go","line":72}
+{"timestamp":"2025-10-01T18:36:34.571Z","level":"DEBUG","category":"ORDER","message":"Creating order in DB...","file":"service.go","line":83}
+{"timestamp":"2025-10-01T18:36:34.571Z","level":"INFO","category":"KAFKA","message":"Order created successfully, publishing to Kafka...","file":"service.go","line":91}
+{"timestamp":"2025-10-01T18:36:34.571Z","level":"INFO","category":"KAFKA","message":"Published order created event for order: test-order-id","file":"service.go","line":438}
+{"timestamp":"2025-10-01T18:36:34.571Z","level":"INFO","category":"ORDER","message":"Order test-order-id placed successfully","file":"service.go","line":96}
+{"timestamp":"2025-10-01T18:36:34.571Z","level":"INFO","category":"ORDER","message":"Placing order: test-order-id for session: test-session-id","file":"service.go","line":69}
+{"timestamp":"2025-10-01T18:36:34.571Z","level":"DEBUG","category":"ORDER","message":"Locking seats...","file":"service.go","line":72}
+{"timestamp":"2025-10-01T18:36:34.571Z","level":"DEBUG","category":"ORDER","message":"Creating order in DB...","file":"service.go","line":83}
+{"timestamp":"2025-10-01T18:36:34.571Z","level":"ERROR","category":"ORDER","message":"Failed to create order: db error. Rolling back seat locks.","file":"service.go","line":85}
+{"timestamp":"2025-10-01T18:36:34.572Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-10-01T18:36:34.572Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-10-02.log","file":"logger.go","line":69}
+{"timestamp":"2025-10-01T18:36:34.572Z","level":"DEBUG","category":"ORDER","message":"Getting order by ID: test-order-id","file":"service.go","line":101}
+{"timestamp":"2025-10-01T18:36:34.572Z","level":"DEBUG","category":"ORDER","message":"Getting order by ID: non-existent","file":"service.go","line":101}
+{"timestamp":"2025-10-01T18:36:34.572Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-10-01T18:36:34.572Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-10-02.log","file":"logger.go","line":69}
+{"timestamp":"2025-10-01T18:36:34.572Z","level":"INFO","category":"ORDER","message":"Updating order: test-order-id","file":"service.go","line":106}
+{"timestamp":"2025-10-01T18:36:34.572Z","level":"DEBUG","category":"ORDER","message":"Merged order data: {BaseModel:{} OrderID:test-order-id UserID:test-user-id SessionID:test-session-id SeatIDs:[seat1 seat2] Status:completed Price:250 CreatedAt:2025-10-02 00:06:34.5722836 +0530 IST m=+0.029145201}","file":"service.go","line":134}
+{"timestamp":"2025-10-01T18:36:34.572Z","level":"INFO","category":"KAFKA","message":"Published order updated event for order: test-order-id","file":"service.go","line":454}
+{"timestamp":"2025-10-01T18:36:34.572Z","level":"INFO","category":"ORDER","message":"Order test-order-id updated successfully","file":"service.go","line":145}
+{"timestamp":"2025-10-01T18:36:34.572Z","level":"INFO","category":"ORDER","message":"Updating order: non-existent","file":"service.go","line":106}
+{"timestamp":"2025-10-01T18:36:34.572Z","level":"ERROR","category":"ORDER","message":"Order non-existent not found: order not found","file":"service.go","line":109}
+{"timestamp":"2025-10-01T18:36:34.572Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-10-01T18:36:34.572Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-10-02.log","file":"logger.go","line":69}
+{"timestamp":"2025-10-01T18:36:34.572Z","level":"DEBUG","category":"ORDER","message":"Getting order by seat: seat1","file":"service.go","line":64}
+{"timestamp":"2025-10-01T18:36:34.572Z","level":"DEBUG","category":"ORDER","message":"Getting order by seat: non-existent","file":"service.go","line":64}
+{"timestamp":"2025-10-01T18:38:46.403Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-10-01T18:38:46.404Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-10-02.log","file":"logger.go","line":69}
+{"timestamp":"2025-10-01T18:38:46.404Z","level":"INFO","category":"ORDER","message":"Placing order: test-order-id for session: test-session-id","file":"service.go","line":69}
+{"timestamp":"2025-10-01T18:38:46.404Z","level":"DEBUG","category":"ORDER","message":"Locking seats...","file":"service.go","line":72}
+{"timestamp":"2025-10-01T18:38:46.404Z","level":"DEBUG","category":"ORDER","message":"Creating order in DB...","file":"service.go","line":83}
+{"timestamp":"2025-10-01T18:38:46.404Z","level":"INFO","category":"KAFKA","message":"Order created successfully, publishing to Kafka...","file":"service.go","line":91}
+{"timestamp":"2025-10-01T18:38:46.404Z","level":"INFO","category":"KAFKA","message":"Published order created event for order: test-order-id","file":"service.go","line":438}
+{"timestamp":"2025-10-01T18:38:46.404Z","level":"INFO","category":"ORDER","message":"Order test-order-id placed successfully","file":"service.go","line":96}
+{"timestamp":"2025-10-01T18:38:46.404Z","level":"INFO","category":"ORDER","message":"Placing order: test-order-id for session: test-session-id","file":"service.go","line":69}
+{"timestamp":"2025-10-01T18:38:46.404Z","level":"DEBUG","category":"ORDER","message":"Locking seats...","file":"service.go","line":72}
+{"timestamp":"2025-10-01T18:38:46.404Z","level":"DEBUG","category":"ORDER","message":"Creating order in DB...","file":"service.go","line":83}
+{"timestamp":"2025-10-01T18:38:46.404Z","level":"ERROR","category":"ORDER","message":"Failed to create order: db error. Rolling back seat locks.","file":"service.go","line":85}
+{"timestamp":"2025-10-01T18:38:46.404Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-10-01T18:38:46.404Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-10-02.log","file":"logger.go","line":69}
+{"timestamp":"2025-10-01T18:38:46.404Z","level":"DEBUG","category":"ORDER","message":"Getting order by ID: test-order-id","file":"service.go","line":101}
+{"timestamp":"2025-10-01T18:38:46.404Z","level":"DEBUG","category":"ORDER","message":"Getting order by ID: non-existent","file":"service.go","line":101}
+{"timestamp":"2025-10-01T18:38:46.405Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-10-01T18:38:46.405Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-10-02.log","file":"logger.go","line":69}
+{"timestamp":"2025-10-01T18:38:46.405Z","level":"INFO","category":"ORDER","message":"Updating order: test-order-id","file":"service.go","line":106}
+{"timestamp":"2025-10-01T18:38:46.405Z","level":"DEBUG","category":"ORDER","message":"Merged order data: {BaseModel:{} OrderID:test-order-id UserID:test-user-id SessionID:test-session-id SeatIDs:[seat1 seat2] Status:completed Price:250 CreatedAt:2025-10-02 00:08:46.4053044 +0530 IST m=+2.275968801}","file":"service.go","line":134}
+{"timestamp":"2025-10-01T18:38:46.405Z","level":"INFO","category":"KAFKA","message":"Published order updated event for order: test-order-id","file":"service.go","line":454}
+{"timestamp":"2025-10-01T18:38:46.405Z","level":"INFO","category":"ORDER","message":"Order test-order-id updated successfully","file":"service.go","line":145}
+{"timestamp":"2025-10-01T18:38:46.405Z","level":"INFO","category":"ORDER","message":"Updating order: non-existent","file":"service.go","line":106}
+{"timestamp":"2025-10-01T18:38:46.405Z","level":"ERROR","category":"ORDER","message":"Order non-existent not found: order not found","file":"service.go","line":109}
+{"timestamp":"2025-10-01T18:38:46.405Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-10-01T18:38:46.405Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-10-02.log","file":"logger.go","line":69}
+{"timestamp":"2025-10-01T18:38:46.405Z","level":"DEBUG","category":"ORDER","message":"Getting order by seat: seat1","file":"service.go","line":64}
+{"timestamp":"2025-10-01T18:38:46.405Z","level":"DEBUG","category":"ORDER","message":"Getting order by seat: non-existent","file":"service.go","line":64}
