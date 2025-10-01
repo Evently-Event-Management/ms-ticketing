@@ -61,7 +61,7 @@ func (d *DB) GetOrderBySeat(seatID string) (*models.Order, error) {
 	var order models.Order
 	err := d.Bun.NewSelect().
 		Model(&order).
-		Where("? = ANY(seat_ids)", seatID).
+		Where("seat_ids LIKE ?", "%"+seatID+"%"). // This is a simple approach for SQLite compatibility
 		Limit(1).
 		Scan(context.Background())
 	if err != nil {
@@ -93,7 +93,7 @@ func (d *DB) GetSessionIdBySeat(seatID string) (string, error) {
 	err := d.Bun.NewSelect().
 		Table("orders").
 		Column("session_id").
-		Where("? = ANY(seat_ids)", seatID).
+		Where("seat_ids LIKE ?", "%"+seatID+"%"). // Changed to LIKE for SQLite compatibility
 		Limit(1).
 		Scan(context.Background(), &result)
 

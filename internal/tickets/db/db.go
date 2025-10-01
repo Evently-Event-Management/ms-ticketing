@@ -70,13 +70,30 @@ func (d *DB) CreateTicket(ticket models.Ticket) error {
 }
 
 func (d *DB) GetTicketsByUser(userID string) ([]models.Ticket, error) {
-	var tickets []models.Ticket
+	// First, fetch order IDs associated with the user
+	var orderIDs []string
 	err := d.Bun.NewSelect().
-		Model(&tickets).
+		Column("order_id").
+		Table("orders").
 		Where("user_id = ?", userID).
+		Scan(context.Background(), &orderIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(orderIDs) == 0 {
+		return []models.Ticket{}, nil // Return empty slice if no orders found
+	}
+
+	// Then, fetch all tickets associated with those order IDs
+	var tickets []models.Ticket
+	err = d.Bun.NewSelect().
+		Model(&tickets).
+		Where("order_id IN (?)", bun.In(orderIDs)).
 		Scan(context.Background())
 	if err != nil {
 		return nil, err
 	}
+
 	return tickets, nil
 }

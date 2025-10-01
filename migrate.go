@@ -15,7 +15,7 @@ func main() {
 	// Use environment variable if available, otherwise fallback to default
 	dsn := os.Getenv("POSTGRES_DSN")
 	if dsn == "" {
-		dsn = "postgres://appuser:secretpass@localhost:5432/appdb?sslmode=disable"
+		dsn = "postgres://ticketly:ticketly@localhost:5432/order_service?sslmode=disable"
 		fmt.Println("⚠️ Using default DSN. Set POSTGRES_DSN environment variable to override.")
 	}
 
