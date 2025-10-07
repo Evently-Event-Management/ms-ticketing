@@ -8,6 +8,7 @@ import (
 	"io"
 	"ms-ticketing/internal/auth"
 	"ms-ticketing/internal/models"
+	"ms-ticketing/internal/order/discount"
 	tickets "ms-ticketing/internal/tickets/service"
 	"net/http"
 	"os"
@@ -39,22 +40,24 @@ type KafkaProducer interface {
 }
 
 type OrderService struct {
-	DB            DBLayer
-	Redis         RedisLock
-	Kafka         KafkaProducer
-	TicketService *tickets.TicketService
-	client        *http.Client
-	logger        *logger.Logger
+	DB              DBLayer
+	Redis           RedisLock
+	Kafka           KafkaProducer
+	TicketService   *tickets.TicketService
+	DiscountService *discount.DiscountService
+	client          *http.Client
+	logger          *logger.Logger
 }
 
 func NewOrderService(db DBLayer, redis RedisLock, kafka KafkaProducer, ticketService *tickets.TicketService, client *http.Client) *OrderService {
 	return &OrderService{
-		DB:            db,
-		Redis:         redis,
-		Kafka:         kafka,
-		TicketService: ticketService,
-		client:        client,
-		logger:        logger.NewLogger(), // Initialize logger
+		DB:              db,
+		Redis:           redis,
+		Kafka:           kafka,
+		TicketService:   ticketService,
+		DiscountService: discount.NewDiscountService(),
+		client:          client,
+		logger:          logger.NewLogger(), // Initialize logger
 	}
 }
 
@@ -350,20 +353,69 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 		s.logger.Error("KAFKA", fmt.Sprintf("Kafka publish error (seats locked): %v", err))
 	}
 
-	// Step 6: Build order model using the seat details from the OrderDetailsDTO
-	var totalPrice float64 = 0
+	// Step 6: Calculate prices and apply discount if available
+	var subtotal float64 = 0
 	for _, seat := range orderDetailsDTO.Seats {
-		totalPrice += seat.Tier.Price
+		subtotal += seat.Tier.Price
+	}
+
+	// Default values assuming no discount
+	discountAmount := 0.0
+	discountID := ""
+	discountCode := ""
+	finalPrice := subtotal
+
+	// Process discount if provided in the OrderDetailsDTO
+	if orderDetailsDTO.Discount != nil {
+		s.logger.Debug("DISCOUNT", fmt.Sprintf("Processing discount from OrderDetailsDTO: %s", orderDetailsDTO.Discount.Code))
+
+		// Validate and calculate discount
+		discountResult, err := s.DiscountService.ValidateAndCalculateDiscount(
+			orderDetailsDTO.Discount,
+			orderDetailsDTO.Seats,
+			orderReq.SessionID,
+		)
+
+		if err != nil {
+			s.logger.Error("DISCOUNT", fmt.Sprintf("Error calculating discount: %v", err))
+			rollback()
+			return nil, fmt.Errorf("error calculating discount: %w", err)
+		}
+
+		if !discountResult.IsValid {
+			s.logger.Warn("DISCOUNT", fmt.Sprintf("Discount not applicable: %s", discountResult.Reason))
+			rollback()
+			return nil, fmt.Errorf("discount not applicable: %s", discountResult.Reason)
+		}
+
+		// Apply discount
+		discountAmount = discountResult.DiscountAmount
+		discountID = orderDetailsDTO.Discount.ID
+		discountCode = orderDetailsDTO.Discount.Code
+		finalPrice = subtotal - discountAmount
+
+		if finalPrice < 0 {
+			finalPrice = 0
+		}
+
+		s.logger.Info("DISCOUNT", fmt.Sprintf("Applied discount: %.2f, final price: %.2f", discountAmount, finalPrice))
+
+		// Note: The discount usage has already been incremented by the service that processed the first request
+		// and returned the OrderDetailsDTO with the discount information
 	}
 
 	order := models.Order{
-		OrderID:   orderID,
-		UserID:    userID,
-		SessionID: orderReq.SessionID,
-		SeatIDs:   orderReq.SeatIDs,
-		Status:    "pending",
-		Price:     totalPrice, // Set price based on seat details
-		CreatedAt: time.Now(),
+		OrderID:        orderID,
+		UserID:         userID,
+		SessionID:      orderReq.SessionID,
+		SeatIDs:        orderReq.SeatIDs,
+		Status:         "pending",
+		SubTotal:       subtotal,
+		DiscountID:     discountID,
+		DiscountCode:   discountCode,
+		DiscountAmount: discountAmount,
+		Price:          finalPrice,
+		CreatedAt:      time.Now(),
 	}
 
 	// Step 7: Save order (DB + Kafka event)

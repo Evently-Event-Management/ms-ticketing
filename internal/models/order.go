@@ -16,13 +16,17 @@ type OrderRequest struct {
 type Order struct {
 	bun.BaseModel `bun:"table:orders"`
 
-	OrderID   string    `bun:"order_id,pk"`
-	UserID    string    `bun:"user_id"`
-	SessionID string    `bun:"session_id"`
-	SeatIDs   []string  `bun:"seat_ids,array"`
-	Status    string    `bun:"status"`
-	Price     float64   `bun:"price"`
-	CreatedAt time.Time `bun:"created_at"`
+	OrderID        string    `bun:"order_id,pk"`
+	UserID         string    `bun:"user_id"`
+	SessionID      string    `bun:"session_id"`
+	SeatIDs        []string  `bun:"seat_ids,array"`
+	Status         string    `bun:"status"`
+	SubTotal       float64   `bun:"subtotal"`        // Price before discount
+	DiscountID     string    `bun:"discount_id"`     // ID of applied discount code
+	DiscountCode   string    `bun:"discount_code"`   // Code of applied discount
+	DiscountAmount float64   `bun:"discount_amount"` // Amount of discount applied
+	Price          float64   `bun:"price"`           // Final price after discount
+	CreatedAt      time.Time `bun:"created_at"`
 }
 
 type Tier struct {
