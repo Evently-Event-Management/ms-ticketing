@@ -1,0 +1,40 @@
+{"timestamp":"2025-09-10T20:50:50.879Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-09-10T20:50:50.879Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-09-11.log","file":"logger.go","line":69}
+{"timestamp":"2025-09-10T20:50:50.879Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":198}
+{"timestamp":"2025-09-10T20:50:50.879Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":204}
+{"timestamp":"2025-09-10T20:50:50.879Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":212}
+{"timestamp":"2025-09-10T20:50:50.879Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 1/5)","file":"main.go","line":134}
+{"timestamp":"2025-09-10T20:50:50.880Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: dial tcp [::1]:5432: connect: connection refused","file":"main.go","line":147}
+{"timestamp":"2025-09-10T20:50:52.881Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 2/5)","file":"main.go","line":134}
+{"timestamp":"2025-09-10T20:50:52.882Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: dial tcp [::1]:5432: connect: connection refused","file":"main.go","line":147}
+{"timestamp":"2025-09-10T20:50:54.884Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 3/5)","file":"main.go","line":134}
+{"timestamp":"2025-09-10T20:50:54.884Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: dial tcp [::1]:5432: connect: connection refused","file":"main.go","line":147}
+{"timestamp":"2025-09-10T20:50:56.885Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 4/5)","file":"main.go","line":134}
+{"timestamp":"2025-09-10T20:50:56.886Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: dial tcp [::1]:5432: connect: connection refused","file":"main.go","line":147}
+{"timestamp":"2025-09-10T20:50:58.886Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 5/5)","file":"main.go","line":134}
+{"timestamp":"2025-09-10T20:50:58.887Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: dial tcp [::1]:5432: connect: connection refused","file":"main.go","line":147}
+{"timestamp":"2025-09-10T20:50:58.887Z","level":"FATAL","category":"DATABASE","message":"Failed to connect to PostgreSQL after 5 attempts: dial tcp [::1]:5432: connect: connection refused","file":"main.go","line":155}
+{"timestamp":"2025-09-10T20:51:31.105Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-09-10T20:51:31.105Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-09-11.log","file":"logger.go","line":69}
+{"timestamp":"2025-09-10T20:51:31.105Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":198}
+{"timestamp":"2025-09-10T20:51:31.105Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":204}
+{"timestamp":"2025-09-10T20:51:31.105Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":212}
+{"timestamp":"2025-09-10T20:51:31.105Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 1/5)","file":"main.go","line":134}
+{"timestamp":"2025-09-10T20:51:31.107Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: pq: SSL is not enabled on the server","file":"main.go","line":147}
+{"timestamp":"2025-09-10T20:51:33.108Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 2/5)","file":"main.go","line":134}
+{"timestamp":"2025-09-10T20:51:33.110Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: pq: SSL is not enabled on the server","file":"main.go","line":147}
+{"timestamp":"2025-09-10T20:51:35.111Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 3/5)","file":"main.go","line":134}
+{"timestamp":"2025-09-10T20:51:35.113Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: pq: SSL is not enabled on the server","file":"main.go","line":147}
+{"timestamp":"2025-09-10T20:51:37.114Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 4/5)","file":"main.go","line":134}
+{"timestamp":"2025-09-10T20:51:37.116Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: pq: SSL is not enabled on the server","file":"main.go","line":147}
+{"timestamp":"2025-09-10T20:51:39.117Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 5/5)","file":"main.go","line":134}
+{"timestamp":"2025-09-10T20:51:39.119Z","level":"ERROR","category":"DATABASE","message":"Failed to connect to PostgreSQL: pq: SSL is not enabled on the server","file":"main.go","line":147}
+{"timestamp":"2025-09-10T20:51:39.119Z","level":"FATAL","category":"DATABASE","message":"Failed to connect to PostgreSQL after 5 attempts: pq: SSL is not enabled on the server","file":"main.go","line":155}
+{"timestamp":"2025-09-10T20:51:41.463Z","level":"INFO","category":"LOGGER","message":"Enhanced logging system initialized","file":"logger.go","line":68}
+{"timestamp":"2025-09-10T20:51:41.463Z","level":"INFO","category":"LOGGER","message":"Log file: logs/order-gateway-2025-09-11.log","file":"logger.go","line":69}
+{"timestamp":"2025-09-10T20:51:41.463Z","level":"INFO","category":"APP","message":"Starting Order Service initialization","file":"main.go","line":198}
+{"timestamp":"2025-09-10T20:51:41.463Z","level":"INFO","category":"CONFIG","message":"Loaded environment variables from .env file","file":"main.go","line":204}
+{"timestamp":"2025-09-10T20:51:41.463Z","level":"INFO","category":"APP","message":"Verifying database connections","file":"main.go","line":212}
+{"timestamp":"2025-09-10T20:51:41.463Z","level":"INFO","category":"DATABASE","message":"Attempting to connect to PostgreSQL (attempt 1/5)","file":"main.go","line":134}
+{"timestamp":"2025-09-10T20:51:41.477Z","level":"INFO","category":"DATABASE","message":"✅ PostgreSQL connection successful","file":"main.go","line":158}
+{"timestamp":"2025-09-10T20:51:41.546Z","level":"FATAL","category":"DATABASE","message":"Redis connection error: dial tcp [::1]:6379: connect: connection refused","file":"main.go","line":172}
