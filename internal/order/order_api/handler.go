@@ -40,7 +40,7 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	}
 	h.Logger.Debug("API", fmt.Sprintf("CreateOrder: decoded order: %+v", req))
 
-	err := h.OrderService.PlaceOrder(req)
+	err := h.OrderService.PlaceOrder(req, false) // false = do not skip locking
 	if err != nil {
 		h.Logger.Error("API", fmt.Sprintf("CreateOrder: failed to place order: %v", err))
 		http.Error(w, "Could not place order: "+err.Error(), http.StatusInternalServerError)

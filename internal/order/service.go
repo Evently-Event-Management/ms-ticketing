@@ -68,19 +68,23 @@ func (s *OrderService) GetOrderBySeat(seatID string) (*models.Order, error) {
 	return s.DB.GetOrderBySeat(seatID)
 }
 
-func (s *OrderService) PlaceOrder(order models.Order) error {
+func (s *OrderService) PlaceOrder(order models.Order, skipLocking bool) error {
 	s.logger.Info("ORDER", fmt.Sprintf("Placing order: %s for session: %s", order.OrderID, order.SessionID))
 
-	// First lock the seats
-	s.logger.Debug("ORDER", "Locking seats...")
-	locked, err := s.Redis.LockSeats(order.SeatIDs, order.OrderID)
-	if err != nil {
-		s.logger.Error("ORDER", fmt.Sprintf("Failed to lock seats: %v", err))
-		return err
-	}
-	if !locked {
-		s.logger.Error("ORDER", "Failed to lock seats: one or more seats already locked")
-		return errors.New("one or more seats already locked")
+	// Lock the seats if not already locked
+	if !skipLocking {
+		s.logger.Debug("ORDER", "Locking seats...")
+		locked, err := s.Redis.LockSeats(order.SeatIDs, order.OrderID)
+		if err != nil {
+			s.logger.Error("ORDER", fmt.Sprintf("Failed to lock seats: %v", err))
+			return err
+		}
+		if !locked {
+			s.logger.Error("ORDER", "Failed to lock seats: one or more seats already locked")
+			return errors.New("one or more seats already locked")
+		}
+	} else {
+		s.logger.Debug("ORDER", "Skipping seat locking as seats are already locked")
 	}
 
 	s.logger.Debug("ORDER", "Creating order in DB...")
@@ -366,7 +370,7 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 	finalPrice := subtotal
 
 	// Process discount if provided in the OrderDetailsDTO
-	if orderDetailsDTO.Discount != nil {
+	if orderDetailsDTO.Discount != nil && orderDetailsDTO.Discount.ID != "" {
 		s.logger.Debug("DISCOUNT", fmt.Sprintf("Processing discount from OrderDetailsDTO: %s", orderDetailsDTO.Discount.Code))
 
 		// Validate and calculate discount
@@ -399,8 +403,11 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 		}
 
 		s.logger.Info("DISCOUNT", fmt.Sprintf("Applied discount: %.2f, final price: %.2f", discountAmount, finalPrice))
+	} else {
+		s.logger.Debug("DISCOUNT", "No discount applied to order")
 	}
 
+	// Build the order object, ensuring empty discount values are treated as NULL in the database
 	order := models.Order{
 		OrderID:        orderID,
 		UserID:         userID,
@@ -408,15 +415,21 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 		SeatIDs:        orderReq.SeatIDs,
 		Status:         "pending",
 		SubTotal:       subtotal,
-		DiscountID:     discountID,
-		DiscountCode:   discountCode,
 		DiscountAmount: discountAmount,
 		Price:          finalPrice,
 		CreatedAt:      time.Now(),
 	}
 
-	// Step 7: Save order (DB + Kafka event)
-	if err := s.PlaceOrder(order); err != nil {
+	// Only set discount fields if they have values
+	if discountID != "" {
+		order.DiscountID = discountID
+	}
+	if discountCode != "" {
+		order.DiscountCode = discountCode
+	}
+
+	// Step 7: Save order (DB + Kafka event) - skip locking since we already locked the seats
+	if err := s.PlaceOrder(order, true); err != nil {
 		s.logger.Error("ORDER", fmt.Sprintf("Failed to place order: %v. Unlocking seats.", err))
 		rollback()
 		return nil, fmt.Errorf("failed to place order: %w", err)
@@ -519,12 +532,6 @@ func (s *OrderService) publishSeatsLocked(orderReq models.OrderRequest) error {
 		s.logger.Error("KAFKA", fmt.Sprintf("Failed to marshal order request: %v", err))
 		return fmt.Errorf("failed to marshal order request: %w", err)
 	}
-
-	// Use the first seat ID as key, or generate a unique key if needed
-	//key := "seats_locked"
-	//if len(orderReq.SeatIDs) > 0 {
-	//	key = orderReq.SeatIDs[0]
-	//}
 
 	err = s.Kafka.Publish("ticketly.seats.locked", orderReq.SessionID, payload)
 	if err != nil {

@@ -21,11 +21,11 @@ type Order struct {
 	SessionID      string    `bun:"session_id"`
 	SeatIDs        []string  `bun:"seat_ids,array"`
 	Status         string    `bun:"status"`
-	SubTotal       float64   `bun:"subtotal"`        // Price before discount
-	DiscountID     string    `bun:"discount_id"`     // ID of applied discount code
-	DiscountCode   string    `bun:"discount_code"`   // Code of applied discount
-	DiscountAmount float64   `bun:"discount_amount"` // Amount of discount applied
-	Price          float64   `bun:"price"`           // Final price after discount
+	SubTotal       float64   `bun:"subtotal"`               // Price before discount
+	DiscountID     string    `bun:"discount_id,nullzero"`   // ID of applied discount code
+	DiscountCode   string    `bun:"discount_code,nullzero"` // Code of applied discount
+	DiscountAmount float64   `bun:"discount_amount"`        // Amount of discount applied
+	Price          float64   `bun:"price"`                  // Final price after discount
 	CreatedAt      time.Time `bun:"created_at"`
 }
 
