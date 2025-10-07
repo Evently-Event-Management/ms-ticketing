@@ -399,9 +399,6 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 		}
 
 		s.logger.Info("DISCOUNT", fmt.Sprintf("Applied discount: %.2f, final price: %.2f", discountAmount, finalPrice))
-
-		// Note: The discount usage has already been incremented by the service that processed the first request
-		// and returned the OrderDetailsDTO with the discount information
 	}
 
 	order := models.Order{
