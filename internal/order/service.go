@@ -238,52 +238,54 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 	orderID := uuid.NewString()
 	s.logger.Debug("ORDER", fmt.Sprintf("Generated order ID: %s", orderID))
 
-	// Step 3: Call Seat Validation Service
-	seatServiceBase := os.Getenv("SEAT_SERVICE_URL") // e.g. http://seating-service:8080
-	// Ensure no trailing slash in base URL to prevent double slashes
-	if seatServiceBase != "" && seatServiceBase[len(seatServiceBase)-1] == '/' {
-		seatServiceBase = seatServiceBase[:len(seatServiceBase)-1]
+	// Step 3: Call Pre-validation Service (first HTTP request)
+	s.logger.Debug("PRE_VALIDATION", "Making first HTTP request to validate pre-order")
+	eventQueryServiceURL := os.Getenv("EVENT_QUERY_SERVICE_URL") // e.g., http://localhost:8082/api/event-query
+	if eventQueryServiceURL != "" && eventQueryServiceURL[len(eventQueryServiceURL)-1] == '/' {
+		eventQueryServiceURL = eventQueryServiceURL[:len(eventQueryServiceURL)-1]
 	}
 
-	s.logger.Debug("SEAT_VALIDATION", fmt.Sprintf("Session ID: %s", orderReq.SessionID))
-	validateURL := fmt.Sprintf("%s/internal/v1/sessions/%s/seats/validate", seatServiceBase, orderReq.SessionID)
+	preValidateURL := fmt.Sprintf("%s/internal/v1/validate-pre-order", eventQueryServiceURL)
 
-	// Directly use the request body from frontend
+	// Prepare request body
 	reqBody, err := json.Marshal(orderReq)
 	if err != nil {
-		s.logger.Error("SEAT_VALIDATION", fmt.Sprintf("Failed to marshal request: %v", err))
+		s.logger.Error("PRE_VALIDATION", fmt.Sprintf("Failed to marshal request: %v", err))
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	s.logger.Debug("SEAT_VALIDATION", fmt.Sprintf("Validation URL: %s", validateURL))
-	s.logger.Debug("SEAT_VALIDATION", fmt.Sprintf("Request body: %s", string(reqBody)))
+	s.logger.Debug("PRE_VALIDATION", fmt.Sprintf("Pre-validation URL: %s", preValidateURL))
+	s.logger.Debug("PRE_VALIDATION", fmt.Sprintf("Request body: %s", string(reqBody)))
 
-	req, err := http.NewRequest("POST", validateURL, bytes.NewBuffer(reqBody))
+	req, err := http.NewRequest("POST", preValidateURL, bytes.NewBuffer(reqBody))
 	if err != nil {
-		s.logger.Error("SEAT_VALIDATION", fmt.Sprintf("Failed to create request: %v", err))
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		s.logger.Error("PRE_VALIDATION", fmt.Sprintf("Failed to create pre-validation request: %v", err))
+		return nil, fmt.Errorf("failed to create pre-validation request: %w", err)
 	}
 	req.Header.Set("Authorization", "Bearer "+m2m_token)
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := s.client.Do(req)
 	if err != nil {
-		s.logger.Error("SEAT_VALIDATION", fmt.Sprintf("Seat validation service error: %v", err))
-		return nil, fmt.Errorf("seat validation service error: %w", err)
+		s.logger.Error("PRE_VALIDATION", fmt.Sprintf("Pre-validation service error: %v", err))
+		return nil, fmt.Errorf("pre-validation service error: %w", err)
 	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			s.logger.Error("SEAT_VALIDATION", fmt.Sprintf("Failed to close seat validation response body: %v", err))
-		}
-	}(resp.Body)
+
+	// Read and store the response body
+	var orderDetailsDTO models.OrderDetailsDTO
+	err = json.NewDecoder(resp.Body).Decode(&orderDetailsDTO)
+	resp.Body.Close()
+	if err != nil {
+		s.logger.Error("PRE_VALIDATION", fmt.Sprintf("Failed to decode pre-validation response: %v", err))
+		return nil, fmt.Errorf("failed to decode pre-validation response: %w", err)
+	}
 
 	if resp.StatusCode != http.StatusOK {
-		s.logger.Error("SEAT_VALIDATION", fmt.Sprintf("Seat validation failed: status %d", resp.StatusCode))
-		return nil, fmt.Errorf("seat validation failed: status %d", resp.StatusCode)
+		s.logger.Error("PRE_VALIDATION", fmt.Sprintf("Pre-validation failed: status %d", resp.StatusCode))
+		return nil, fmt.Errorf("pre-validation failed: status %d", resp.StatusCode)
 	}
 
-	s.logger.Info("SEAT_VALIDATION", "Seat validation successful")
+	s.logger.Info("PRE_VALIDATION", "Pre-validation successful, OrderDetailsDTO received")
 
 	// Step 4: Lock seats in Redis
 	s.logger.Debug("REDIS", "Attempting to lock seats in Redis")
@@ -297,66 +299,70 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 		return nil, fmt.Errorf("one or more seats already locked")
 	}
 	s.logger.Info("REDIS", "Seats locked successfully")
-	if err := s.publishSeatsLocked(orderReq); err != nil {
-		s.logger.Error("KAFKA", fmt.Sprintf("Kafka publish error (seats locked): %v", err))
-	}
+
 	// Transaction rollback helper
 	rollback := func() {
 		s.logger.Warn("TXN", "Rolling back: unlocking seats")
 		_ = s.Redis.UnlockSeats(orderReq.SeatIDs, orderID)
 	}
 
-	// Step 5: Get seat details for ticket creation
-	s.logger.Debug("SEAT_DETAILS", "Requesting seat details for ticket creation")
-	validateURLDetails := fmt.Sprintf("%s/internal/v1/sessions/%s/seats/details", seatServiceBase, orderReq.SessionID)
-
-	// Use the same request body for seat details
-	reqDetails, err := http.NewRequest("POST", validateURLDetails, bytes.NewBuffer(reqBody))
-	if err != nil {
-		s.logger.Error("SEAT_DETAILS", fmt.Sprintf("Failed to create seat details request: %v", err))
-		rollback()
-		return nil, fmt.Errorf("failed to create seat details request: %w", err)
+	// Step 5: Make second HTTP request to validate seats after locking
+	s.logger.Debug("SEAT_VALIDATION", "Making second HTTP request to validate seats after locking")
+	seatServiceBase := os.Getenv("EVENT_SEATING_SERVICE_URL") // e.g., http://localhost:8081/api/event-seating
+	if seatServiceBase != "" && seatServiceBase[len(seatServiceBase)-1] == '/' {
+		seatServiceBase = seatServiceBase[:len(seatServiceBase)-1]
 	}
-	reqDetails.Header.Set("Authorization", "Bearer "+m2m_token)
-	reqDetails.Header.Set("Content-Type", "application/json")
 
-	respDetails, err := s.client.Do(reqDetails)
+	finalValidateURL := fmt.Sprintf("%s/internal/v1/validate-pre-order", seatServiceBase)
+
+	reqFinal, err := http.NewRequest("POST", finalValidateURL, bytes.NewBuffer(reqBody))
 	if err != nil {
-		s.logger.Error("SEAT_DETAILS", fmt.Sprintf("Seat detail collection service error: %v", err))
+		s.logger.Error("SEAT_VALIDATION", fmt.Sprintf("Failed to create seat validation request: %v", err))
 		rollback()
-		return nil, fmt.Errorf("seat detail collection service error: %w", err)
+		return nil, fmt.Errorf("failed to create seat validation request: %w", err)
+	}
+	reqFinal.Header.Set("Authorization", "Bearer "+m2m_token)
+	reqFinal.Header.Set("Content-Type", "application/json")
+
+	respFinal, err := s.client.Do(reqFinal)
+	if err != nil {
+		s.logger.Error("SEAT_VALIDATION", fmt.Sprintf("Seat validation service error: %v", err))
+		rollback()
+		return nil, fmt.Errorf("seat validation service error: %w", err)
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
-			s.logger.Error("SEAT_DETAILS", fmt.Sprintf("Failed to close seat details response body: %v", err))
+			s.logger.Error("SEAT_VALIDATION", fmt.Sprintf("Failed to close seat validation response body: %v", err))
 		}
-	}(respDetails.Body)
+	}(respFinal.Body)
 
-	if respDetails.StatusCode != http.StatusOK {
-		s.logger.Error("SEAT_DETAILS", fmt.Sprintf("Seat detail collection failed: status %d", respDetails.StatusCode))
+	if respFinal.StatusCode != http.StatusOK {
+		s.logger.Error("SEAT_VALIDATION", fmt.Sprintf("Final seat validation failed: status %d", respFinal.StatusCode))
 		rollback()
-		return nil, fmt.Errorf("seat detail collection failed: status %d", respDetails.StatusCode)
+		return nil, fmt.Errorf("final seat validation failed: status %d", respFinal.StatusCode)
 	}
 
-	// Parse the seat details response as a slice
-	var seatDetails []models.SeatDetails
-	if err := json.NewDecoder(respDetails.Body).Decode(&seatDetails); err != nil {
-		s.logger.Error("SEAT_DETAILS", fmt.Sprintf("Failed to decode seat details: %v", err))
-		rollback()
-		return nil, fmt.Errorf("failed to decode seat details: %w", err)
+	s.logger.Info("SEAT_VALIDATION", "Final seat validation successful")
+
+	// Publish seats locked event
+	if err := s.publishSeatsLocked(orderReq); err != nil {
+		s.logger.Error("KAFKA", fmt.Sprintf("Kafka publish error (seats locked): %v", err))
 	}
 
-	s.logger.Info("SEAT_DETAILS", fmt.Sprintf("Retrieved details for %d seats", len(seatDetails)))
+	// Step 6: Build order model using the seat details from the OrderDetailsDTO
+	var totalPrice float64 = 0
+	for _, seat := range orderDetailsDTO.Seats {
+		totalPrice += seat.Tier.Price
+	}
 
-	// Step 6: Build order model
 	order := models.Order{
 		OrderID:   orderID,
 		UserID:    userID,
 		SessionID: orderReq.SessionID,
 		SeatIDs:   orderReq.SeatIDs,
 		Status:    "pending",
-		Price:     0.0, // Will be updated based on seat prices
+		Price:     totalPrice, // Set price based on seat details
 		CreatedAt: time.Now(),
 	}
 
@@ -369,8 +375,7 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 
 	// Step 8: Create tickets for each seat
 	s.logger.Info("TICKET", "Creating tickets for each seat")
-	var totalPrice float64 = 0
-	for _, seat := range seatDetails {
+	for _, seat := range orderDetailsDTO.Seats {
 		ticket := models.Ticket{
 			TicketID:        uuid.NewString(),
 			OrderID:         orderID,
@@ -383,8 +388,7 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 			IssuedAt:        time.Now(),
 			CheckedIn:       false,
 		}
-		// Add ticket price to total order price
-		totalPrice += seat.Tier.Price
+
 		// Save the ticket using TicketService
 		if s.TicketService != nil {
 			if err := s.TicketService.PlaceTicket(ticket); err != nil {
@@ -398,18 +402,6 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 			s.logger.Warn("TICKET", "TicketService not configured, skipping ticket creation")
 			rollback()
 			return nil, fmt.Errorf("ticket service not configured")
-		}
-	}
-
-	// Update order with total price
-	if totalPrice > 0 {
-		order.Price = totalPrice
-		if err := s.DB.UpdateOrder(order); err != nil {
-			s.logger.Warn("ORDER", fmt.Sprintf("Failed to update order price: %v", err))
-			rollback()
-			return nil, fmt.Errorf("failed to update order price: %w", err)
-		} else {
-			s.logger.Info("ORDER", fmt.Sprintf("Updated order price to: $%.2f", totalPrice))
 		}
 	}
 
