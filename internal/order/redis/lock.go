@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"encoding/json"
 	kafka "ms-ticketing/internal/kafka"
 
 	"github.com/go-redis/redis/v8"
@@ -27,18 +26,6 @@ const lockTTL = 1 * time.Minute
 func (r *Redis) LockSeat(seatID, orderID string) (bool, error) {
 	key := "seat_lock:" + seatID
 	ok, err := r.Client.SetNX(context.Background(), key, orderID, lockTTL).Result()
-	if ok {
-		// Stream lock event to Kafka
-		if r.Producer != nil {
-			event := map[string]interface{}{
-				"seat_id":   seatID,
-				"order_id":  orderID,
-				"timestamp": time.Now().Unix(),
-			}
-			value, _ := json.Marshal(event)
-			_ = r.Producer.Publish("ticketly.seat.locked", seatID, value)
-		}
-	}
 	return ok, err
 }
 
@@ -55,16 +42,6 @@ func (r *Redis) UnlockSeat(seatID, orderID string) error {
 	}
 	if val == orderID {
 		_, err := r.Client.Del(ctx, key).Result()
-		if err == nil && r.Producer != nil {
-			// Stream unlock event to Kafka
-			event := map[string]interface{}{
-				"seat_id":   seatID,
-				"order_id":  orderID,
-				"timestamp": time.Now().Unix(),
-			}
-			value, _ := json.Marshal(event)
-			_ = r.Producer.Publish("seat.unlocked", seatID, value)
-		}
 		return err
 	}
 	return nil
