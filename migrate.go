@@ -58,6 +58,10 @@ func migrate(db *sql.DB) error {
 		session_id UUID NOT NULL,
 		seat_ids TEXT[] NOT NULL,
 		status   TEXT NOT NULL,
+		subtotal NUMERIC(10,2) NOT NULL,
+		discount_id UUID,
+		discount_code TEXT,
+		discount_amount NUMERIC(10,2) DEFAULT 0,
 		price    NUMERIC(10,2) NOT NULL,
 		created_at TIMESTAMP NOT NULL DEFAULT NOW()
 	);
@@ -91,16 +95,21 @@ func seed(db *sql.DB) error {
 	seat2 := "22222222-2222-2222-2222-222222222222"
 	tier1 := "33333333-3333-3333-3333-333333333333"
 	tier2 := "44444444-4444-4444-4444-444444444444"
+	discountID := "55555555-5555-5555-5555-555555555555"
 
 	// Insert sample Order
 	var orderID string
 	err := db.QueryRow(
-		`INSERT INTO orders (user_id, session_id, seat_ids, status, price, created_at)
-		 VALUES ($1, $2, $3, $4, $5, $6) RETURNING order_id`,
+		`INSERT INTO orders (user_id, session_id, seat_ids, status, subtotal, discount_id, discount_code, discount_amount, price, created_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING order_id`,
 		userID,
 		sessionID,
 		pq.Array([]string{seat1, seat2}),
 		"completed",
+		300.00,
+		discountID,
+		"WELCOME20",
+		50.00,
 		250.00,
 		now,
 	).Scan(&orderID)
