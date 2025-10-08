@@ -452,8 +452,8 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 		s.logger.Error("KAFKA", fmt.Sprintf("Kafka publish error (seats locked): %v", err))
 	}
 
-	// Step 7: Save order to DB and publish events - skip locking since we already locked the seats
-	if err := s.SaveOrderWithEvents(order, orderReq.SeatIDs); err != nil {
+	// Step 7: Save order to DB - skip locking since we already locked the seats
+	if err := s.SaveOrder(order, orderReq.SeatIDs); err != nil {
 		s.logger.Error("ORDER", fmt.Sprintf("Failed to place order: %v. Unlocking seats.", err))
 		rollback()
 		return nil, fmt.Errorf("failed to place order: %w", err)
@@ -461,6 +461,7 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 
 	// Step 8: Create tickets for each seat
 	s.logger.Info("TICKET", "Creating tickets for each seat")
+	var createdTickets []models.TicketForStreaming
 	for _, seat := range orderDetailsDTO.Seats {
 		ticket := models.Ticket{
 			TicketID:        uuid.NewString(),
@@ -483,6 +484,8 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 				return nil, fmt.Errorf("failed to create ticket for seat %s: %w", seat.SeatID, err)
 			} else {
 				s.logger.Info("TICKET", fmt.Sprintf("Created ticket %s for seat %s", ticket.TicketID, ticket.SeatID))
+				// Add ticket to our local collection for event publishing
+				createdTickets = append(createdTickets, ticket.ToStreamingTicket())
 			}
 		} else {
 			s.logger.Warn("TICKET", "TicketService not configured, skipping ticket creation")
@@ -491,7 +494,27 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 		}
 	}
 
-	// Step 9: Build response
+	// Step 9: Now that we have the order and all tickets created, publish the event with full ticket details
+	if len(createdTickets) > 0 {
+		orderWithTickets := models.OrderWithTickets{
+			Order:   order,
+			Tickets: createdTickets,
+		}
+
+		s.logger.Info("KAFKA", fmt.Sprintf("Publishing order created event with %d tickets", len(createdTickets)))
+		if err := s.publishOrderCreatedWithTickets(orderWithTickets); err != nil {
+			s.logger.Error("KAFKA", fmt.Sprintf("Failed to publish order created event: %v", err))
+			// Continue anyway - don't fail the transaction if just the event publishing fails
+		}
+	} else {
+		// Fallback to basic order event if somehow no tickets were created
+		s.logger.Info("KAFKA", "Publishing basic order created event")
+		if err := s.publishOrderCreated(order); err != nil {
+			s.logger.Error("KAFKA", fmt.Sprintf("Failed to publish order created event: %v", err))
+		}
+	}
+
+	// Step 10: Build response
 	s.logger.Info("ORDER", fmt.Sprintf("Order %s completed successfully for user %s", orderID, userID))
 	return &models.OrderResponse{
 		OrderID:   orderID,
@@ -518,6 +541,8 @@ func (s *OrderService) SaveOrder(order models.Order, seatIDs []string) error {
 }
 
 // PublishOrderCreatedEvent publishes relevant events after order creation
+// DEPRECATED: This method assumes tickets already exist, which is not always true at order creation time
+// Use direct calls to publishOrderCreated or publishOrderCreatedWithTickets instead
 func (s *OrderService) PublishOrderCreatedEvent(order models.Order, seatIDs []string) {
 	s.logger.Info("KAFKA", "Order created successfully, publishing to Kafka...")
 
@@ -544,19 +569,6 @@ func (s *OrderService) PublishOrderCreatedEvent(order models.Order, seatIDs []st
 			s.logger.Error("KAFKA", fmt.Sprintf("Kafka publish error (order created): %v", err))
 		}
 	}
-}
-
-// SaveOrderWithEvents saves an order to the database and publishes related events
-func (s *OrderService) SaveOrderWithEvents(order models.Order, seatIDs []string) error {
-	// First save to database
-	if err := s.SaveOrder(order, seatIDs); err != nil {
-		return err
-	}
-
-	// Then publish events
-	s.PublishOrderCreatedEvent(order, seatIDs)
-
-	return nil
 }
 
 // GetOrderWithTickets retrieves an order with all its associated tickets (without QR codes)
@@ -735,6 +747,8 @@ func (s *OrderService) publishSeatsReleased(orderWithSeats models.OrderWithSeats
 	return err
 }
 
+// publishOrderCreatedWithSeats publishes an order event with just seat IDs
+// DEPRECATED: Use publishOrderCreatedWithTickets instead for richer events
 func (s *OrderService) publishOrderCreatedWithSeats(orderWithSeats models.OrderWithSeats) error {
 	payload, err := json.Marshal(orderWithSeats)
 	if err != nil {
