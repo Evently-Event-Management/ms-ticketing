@@ -19,7 +19,6 @@ type Order struct {
 	OrderID        string    `bun:"order_id,pk"`
 	UserID         string    `bun:"user_id"`
 	SessionID      string    `bun:"session_id"`
-	SeatIDs        []string  `bun:"seat_ids,array"`
 	Status         string    `bun:"status"`
 	SubTotal       float64   `bun:"subtotal"`               // Price before discount
 	DiscountID     string    `bun:"discount_id,nullzero"`   // ID of applied discount code
@@ -27,6 +26,37 @@ type Order struct {
 	DiscountAmount float64   `bun:"discount_amount"`        // Amount of discount applied
 	Price          float64   `bun:"price"`                  // Final price after discount
 	CreatedAt      time.Time `bun:"created_at"`
+}
+
+// OrderWithSeats extends the Order model with seat information
+// This is not stored in the database but used for API responses
+// DEPRECATED: Use OrderWithTickets instead for streaming events
+type OrderWithSeats struct {
+	Order
+	SeatIDs []string `json:"seat_ids"`
+}
+
+// TicketForStreaming is a lightweight version of Ticket without QR code
+// Used for event streaming to reduce payload size
+type TicketForStreaming struct {
+	TicketID        string    `json:"ticket_id"`
+	OrderID         string    `json:"order_id"`
+	SeatID          string    `json:"seat_id"`
+	SeatLabel       string    `json:"seat_label"`
+	Colour          string    `json:"colour"`
+	TierID          string    `json:"tier_id"`
+	TierName        string    `json:"tier_name"`
+	PriceAtPurchase float64   `json:"price_at_purchase"`
+	IssuedAt        time.Time `json:"issued_at"`
+	CheckedIn       bool      `json:"checked_in"`
+	CheckedInTime   time.Time `json:"checked_in_time,omitempty"`
+}
+
+// OrderWithTickets extends the Order model with full ticket information
+// This denormalized structure is used for streaming order events
+type OrderWithTickets struct {
+	Order
+	Tickets []TicketForStreaming `json:"tickets"`
 }
 
 type Tier struct {
@@ -72,9 +102,9 @@ type Discount struct {
 	ID                   string             `json:"id"`
 	Code                 string             `json:"code"`
 	Parameters           DiscountParameters `json:"parameters"`
-	ActiveFrom           time.Time          `json:"activeFrom"`
-	ExpiresAt            time.Time          `json:"expiresAt"`
-	MaxUsage             int                `json:"maxUsage"`
+	ActiveFrom           *time.Time         `json:"activeFrom"`
+	ExpiresAt            *time.Time         `json:"expiresAt"`
+	MaxUsage             *int               `json:"maxUsage"`
 	CurrentUsage         int                `json:"currentUsage"`
 	ApplicableTiers      []Tier             `json:"applicableTiers"`
 	ApplicableSessionIds []string           `json:"applicableSessionIds"`

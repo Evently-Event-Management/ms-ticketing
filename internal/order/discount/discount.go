@@ -57,17 +57,19 @@ func (s *DiscountService) ValidateAndCalculateDiscount(
 
 	// Check if current date is within the discount window
 	now := time.Now()
-	if !now.Equal(discount.ActiveFrom) && !now.After(discount.ActiveFrom) {
+	// Only check activeFrom if it's not null
+	if discount.ActiveFrom != nil && now.Before(*discount.ActiveFrom) {
 		result.Reason = "Discount is not yet active"
 		return result, nil
 	}
-	if !now.Equal(discount.ExpiresAt) && !now.Before(discount.ExpiresAt) {
+	// Only check expiresAt if it's not null
+	if discount.ExpiresAt != nil && now.After(*discount.ExpiresAt) {
 		result.Reason = "Discount has expired"
 		return result, nil
 	}
 
 	// Check usage limits
-	if discount.MaxUsage > 0 && discount.CurrentUsage >= discount.MaxUsage {
+	if discount.MaxUsage != nil && *discount.MaxUsage > 0 && discount.CurrentUsage >= *discount.MaxUsage {
 		result.Reason = "Discount usage limit has been reached"
 		return result, nil
 	}

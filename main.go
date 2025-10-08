@@ -7,9 +7,10 @@ import (
 	"fmt"
 	"ms-ticketing/internal/auth"
 	"ms-ticketing/internal/kafka"
+	"ms-ticketing/internal/models"
 	ticket_db "ms-ticketing/internal/tickets/db"
 	tickets "ms-ticketing/internal/tickets/service"
-	ticket_api "ms-ticketing/internal/tickets/ticket_api"
+	"ms-ticketing/internal/tickets/ticket_api"
 	"net/http"
 	"os"
 	"os/signal"
@@ -68,29 +69,30 @@ func subscribeSeatUnlocks(rdb *redis.Client, producer *kafka.Producer, db DB, lo
 					continue
 				}
 
-				// Create payload for Kafka with camelCase field names
-				payload := map[string]interface{}{
-					"session_id": sessionID,
-					"seat_ids":   []string{seatID},
+				// Create SeatStatusChangeEventDto using the proper model
+				seatEvent, err := models.NewSeatStatusChangeEventDto(sessionID, []string{seatID}, models.SeatStatusAvailable)
+				if err != nil {
+					logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to create seat status event DTO: %v", err))
+					continue
 				}
 
-				value, err := json.Marshal(payload)
+				value, err := json.Marshal(seatEvent)
 				if err != nil {
 					logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to marshal seat unlock payload: %v", err))
 					continue
 				}
 
 				// Use the generic Publish method
-				err = producer.Publish("ticketly.seats.released", seatID, value)
+				err = producer.Publish("ticketly.seats.status", seatID, value)
 				if err != nil {
 					logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to publish seat unlock event: %v", err))
 					// Try to create the topic if it doesn't exist
-					err = kafka.CreateTopicIfNotExists(kafkaBrokers, "ticketly.seats.released")
+					err = kafka.CreateTopicIfNotExists(kafkaBrokers, "ticketly.seats.status")
 					if err != nil {
 						logger.Error("KAFKA", fmt.Sprintf("Failed to create topic: %v", err))
 					} else {
 						// Try publishing again
-						err = producer.Publish("ticketly.seats.released", seatID, value)
+						err = producer.Publish("ticketly.seats.status", seatID, value)
 						if err != nil {
 							logger.Error("SEAT_UNLOCK", fmt.Sprintf("Still failed to publish after topic creation: %v", err))
 						} else {
@@ -174,7 +176,11 @@ func verifyConnections(ctx context.Context, logger *logger.Logger) (*bun.DB, *re
 func SecureHandler(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("user_id") // injected from AuthMiddleware
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("🔒 Secure endpoint accessed by user: " + userID.(string)))
+	_, err := w.Write([]byte("🔒 Secure endpoint accessed by user: " + userID.(string)))
+	if err != nil {
+		fmt.Printf("Error writing response: %v", err)
+		return
+	}
 }
 
 func main() {
@@ -200,11 +206,19 @@ func main() {
 	// Verify DB + Redis connections
 	bunDB, redisClient := verifyConnections(ctx, logger)
 	defer func() {
-		bunDB.Close()
+		err := bunDB.Close()
+		if err != nil {
+			logger.Error("DATABASE", fmt.Sprintf("Error closing PostgreSQL connection: %v", err))
+			return
+		}
 		logger.Info("DATABASE", "PostgreSQL connection closed")
 	}()
 	defer func() {
-		redisClient.Close()
+		err := redisClient.Close()
+		if err != nil {
+			logger.Error("DATABASE", fmt.Sprintf("Error closing Redis connection: %v", err))
+			return
+		}
 		logger.Info("DATABASE", "Redis connection closed")
 	}()
 
@@ -223,8 +237,7 @@ func main() {
 		"ticketly.order.created",
 		"ticketly.order.updated",
 		"ticketly.order.canceled",
-		"ticketly.seats.locked",
-		"ticketly.seats.released",
+		"ticketly.seats.status",
 		"payment_succefully",
 		"payment_unseecuufull",
 	}

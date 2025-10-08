@@ -7,7 +7,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 )
 
@@ -56,7 +55,6 @@ func migrate(db *sql.DB) error {
 		order_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 		user_id UUID NOT NULL,
 		session_id UUID NOT NULL,
-		seat_ids TEXT[] NOT NULL,
 		status   TEXT NOT NULL,
 		subtotal NUMERIC(10,2) NOT NULL,
 		discount_id UUID,
@@ -100,11 +98,10 @@ func seed(db *sql.DB) error {
 	// Insert sample Order
 	var orderID string
 	err := db.QueryRow(
-		`INSERT INTO orders (user_id, session_id, seat_ids, status, subtotal, discount_id, discount_code, discount_amount, price, created_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING order_id`,
+		`INSERT INTO orders (user_id, session_id, status, subtotal, discount_id, discount_code, discount_amount, price, created_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING order_id`,
 		userID,
 		sessionID,
-		pq.Array([]string{seat1, seat2}),
 		"completed",
 		300.00,
 		discountID,
@@ -135,7 +132,7 @@ func seed(db *sql.DB) error {
 
 func printData(db *sql.DB) error {
 	fmt.Println("\n📦 Orders:")
-	rows, err := db.Query(`SELECT order_id, user_id, session_id, seat_ids, status, price, created_at FROM orders`)
+	rows, err := db.Query(`SELECT order_id, user_id, session_id, status, price, created_at FROM orders`)
 	if err != nil {
 		return err
 	}
@@ -143,15 +140,14 @@ func printData(db *sql.DB) error {
 
 	for rows.Next() {
 		var id, userID, sessionID string
-		var seats []string
 		var status string
 		var price float64
 		var created time.Time
-		if err := rows.Scan(&id, &userID, &sessionID, pq.Array(&seats), &status, &price, &created); err != nil {
+		if err := rows.Scan(&id, &userID, &sessionID, &status, &price, &created); err != nil {
 			return err
 		}
-		fmt.Printf("- Order %s | User %s | Session %s | Seats: %v | Status: %s | Price: %.2f | Created: %s\n",
-			id, userID, sessionID, seats, status, price, created)
+		fmt.Printf("- Order %s | User %s | Session %s | Status: %s | Price: %.2f | Created: %s\n",
+			id, userID, sessionID, status, price, created)
 	}
 
 	fmt.Println("\n🎟 Tickets:")
