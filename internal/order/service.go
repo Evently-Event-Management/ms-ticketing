@@ -203,23 +203,76 @@ func (s *OrderService) Checkout(id string) error {
 		return errors.New("order is not in a valid state for checkout")
 	}
 
-	order.Status = "completed"
-
-	if err := s.DB.UpdateOrder(*order); err != nil {
-		s.logger.Error("ORDER", fmt.Sprintf("Failed to complete checkout for order %s: %v", id, err))
-		return fmt.Errorf("failed to complete checkout: %w", err)
-	}
-
-	// Publish order completed event with ticket details
+	// First get the tickets which contain seat IDs
 	orderWithTickets, err := s.GetOrderWithTickets(id)
 	if err != nil {
 		s.logger.Warn("ORDER", fmt.Sprintf("Could not get tickets for completed order %s: %v", id, err))
+
+		// If we can't get tickets, we need to get seat IDs directly as a fallback
+		seatIDs, err := s.DB.GetSeatsByOrder(id)
+		if err != nil {
+			s.logger.Error("ORDER", fmt.Sprintf("Failed to get seat IDs for order %s: %v", id, err))
+			return fmt.Errorf("failed to get seat IDs: %w", err)
+		}
+
+		// Update order status
+		order.Status = "completed"
+		if err := s.DB.UpdateOrder(*order); err != nil {
+			s.logger.Error("ORDER", fmt.Sprintf("Failed to complete checkout for order %s: %v", id, err))
+			return fmt.Errorf("failed to complete checkout: %w", err)
+		}
+
+		// Create an OrderWithSeats for publishing seats booked event
+		orderWithSeats := &models.OrderWithSeats{
+			Order:   *order,
+			SeatIDs: seatIDs,
+		}
+
+		// Publish seats booked event
+		if err := s.publishSeatsBooked(*orderWithSeats); err != nil {
+			s.logger.Error("KAFKA", fmt.Sprintf("Kafka publish error (seats booked): %v", err))
+			// Continue even if publishing fails
+		} else {
+			s.logger.Info("KAFKA", fmt.Sprintf("Published seats booked event for order %s with %d seats",
+				id, len(seatIDs)))
+		}
 
 		// Fall back to basic order update event
 		if err := s.publishOrderUpdated(*order); err != nil {
 			s.logger.Error("KAFKA", fmt.Sprintf("Kafka publish error (order completed): %v", err))
 		}
 	} else {
+		// Extract seat IDs from tickets
+		var seatIDs []string
+		for _, ticket := range orderWithTickets.Tickets {
+			seatIDs = append(seatIDs, ticket.SeatID)
+		}
+
+		// Update order status
+		order.Status = "completed"
+		if err := s.DB.UpdateOrder(*order); err != nil {
+			s.logger.Error("ORDER", fmt.Sprintf("Failed to complete checkout for order %s: %v", id, err))
+			return fmt.Errorf("failed to complete checkout: %w", err)
+		}
+
+		// Update the order in orderWithTickets to reflect the status change
+		orderWithTickets.Status = "completed"
+
+		// Create an OrderWithSeats for publishing seats booked event
+		orderWithSeats := &models.OrderWithSeats{
+			Order:   *order,
+			SeatIDs: seatIDs,
+		}
+
+		// Publish seats booked event
+		if err := s.publishSeatsBooked(*orderWithSeats); err != nil {
+			s.logger.Error("KAFKA", fmt.Sprintf("Kafka publish error (seats booked): %v", err))
+			// Continue even if publishing fails
+		} else {
+			s.logger.Info("KAFKA", fmt.Sprintf("Published seats booked event for order %s with %d seats",
+				id, len(seatIDs)))
+		}
+
 		// Use the denormalized order with tickets for better event payload
 		if err := s.publishOrderCompletedWithTickets(*orderWithTickets); err != nil {
 			s.logger.Error("KAFKA", fmt.Sprintf("Kafka publish error (order completed with tickets): %v", err))
@@ -743,6 +796,28 @@ func (s *OrderService) publishSeatsReleased(orderWithSeats models.OrderWithSeats
 		s.logger.Error("KAFKA", fmt.Sprintf("Failed to publish seat status event: %v", err))
 	} else {
 		s.logger.Info("KAFKA", fmt.Sprintf("Published seat status (AVAILABLE) event for %d seats", len(orderWithSeats.SeatIDs)))
+	}
+	return err
+}
+
+func (s *OrderService) publishSeatsBooked(orderWithSeats models.OrderWithSeats) error {
+	seatEvent, err := models.NewSeatStatusChangeEventDto(orderWithSeats.SessionID, orderWithSeats.SeatIDs, models.SeatStatusBooked)
+	if err != nil {
+		s.logger.Error("KAFKA", fmt.Sprintf("Failed to create seat status event DTO: %v", err))
+		return fmt.Errorf("failed to create seat status event DTO: %w", err)
+	}
+
+	payload, err := json.Marshal(seatEvent)
+	if err != nil {
+		s.logger.Error("KAFKA", fmt.Sprintf("Failed to marshal seat status event: %v", err))
+		return fmt.Errorf("failed to marshal seat status event: %w", err)
+	}
+
+	err = s.Kafka.Publish("ticketly.seats.status", orderWithSeats.SessionID, payload)
+	if err != nil {
+		s.logger.Error("KAFKA", fmt.Sprintf("Failed to publish seat status event: %v", err))
+	} else {
+		s.logger.Info("KAFKA", fmt.Sprintf("Published seat status (BOOKED) event for %d seats", len(orderWithSeats.SeatIDs)))
 	}
 	return err
 }
