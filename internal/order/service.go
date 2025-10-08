@@ -563,7 +563,7 @@ func (s *OrderService) publishOrderCancelled(orderWithSeats models.OrderWithSeat
 }
 
 func (s *OrderService) publishSeatsLocked(orderReq models.OrderRequest) error {
-	seatEvent, err := models.NewSeatStatusChangeEventDto(orderReq.SessionID, orderReq.SeatIDs)
+	seatEvent, err := models.NewSeatStatusChangeEventDto(orderReq.SessionID, orderReq.SeatIDs, models.SeatStatusLocked)
 	if err != nil {
 		s.logger.Error("KAFKA", fmt.Sprintf("Failed to create seat status event DTO: %v", err))
 		return fmt.Errorf("failed to create seat status event DTO: %w", err)
@@ -575,17 +575,17 @@ func (s *OrderService) publishSeatsLocked(orderReq models.OrderRequest) error {
 		return fmt.Errorf("failed to marshal seat status event: %w", err)
 	}
 
-	err = s.Kafka.Publish("ticketly.seats.locked", orderReq.SessionID, payload)
+	err = s.Kafka.Publish("ticketly.seats.status", orderReq.SessionID, payload)
 	if err != nil {
-		s.logger.Error("KAFKA", fmt.Sprintf("Failed to publish seats locked event: %v", err))
+		s.logger.Error("KAFKA", fmt.Sprintf("Failed to publish seat status event: %v", err))
 	} else {
-		s.logger.Info("KAFKA", fmt.Sprintf("Published seats locked event for %d seats", len(orderReq.SeatIDs)))
+		s.logger.Info("KAFKA", fmt.Sprintf("Published seat status (LOCKED) event for %d seats", len(orderReq.SeatIDs)))
 	}
 	return err
 }
 
 func (s *OrderService) publishSeatsReleased(orderWithSeats models.OrderWithSeats) error {
-	seatEvent, err := models.NewSeatStatusChangeEventDto(orderWithSeats.SessionID, orderWithSeats.SeatIDs)
+	seatEvent, err := models.NewSeatStatusChangeEventDto(orderWithSeats.SessionID, orderWithSeats.SeatIDs, models.SeatStatusAvailable)
 	if err != nil {
 		s.logger.Error("KAFKA", fmt.Sprintf("Failed to create seat status event DTO: %v", err))
 		return fmt.Errorf("failed to create seat status event DTO: %w", err)
@@ -597,11 +597,11 @@ func (s *OrderService) publishSeatsReleased(orderWithSeats models.OrderWithSeats
 		return fmt.Errorf("failed to marshal seat status event: %w", err)
 	}
 
-	err = s.Kafka.Publish("ticketly.seats.released", orderWithSeats.SessionID, payload)
+	err = s.Kafka.Publish("ticketly.seats.status", orderWithSeats.SessionID, payload)
 	if err != nil {
-		s.logger.Error("KAFKA", fmt.Sprintf("Failed to publish seats released event: %v", err))
+		s.logger.Error("KAFKA", fmt.Sprintf("Failed to publish seat status event: %v", err))
 	} else {
-		s.logger.Info("KAFKA", fmt.Sprintf("Published seats released event for %d seats", len(orderWithSeats.SeatIDs)))
+		s.logger.Info("KAFKA", fmt.Sprintf("Published seat status (AVAILABLE) event for %d seats", len(orderWithSeats.SeatIDs)))
 	}
 	return err
 }

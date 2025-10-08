@@ -67,7 +67,7 @@ func (r *Redis) UnlockSeat(seatID, orderID string) error {
 		}
 		return err
 	}
-	return nil // do not unlock if not owned by this order
+	return nil
 }
 
 // Lock multiple seats atomically
@@ -105,5 +105,3 @@ func (r *Redis) UnlockSeats(seatIDs []string, orderID string) error {
 	}
 	return firstErr
 }
-
-// Define DB interface or import the correct type
