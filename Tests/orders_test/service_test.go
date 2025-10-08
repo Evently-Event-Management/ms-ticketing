@@ -223,7 +223,7 @@ func TestPlaceOrder(t *testing.T) {
 	}
 
 	// Test placing an order
-	err := orderService.PlaceOrder(testOrder)
+	err := orderService.SaveOrder(testOrder)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -253,7 +253,7 @@ func TestPlaceOrder(t *testing.T) {
 	db.shouldFailOn = "CreateOrder"
 	db.errorMsg = "db error"
 
-	err = orderService.PlaceOrder(testOrder)
+	err = orderService.SaveOrder(testOrder)
 	if err == nil {
 		t.Error("Expected error when DB fails, got nil")
 	}

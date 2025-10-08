@@ -11,8 +11,6 @@ type DB struct {
 	Bun *bun.DB
 }
 
-// CancelTicket implements tickets.TicketDBLayer.
-
 // ---------------- ORDERS ----------------
 
 // GetOrderByID → fetch one order by its ID
@@ -29,11 +27,42 @@ func (d *DB) GetOrderByID(id string) (*models.Order, error) {
 	return &order, nil
 }
 
+// GetOrderWithSeats retrieves an order and its associated seat IDs
+func (d *DB) GetOrderWithSeats(id string) (*models.OrderWithSeats, error) {
+	// First get the order
+	var order models.Order
+	err := d.Bun.NewSelect().
+		Model(&order).
+		Where("order_id = ?", id).
+		Limit(1).
+		Scan(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	// Then get the seats from tickets table
+	var seatIDs []string
+	err = d.Bun.NewSelect().
+		Column("seat_id").
+		Table("tickets").
+		Where("order_id = ?", id).
+		Scan(context.Background(), &seatIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	// Combine the results
+	return &models.OrderWithSeats{
+		Order:   order,
+		SeatIDs: seatIDs,
+	}, nil
+}
+
 // UpdateOrder → update allowed fields
 func (d *DB) UpdateOrder(order models.Order) error {
 	_, err := d.Bun.NewUpdate().
 		Model(&order).
-		Column("session_id", "user_id", "seat_ids", "status", "price", "created_at").
+		Column("session_id", "user_id", "status", "price", "created_at").
 		Where("order_id = ?", order.OrderID).
 		Exec(context.Background())
 	return err
@@ -61,7 +90,8 @@ func (d *DB) GetOrderBySeat(seatID string) (*models.Order, error) {
 	var order models.Order
 	err := d.Bun.NewSelect().
 		Model(&order).
-		Where("? = ANY(seat_ids)", seatID).
+		Join("JOIN tickets ON tickets.order_id = orders.order_id").
+		Where("tickets.seat_id = ?", seatID).
 		Limit(1).
 		Scan(context.Background())
 	if err != nil {
@@ -83,23 +113,34 @@ func (d *DB) GetTicketsByOrder(orderID string) ([]models.Ticket, error) {
 	return tickets, nil
 }
 
-func (d *DB) GetSessionIdBySeat(seatID string) (string, error) {
-	// Define a temporary struct to hold the query result
-	type OrderResult struct {
-		SessionID string `bun:"session_id"`
-	}
-
-	var result OrderResult
+// GetSeatsByOrder → fetch all seat IDs linked to an order
+func (d *DB) GetSeatsByOrder(orderID string) ([]string, error) {
+	var seatIDs []string
 	err := d.Bun.NewSelect().
+		Column("seat_id").
+		Table("tickets").
+		Where("order_id = ?", orderID).
+		Scan(context.Background(), &seatIDs)
+	if err != nil {
+		return nil, err
+	}
+	return seatIDs, nil
+}
+
+func (d *DB) GetSessionIdBySeat(seatID string) (string, error) {
+	// Get session ID by joining orders and tickets tables
+	var sessionID string
+	err := d.Bun.NewSelect().
+		Column("orders.session_id").
 		Table("orders").
-		Column("session_id").
-		Where("? = ANY(seat_ids)", seatID).
+		Join("JOIN tickets ON tickets.order_id = orders.order_id").
+		Where("tickets.seat_id = ?", seatID).
 		Limit(1).
-		Scan(context.Background(), &result)
+		Scan(context.Background(), &sessionID)
 
 	if err != nil {
 		return "", err
 	}
 
-	return result.SessionID, nil
+	return sessionID, nil
 }
