@@ -313,10 +313,15 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 	// Read and store the response body
 	var orderDetailsDTO models.OrderDetailsDTO
 	err = json.NewDecoder(resp.Body).Decode(&orderDetailsDTO)
-	resp.Body.Close()
 	if err != nil {
 		s.logger.Error("PRE_VALIDATION", fmt.Sprintf("Failed to decode pre-validation response: %v", err))
 		return nil, fmt.Errorf("failed to decode pre-validation response: %w", err)
+	}
+
+	err = resp.Body.Close()
+	if err != nil {
+		s.logger.Error("PRE_VALIDATION", fmt.Sprintf("Failed to close pre-validation response body: %v", err))
+		return nil, fmt.Errorf("failed to close pre-validation response body: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
