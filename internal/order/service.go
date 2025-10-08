@@ -153,22 +153,7 @@ func (s *OrderService) CancelOrder(id string) error {
 	if err != nil {
 		// If we can't get the tickets, fall back to seats-only approach
 		s.logger.Warn("ORDER", fmt.Sprintf("Could not get tickets for order %s: %v, falling back to seats-only approach", id, err))
-
-		// Create an OrderWithSeats for event publishing as fallback
-		orderWithSeats := &models.OrderWithSeats{
-			Order:   *order,
-			SeatIDs: seatIDs,
-		}
-
-		// Publish order cancelled event
-		if err := s.publishOrderCancelled(*orderWithSeats); err != nil {
-			s.logger.Error("KAFKA", fmt.Sprintf("Kafka publish error (order cancelled): %v", err))
-		}
-
-		// Publish seats released event
-		if err := s.publishSeatsReleased(*orderWithSeats); err != nil {
-			s.logger.Error("KAFKA", fmt.Sprintf("Kafka publish error (seats released): %v", err))
-		}
+		return fmt.Errorf("could not get tickets for order %s: %w", id, err)
 	} else {
 		// Use the denormalized order with tickets for better event payload
 		// Publish order cancelled event with full ticket details
@@ -207,40 +192,7 @@ func (s *OrderService) Checkout(id string) error {
 	orderWithTickets, err := s.GetOrderWithTickets(id)
 	if err != nil {
 		s.logger.Warn("ORDER", fmt.Sprintf("Could not get tickets for completed order %s: %v", id, err))
-
-		// If we can't get tickets, we need to get seat IDs directly as a fallback
-		seatIDs, err := s.DB.GetSeatsByOrder(id)
-		if err != nil {
-			s.logger.Error("ORDER", fmt.Sprintf("Failed to get seat IDs for order %s: %v", id, err))
-			return fmt.Errorf("failed to get seat IDs: %w", err)
-		}
-
-		// Update order status
-		order.Status = "completed"
-		if err := s.DB.UpdateOrder(*order); err != nil {
-			s.logger.Error("ORDER", fmt.Sprintf("Failed to complete checkout for order %s: %v", id, err))
-			return fmt.Errorf("failed to complete checkout: %w", err)
-		}
-
-		// Create an OrderWithSeats for publishing seats booked event
-		orderWithSeats := &models.OrderWithSeats{
-			Order:   *order,
-			SeatIDs: seatIDs,
-		}
-
-		// Publish seats booked event
-		if err := s.publishSeatsBooked(*orderWithSeats); err != nil {
-			s.logger.Error("KAFKA", fmt.Sprintf("Kafka publish error (seats booked): %v", err))
-			// Continue even if publishing fails
-		} else {
-			s.logger.Info("KAFKA", fmt.Sprintf("Published seats booked event for order %s with %d seats",
-				id, len(seatIDs)))
-		}
-
-		// Fall back to basic order update event
-		if err := s.publishOrderUpdated(*order); err != nil {
-			s.logger.Error("KAFKA", fmt.Sprintf("Kafka publish error (order completed): %v", err))
-		}
+		return fmt.Errorf("could not get tickets for completed order %s: %w", id, err)
 	} else {
 		// Extract seat IDs from tickets
 		var seatIDs []string
@@ -711,22 +663,6 @@ func (s *OrderService) publishOrderCompletedWithTickets(orderWithTickets models.
 	return err
 }
 
-func (s *OrderService) publishOrderCancelled(orderWithSeats models.OrderWithSeats) error {
-	payload, err := json.Marshal(orderWithSeats)
-	if err != nil {
-		s.logger.Error("KAFKA", fmt.Sprintf("Failed to marshal order with seats: %v", err))
-		return fmt.Errorf("failed to marshal order with seats: %w", err)
-	}
-
-	err = s.Kafka.Publish("ticketly.order.canceled", orderWithSeats.OrderID, payload)
-	if err != nil {
-		s.logger.Error("KAFKA", fmt.Sprintf("Failed to publish order cancelled event: %v", err))
-	} else {
-		s.logger.Info("KAFKA", fmt.Sprintf("Published order cancelled event for order: %s", orderWithSeats.OrderID))
-	}
-	return err
-}
-
 // publishOrderCancelledWithTickets publishes an order cancelled event with full ticket details
 func (s *OrderService) publishOrderCancelledWithTickets(orderWithTickets models.OrderWithTickets, seatIDs []string) error {
 	// Add SeatIDs field to the event payload for backward compatibility
@@ -752,6 +688,23 @@ func (s *OrderService) publishOrderCancelledWithTickets(orderWithTickets models.
 	} else {
 		s.logger.Info("KAFKA", fmt.Sprintf("Published order cancelled event for order: %s with %d tickets",
 			orderWithTickets.OrderID, len(orderWithTickets.Tickets)))
+	}
+	return err
+}
+
+// publishOrderCreatedWithTickets publishes a denormalized order with all ticket details
+func (s *OrderService) publishOrderCreatedWithTickets(orderWithTickets models.OrderWithTickets) error {
+	payload, err := json.Marshal(orderWithTickets)
+	if err != nil {
+		s.logger.Error("KAFKA", fmt.Sprintf("Failed to marshal order with tickets: %v", err))
+		return fmt.Errorf("failed to marshal order with tickets: %w", err)
+	}
+
+	err = s.Kafka.Publish("ticketly.order.created", orderWithTickets.OrderID, payload)
+	if err != nil {
+		s.logger.Error("KAFKA", fmt.Sprintf("Failed to publish order created event: %v", err))
+	} else {
+		s.logger.Info("KAFKA", fmt.Sprintf("Published order created event for order: %s with %d tickets", orderWithTickets.OrderID, len(orderWithTickets.Tickets)))
 	}
 	return err
 }
@@ -818,41 +771,6 @@ func (s *OrderService) publishSeatsBooked(orderWithSeats models.OrderWithSeats) 
 		s.logger.Error("KAFKA", fmt.Sprintf("Failed to publish seat status event: %v", err))
 	} else {
 		s.logger.Info("KAFKA", fmt.Sprintf("Published seat status (BOOKED) event for %d seats", len(orderWithSeats.SeatIDs)))
-	}
-	return err
-}
-
-// publishOrderCreatedWithSeats publishes an order event with just seat IDs
-// DEPRECATED: Use publishOrderCreatedWithTickets instead for richer events
-func (s *OrderService) publishOrderCreatedWithSeats(orderWithSeats models.OrderWithSeats) error {
-	payload, err := json.Marshal(orderWithSeats)
-	if err != nil {
-		s.logger.Error("KAFKA", fmt.Sprintf("Failed to marshal order with seats: %v", err))
-		return fmt.Errorf("failed to marshal order with seats: %w", err)
-	}
-
-	err = s.Kafka.Publish("ticketly.order.created", orderWithSeats.OrderID, payload)
-	if err != nil {
-		s.logger.Error("KAFKA", fmt.Sprintf("Failed to publish order created event: %v", err))
-	} else {
-		s.logger.Info("KAFKA", fmt.Sprintf("Published order created event for order: %s with %d seats", orderWithSeats.OrderID, len(orderWithSeats.SeatIDs)))
-	}
-	return err
-}
-
-// publishOrderCreatedWithTickets publishes a denormalized order with all ticket details
-func (s *OrderService) publishOrderCreatedWithTickets(orderWithTickets models.OrderWithTickets) error {
-	payload, err := json.Marshal(orderWithTickets)
-	if err != nil {
-		s.logger.Error("KAFKA", fmt.Sprintf("Failed to marshal order with tickets: %v", err))
-		return fmt.Errorf("failed to marshal order with tickets: %w", err)
-	}
-
-	err = s.Kafka.Publish("ticketly.order.created", orderWithTickets.OrderID, payload)
-	if err != nil {
-		s.logger.Error("KAFKA", fmt.Sprintf("Failed to publish order created event: %v", err))
-	} else {
-		s.logger.Info("KAFKA", fmt.Sprintf("Published order created event for order: %s with %d tickets", orderWithTickets.OrderID, len(orderWithTickets.Tickets)))
 	}
 	return err
 }
