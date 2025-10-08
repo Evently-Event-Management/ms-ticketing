@@ -19,7 +19,6 @@ type Order struct {
 	OrderID        string    `bun:"order_id,pk"`
 	UserID         string    `bun:"user_id"`
 	SessionID      string    `bun:"session_id"`
-	SeatIDs        []string  `bun:"seat_ids,array"`
 	Status         string    `bun:"status"`
 	SubTotal       float64   `bun:"subtotal"`               // Price before discount
 	DiscountID     string    `bun:"discount_id,nullzero"`   // ID of applied discount code
@@ -27,6 +26,13 @@ type Order struct {
 	DiscountAmount float64   `bun:"discount_amount"`        // Amount of discount applied
 	Price          float64   `bun:"price"`                  // Final price after discount
 	CreatedAt      time.Time `bun:"created_at"`
+}
+
+// OrderWithSeats extends the Order model with seat information
+// This is not stored in the database but used for API responses
+type OrderWithSeats struct {
+	Order
+	SeatIDs []string `json:"seat_ids"`
 }
 
 type Tier struct {
