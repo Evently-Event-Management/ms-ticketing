@@ -54,6 +54,7 @@ func migrate(db *sql.DB) error {
 	CREATE TABLE orders (
 		order_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 		user_id UUID NOT NULL,
+		event_id UUID,
 		session_id UUID NOT NULL,
 		status   TEXT NOT NULL,
 		subtotal NUMERIC(10,2) NOT NULL,
@@ -88,6 +89,7 @@ func seed(db *sql.DB) error {
 
 	// Sample UUIDs
 	userID := "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+	eventID := "cccccccc-cccc-cccc-cccc-cccccccccccc" // Added eventID
 	sessionID := "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
 	seat1 := "11111111-1111-1111-1111-111111111111"
 	seat2 := "22222222-2222-2222-2222-222222222222"
@@ -98,9 +100,10 @@ func seed(db *sql.DB) error {
 	// Insert sample Order
 	var orderID string
 	err := db.QueryRow(
-		`INSERT INTO orders (user_id, session_id, status, subtotal, discount_id, discount_code, discount_amount, price, created_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING order_id`,
+		`INSERT INTO orders (user_id, event_id, session_id, status, subtotal, discount_id, discount_code, discount_amount, price, created_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING order_id`,
 		userID,
+		eventID,
 		sessionID,
 		"completed",
 		300.00,
@@ -132,22 +135,22 @@ func seed(db *sql.DB) error {
 
 func printData(db *sql.DB) error {
 	fmt.Println("\n📦 Orders:")
-	rows, err := db.Query(`SELECT order_id, user_id, session_id, status, price, created_at FROM orders`)
+	rows, err := db.Query(`SELECT order_id, user_id, event_id, session_id, status, price, created_at FROM orders`)
 	if err != nil {
 		return err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var id, userID, sessionID string
+		var id, userID, eventID, sessionID string
 		var status string
 		var price float64
 		var created time.Time
-		if err := rows.Scan(&id, &userID, &sessionID, &status, &price, &created); err != nil {
+		if err := rows.Scan(&id, &userID, &eventID, &sessionID, &status, &price, &created); err != nil {
 			return err
 		}
-		fmt.Printf("- Order %s | User %s | Session %s | Status: %s | Price: %.2f | Created: %s\n",
-			id, userID, sessionID, status, price, created)
+		fmt.Printf("- Order %s | User %s | Event %s | Session %s | Status: %s | Price: %.2f | Created: %s\n",
+			id, userID, eventID, sessionID, status, price, created)
 	}
 
 	fmt.Println("\n🎟 Tickets:")

@@ -18,6 +18,7 @@ type Order struct {
 
 	OrderID        string    `bun:"order_id,pk"`
 	UserID         string    `bun:"user_id"`
+	EventID        string    `bun:"event_id"` // Added event_id field
 	SessionID      string    `bun:"session_id"`
 	Status         string    `bun:"status"`
 	SubTotal       float64   `bun:"subtotal"`               // Price before discount
