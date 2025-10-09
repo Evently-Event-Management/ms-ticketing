@@ -62,7 +62,7 @@ func (d *DB) GetOrderWithSeats(id string) (*models.OrderWithSeats, error) {
 func (d *DB) UpdateOrder(order models.Order) error {
 	_, err := d.Bun.NewUpdate().
 		Model(&order).
-		Column("session_id", "user_id", "status", "price", "created_at").
+		Column("session_id", "event_id", "user_id", "status", "price", "created_at").
 		Where("order_id = ?", order.OrderID).
 		Exec(context.Background())
 	return err
