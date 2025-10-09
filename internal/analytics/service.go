@@ -25,12 +25,22 @@ type EventAnalytics struct {
 	TotalBeforeDisc  float64             `json:"total_before_discounts"`
 	TotalTicketsSold int                 `json:"total_tickets_sold"`
 	DailySales       []DailySalesMetrics `json:"daily_sales"`
+	SalesByTier      []TierSalesMetrics  `json:"sales_by_tier"`
 }
 
 // EventDiscountAnalytics represents discount usage data for an event
 type EventDiscountAnalytics struct {
 	EventID       string          `json:"event_id"`
 	DiscountUsage []DiscountUsage `json:"discount_usage"`
+}
+
+// TierSalesMetrics contains sales metrics for a specific tier
+type TierSalesMetrics struct {
+	TierID      string  `json:"tier_id"`
+	TierName    string  `json:"tier_name"`
+	TierColor   string  `json:"tier_color"`
+	TicketsSold int     `json:"tickets_sold"`
+	Revenue     float64 `json:"revenue"`
 }
 
 // SessionAnalytics represents aggregated analytics data for a session
@@ -41,6 +51,21 @@ type SessionAnalytics struct {
 	TotalBeforeDisc  float64             `json:"total_before_discounts"`
 	TotalTicketsSold int                 `json:"total_tickets_sold"`
 	DailySales       []DailySalesMetrics `json:"daily_sales"`
+	SalesByTier      []TierSalesMetrics  `json:"sales_by_tier"`
+}
+
+// SessionSummary contains basic revenue information for a session
+type SessionSummary struct {
+	SessionID        string  `json:"session_id"`
+	TotalRevenue     float64 `json:"total_revenue"`
+	TotalBeforeDisc  float64 `json:"total_before_discounts"`
+	TotalTicketsSold int     `json:"total_tickets_sold"`
+}
+
+// EventSessionsAnalytics represents all sessions summary for an event
+type EventSessionsAnalytics struct {
+	EventID  string           `json:"event_id"`
+	Sessions []SessionSummary `json:"sessions"`
 }
 
 // DailySalesMetrics contains metrics for a single day
@@ -115,6 +140,38 @@ func (s *Service) GetEventAnalytics(ctx context.Context, eventID string) (*Event
 		totalBeforeDisc += order.SubTotal
 	}
 
+	// Get sales by tier
+	type tierSalesRaw struct {
+		TierID      string  `bun:"tier_id"`
+		TierName    string  `bun:"tier_name"`
+		TierColor   string  `bun:"tier_color"`
+		TicketCount int     `bun:"ticket_count"`
+		TierRevenue float64 `bun:"tier_revenue"`
+	}
+
+	var tierSales []tierSalesRaw
+	err = s.db.NewRaw(`
+		SELECT 
+			t.tier_id,
+			t.tier_name,
+			t.colour AS tier_color,
+			COUNT(t.ticket_id) AS ticket_count,
+			SUM(t.price_at_purchase) AS tier_revenue
+		FROM 
+			tickets t
+		JOIN 
+			orders o ON t.order_id = o.order_id
+		WHERE 
+			o.event_id = ?
+		GROUP BY 
+			t.tier_id, t.tier_name, t.colour
+		ORDER BY 
+			t.tier_name
+	`, eventID).Scan(ctx, &tierSales)
+	if err != nil {
+		return nil, err
+	}
+
 	// Format results
 	result := &EventAnalytics{
 		EventID:          eventID,
@@ -122,6 +179,7 @@ func (s *Service) GetEventAnalytics(ctx context.Context, eventID string) (*Event
 		TotalBeforeDisc:  totalBeforeDisc,
 		TotalTicketsSold: ticketCount,
 		DailySales:       make([]DailySalesMetrics, 0, len(dailySales)),
+		SalesByTier:      make([]TierSalesMetrics, 0, len(tierSales)),
 	}
 
 	for _, ds := range dailySales {
@@ -129,6 +187,16 @@ func (s *Service) GetEventAnalytics(ctx context.Context, eventID string) (*Event
 			Date:        ds.SalesDate.Format("2006-01-02"),
 			Revenue:     ds.DailyRevenue,
 			TicketsSold: ds.DailyQuantity,
+		})
+	}
+
+	for _, ts := range tierSales {
+		result.SalesByTier = append(result.SalesByTier, TierSalesMetrics{
+			TierID:      ts.TierID,
+			TierName:    ts.TierName,
+			TierColor:   ts.TierColor,
+			TicketsSold: ts.TicketCount,
+			Revenue:     ts.TierRevenue,
 		})
 	}
 
@@ -173,6 +241,56 @@ func (s *Service) GetEventDiscountAnalytics(ctx context.Context, eventID string)
 			DiscountCode:  du.DiscountCode,
 			UsageCount:    du.CodeUsageCount,
 			TotalDiscount: du.DiscountAmountSum,
+		})
+	}
+
+	return result, nil
+}
+
+// GetEventSessionsAnalytics returns summary analytics for all sessions of an event
+func (s *Service) GetEventSessionsAnalytics(ctx context.Context, eventID string) (*EventSessionsAnalytics, error) {
+	// Get all sessions for this event
+	type sessionSummaryRaw struct {
+		SessionID        string  `bun:"session_id"`
+		TotalRevenue     float64 `bun:"total_revenue"`
+		TotalBeforeDisc  float64 `bun:"total_before_disc"`
+		TotalTicketsSold int     `bun:"total_tickets_sold"`
+	}
+
+	var sessionSummaries []sessionSummaryRaw
+	err := s.db.NewRaw(`
+		SELECT 
+			o.session_id,
+			SUM(o.price) AS total_revenue,
+			SUM(o.subtotal) AS total_before_disc,
+			COUNT(t.ticket_id) AS total_tickets_sold
+		FROM 
+			orders o
+		JOIN 
+			tickets t ON t.order_id = o.order_id
+		WHERE 
+			o.event_id = ?
+		GROUP BY 
+			o.session_id
+		ORDER BY 
+			o.session_id
+	`, eventID).Scan(ctx, &sessionSummaries)
+	if err != nil {
+		return nil, err
+	}
+
+	// Format results
+	result := &EventSessionsAnalytics{
+		EventID:  eventID,
+		Sessions: make([]SessionSummary, 0, len(sessionSummaries)),
+	}
+
+	for _, ss := range sessionSummaries {
+		result.Sessions = append(result.Sessions, SessionSummary{
+			SessionID:        ss.SessionID,
+			TotalRevenue:     ss.TotalRevenue,
+			TotalBeforeDisc:  ss.TotalBeforeDisc,
+			TotalTicketsSold: ss.TotalTicketsSold,
 		})
 	}
 
@@ -236,6 +354,38 @@ func (s *Service) GetSessionAnalytics(ctx context.Context, eventID, sessionID st
 		totalBeforeDisc += order.SubTotal
 	}
 
+	// Get sales by tier for this session
+	type tierSalesRaw struct {
+		TierID      string  `bun:"tier_id"`
+		TierName    string  `bun:"tier_name"`
+		TierColor   string  `bun:"tier_color"`
+		TicketCount int     `bun:"ticket_count"`
+		TierRevenue float64 `bun:"tier_revenue"`
+	}
+
+	var tierSales []tierSalesRaw
+	err = s.db.NewRaw(`
+		SELECT 
+			t.tier_id,
+			t.tier_name,
+			t.colour AS tier_color,
+			COUNT(t.ticket_id) AS ticket_count,
+			SUM(t.price_at_purchase) AS tier_revenue
+		FROM 
+			tickets t
+		JOIN 
+			orders o ON t.order_id = o.order_id
+		WHERE 
+			o.session_id = ?
+		GROUP BY 
+			t.tier_id, t.tier_name, t.colour
+		ORDER BY 
+			t.tier_name
+	`, sessionID).Scan(ctx, &tierSales)
+	if err != nil {
+		return nil, err
+	}
+
 	// Format results
 	result := &SessionAnalytics{
 		EventID:          eventID,
@@ -244,6 +394,7 @@ func (s *Service) GetSessionAnalytics(ctx context.Context, eventID, sessionID st
 		TotalBeforeDisc:  totalBeforeDisc,
 		TotalTicketsSold: ticketCount,
 		DailySales:       make([]DailySalesMetrics, 0, len(dailySales)),
+		SalesByTier:      make([]TierSalesMetrics, 0, len(tierSales)),
 	}
 
 	for _, ds := range dailySales {
@@ -251,6 +402,16 @@ func (s *Service) GetSessionAnalytics(ctx context.Context, eventID, sessionID st
 			Date:        ds.SalesDate.Format("2006-01-02"),
 			Revenue:     ds.DailyRevenue,
 			TicketsSold: ds.DailyQuantity,
+		})
+	}
+
+	for _, ts := range tierSales {
+		result.SalesByTier = append(result.SalesByTier, TierSalesMetrics{
+			TierID:      ts.TierID,
+			TierName:    ts.TierName,
+			TierColor:   ts.TierColor,
+			TicketsSold: ts.TicketCount,
+			Revenue:     ts.TierRevenue,
 		})
 	}
 
