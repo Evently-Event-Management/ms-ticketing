@@ -38,6 +38,8 @@ import (
 
 type DB interface {
 	GetSessionIdBySeat(seatID string) (string, error)
+	GetOrderBySeat(seatID string) (*models.Order, error)
+	UpdateOrder(order models.Order) error
 }
 
 func subscribeSeatUnlocks(rdb *redis.Client, producer *kafka.Producer, db DB, logger *logger.Logger, kafkaBrokers []string) {
@@ -69,6 +71,26 @@ func subscribeSeatUnlocks(rdb *redis.Client, producer *kafka.Producer, db DB, lo
 				if err != nil {
 					logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to get session ID for seat %s: %v", seatID, err))
 					continue
+				}
+
+				// Get order by seat and update status to cancelled
+				order, err := db.GetOrderBySeat(seatID)
+				if err != nil {
+					logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to get order for seat %s: %v", seatID, err))
+				} else {
+					logger.Info("SEAT_UNLOCK", fmt.Sprintf("Found order %s for seat %s with status: %s", order.OrderID, seatID, order.Status))
+					// Update order status to cancelled only if it's currently pending
+					if order.Status == "pending" {
+						order.Status = "cancelled"
+						err = db.UpdateOrder(*order)
+						if err != nil {
+							logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to update order %s to cancelled: %v", order.OrderID, err))
+						} else {
+							logger.Info("SEAT_UNLOCK", fmt.Sprintf("Order %s status updated to cancelled due to seat lock expiry", order.OrderID))
+						}
+					} else {
+						logger.Info("SEAT_UNLOCK", fmt.Sprintf("Order %s status is '%s', not updating to cancelled (only pending orders are updated)", order.OrderID, order.Status))
+					}
 				}
 
 				// Create SeatStatusChangeEventDto using the proper model
@@ -295,6 +317,7 @@ func main() {
 			r.Get("/{orderId}", handler.GetOrder)
 			r.Put("/{orderId}", handler.UpdateOrder)
 			r.Delete("/{orderId}", handler.DeleteOrder)
+			r.Get("/user/{userId}", handler.GetOrdersWithTicketsByUserID)
 		})
 		logger.Info("ROUTER", "Order routes registered under /api/order")
 

@@ -29,6 +29,7 @@ type DBLayer interface {
 	GetOrderBySeat(seatID string) (*models.Order, error)
 	GetSeatsByOrder(orderID string) ([]string, error)
 	GetSessionIdBySeat(seatID string) (string, error)
+	GetOrdersWithTicketsByUserID(userID string) ([]models.OrderWithTickets, error)
 }
 
 type RedisLock interface {
@@ -611,6 +612,20 @@ func (s *OrderService) GetOrderWithTickets(orderID string) (*models.OrderWithTic
 		Order:   *order,
 		Tickets: streamingTickets,
 	}, nil
+}
+
+// GetOrdersWithTicketsByUserID retrieves all orders with their associated tickets for a given user
+func (s *OrderService) GetOrdersWithTicketsByUserID(userID string) ([]models.OrderWithTickets, error) {
+	s.logger.Debug("ORDER", fmt.Sprintf("Getting orders with tickets for user: %s", userID))
+
+	ordersWithTickets, err := s.DB.GetOrdersWithTicketsByUserID(userID)
+	if err != nil {
+		s.logger.Error("ORDER", fmt.Sprintf("Failed to get orders with tickets for user %s: %v", userID, err))
+		return nil, fmt.Errorf("failed to get orders with tickets for user: %w", err)
+	}
+
+	s.logger.Info("ORDER", fmt.Sprintf("Retrieved %d orders with tickets for user %s", len(ordersWithTickets), userID))
+	return ordersWithTickets, nil
 }
 
 // Helper methods for Kafka publishing
