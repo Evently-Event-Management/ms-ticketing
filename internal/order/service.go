@@ -436,6 +436,7 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 	order := models.Order{
 		OrderID:        orderID,
 		UserID:         userID,
+		EventID:        orderReq.EventID,
 		SessionID:      orderReq.SessionID,
 		Status:         "pending",
 		SubTotal:       subtotal,

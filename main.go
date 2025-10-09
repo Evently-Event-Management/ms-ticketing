@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"ms-ticketing/internal/analytics"
+	analytics_api "ms-ticketing/internal/analytics/api"
 	"ms-ticketing/internal/auth"
 	"ms-ticketing/internal/kafka"
 	"ms-ticketing/internal/models"
@@ -250,6 +252,9 @@ func main() {
 	logger.Info("SERVICE", "Initializing ticket service")
 	ticketService := tickets.NewTicketService(&ticket_db.DB{Bun: bunDB})
 
+	logger.Info("SERVICE", "Initializing analytics service")
+	analyticsService := analytics.NewService(bunDB)
+
 	logger.Info("SERVICE", "Initializing order service")
 	// Service layer
 	orderService := order.NewOrderService(
@@ -268,6 +273,8 @@ func main() {
 	ticketHandler := &ticket_api.Handler{
 		TicketService: ticketService,
 	}
+
+	analyticsHandler := analytics_api.NewHandler(analyticsService, logger)
 
 	logger.Info("HTTP", "Setting up router and middleware")
 	// Router setup
@@ -300,6 +307,10 @@ func main() {
 			r.Delete("/{ticketId}", ticketHandler.DeleteTicket)
 		})
 		logger.Info("ROUTER", "Ticket routes registered under /api/order/ticket")
+
+		// Register analytics routes
+		analyticsHandler.RegisterRoutes(r)
+		logger.Info("ROUTER", "Analytics routes registered under /api/order/analytics")
 	})
 
 	// HTTP Server
