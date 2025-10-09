@@ -249,7 +249,7 @@ func (s *Service) GetEventDiscountAnalytics(ctx context.Context, eventID string)
 
 // GetEventSessionsAnalytics returns summary analytics for all sessions of an event
 func (s *Service) GetEventSessionsAnalytics(ctx context.Context, eventID string) (*EventSessionsAnalytics, error) {
-	// Get all sessions for this event
+	// sessionSummaryRaw is used to scan the raw SQL query result.
 	type sessionSummaryRaw struct {
 		SessionID        string  `bun:"session_id"`
 		TotalRevenue     float64 `bun:"total_revenue"`
@@ -258,28 +258,54 @@ func (s *Service) GetEventSessionsAnalytics(ctx context.Context, eventID string)
 	}
 
 	var sessionSummaries []sessionSummaryRaw
+	// The corrected query using Common Table Expressions (CTEs)
 	err := s.db.NewRaw(`
-		SELECT 
-			o.session_id,
-			SUM(o.price) AS total_revenue,
-			SUM(o.subtotal) AS total_before_disc,
-			COUNT(t.ticket_id) AS total_tickets_sold
-		FROM 
-			orders o
-		JOIN 
-			tickets t ON t.order_id = o.order_id
-		WHERE 
-			o.event_id = ?
-		GROUP BY 
-			o.session_id
-		ORDER BY 
-			o.session_id
-	`, eventID).Scan(ctx, &sessionSummaries)
+        WITH OrderTotals AS (
+            -- First, calculate the total revenue and subtotal from the orders table
+            SELECT
+                session_id,
+                SUM(price) AS total_revenue,
+                SUM(subtotal) AS total_before_disc
+            FROM
+                orders
+            WHERE
+                event_id = ?
+            GROUP BY
+                session_id
+        ),
+        TicketCounts AS (
+            -- Second, count the number of tickets sold
+            SELECT
+                o.session_id,
+                COUNT(t.ticket_id) AS total_tickets_sold
+            FROM
+                tickets t
+            JOIN
+                orders o ON t.order_id = o.order_id
+            WHERE
+                o.event_id = ?
+            GROUP BY
+                o.session_id
+        )
+        -- Finally, join the two results
+        SELECT
+            ot.session_id,
+            ot.total_revenue,
+            ot.total_before_disc,
+            tc.total_tickets_sold
+        FROM
+            OrderTotals ot
+        JOIN
+            TicketCounts tc ON ot.session_id = tc.session_id
+        ORDER BY
+            ot.session_id;
+    `, eventID, eventID).Scan(ctx, &sessionSummaries) // Pass eventID twice for the two placeholders
+
 	if err != nil {
 		return nil, err
 	}
 
-	// Format results
+	// Format results into the final structure
 	result := &EventSessionsAnalytics{
 		EventID:  eventID,
 		Sessions: make([]SessionSummary, 0, len(sessionSummaries)),
