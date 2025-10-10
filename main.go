@@ -458,7 +458,6 @@ func main() {
 			r.Route("/order", func(r chi.Router) {
 				r.Post("/", handler.SeatValidationAndPlaceOrder)
 				r.Get("/{orderId}", handler.GetOrder)
-				r.Put("/{orderId}", handler.UpdateOrder)
 				r.Delete("/{orderId}", handler.DeleteOrder)
 				r.Post("/{orderId}/create-payment-intent", handler.CreatePaymentIntent)
 			})
