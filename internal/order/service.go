@@ -29,6 +29,8 @@ type DBLayer interface {
 	GetOrderBySeat(seatID string) (*models.Order, error)
 	GetSeatsByOrder(orderID string) ([]string, error)
 	GetSessionIdBySeat(seatID string) (string, error)
+	GetOrdersWithTicketsByUserID(userID string) ([]models.OrderWithTickets, error)
+	GetOrdersWithTicketsAndQRByUserID(userID string) ([]models.OrderWithTicketsAndQR, error)
 }
 
 type RedisLock interface {
@@ -113,6 +115,35 @@ func (s *OrderService) UpdateOrder(id string, updateData models.Order) error {
 	}
 
 	s.logger.Info("ORDER", fmt.Sprintf("Order %s updated successfully", id))
+	return nil
+}
+
+// UpdateOrderStatus updates only the status of an order
+func (s *OrderService) UpdateOrderStatus(orderID string, status string) error {
+	s.logger.Debug("ORDER", fmt.Sprintf("Updating order %s status to %s", orderID, status))
+
+	// Get the existing order
+	order, err := s.DB.GetOrderByID(orderID)
+	if err != nil {
+		s.logger.Error("ORDER", fmt.Sprintf("Failed to get order %s: %v", orderID, err))
+		return fmt.Errorf("failed to get order: %w", err)
+	}
+
+	// Update only the status
+	order.Status = status
+
+	// Save the updated order
+	if err := s.DB.UpdateOrder(*order); err != nil {
+		s.logger.Error("ORDER", fmt.Sprintf("Failed to update order %s status: %v", orderID, err))
+		return fmt.Errorf("failed to update order status: %w", err)
+	}
+
+	// Publish order updated event
+	if err := s.publishOrderUpdated(*order); err != nil {
+		s.logger.Error("KAFKA", fmt.Sprintf("Kafka publish error (order status updated): %v", err))
+	}
+
+	s.logger.Info("ORDER", fmt.Sprintf("Order %s status updated to %s", orderID, status))
 	return nil
 }
 
@@ -611,6 +642,34 @@ func (s *OrderService) GetOrderWithTickets(orderID string) (*models.OrderWithTic
 		Order:   *order,
 		Tickets: streamingTickets,
 	}, nil
+}
+
+// GetOrdersWithTicketsByUserID retrieves all orders with their associated tickets for a given user
+func (s *OrderService) GetOrdersWithTicketsByUserID(userID string) ([]models.OrderWithTickets, error) {
+	s.logger.Debug("ORDER", fmt.Sprintf("Getting orders with tickets for user: %s", userID))
+
+	ordersWithTickets, err := s.DB.GetOrdersWithTicketsByUserID(userID)
+	if err != nil {
+		s.logger.Error("ORDER", fmt.Sprintf("Failed to get orders with tickets for user %s: %v", userID, err))
+		return nil, fmt.Errorf("failed to get orders with tickets for user: %w", err)
+	}
+
+	s.logger.Info("ORDER", fmt.Sprintf("Retrieved %d orders with tickets for user %s", len(ordersWithTickets), userID))
+	return ordersWithTickets, nil
+}
+
+// GetOrdersWithTicketsAndQRByUserID retrieves all orders with their associated tickets including QR codes for a given user
+func (s *OrderService) GetOrdersWithTicketsAndQRByUserID(userID string) ([]models.OrderWithTicketsAndQR, error) {
+	s.logger.Debug("ORDER", fmt.Sprintf("Getting orders with tickets and QR codes for user: %s", userID))
+
+	ordersWithTicketsAndQR, err := s.DB.GetOrdersWithTicketsAndQRByUserID(userID)
+	if err != nil {
+		s.logger.Error("ORDER", fmt.Sprintf("Failed to get orders with tickets and QR codes for user %s: %v", userID, err))
+		return nil, fmt.Errorf("failed to get orders with tickets and QR codes for user: %w", err)
+	}
+
+	s.logger.Info("ORDER", fmt.Sprintf("Retrieved %d orders with tickets and QR codes for user %s", len(ordersWithTicketsAndQR), userID))
+	return ordersWithTicketsAndQR, nil
 }
 
 // Helper methods for Kafka publishing

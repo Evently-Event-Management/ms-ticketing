@@ -10,6 +10,9 @@ import (
 	"ms-ticketing/internal/auth"
 	"ms-ticketing/internal/kafka"
 	"ms-ticketing/internal/models"
+	payment_handler "ms-ticketing/internal/payment/handler"
+	"ms-ticketing/internal/payment/services"
+	"ms-ticketing/internal/payment/storage"
 	ticket_db "ms-ticketing/internal/tickets/db"
 	tickets "ms-ticketing/internal/tickets/service"
 	"ms-ticketing/internal/tickets/ticket_api"
@@ -23,7 +26,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-redis/redis/v8"
 	"github.com/joho/godotenv"
-	_ "github.com/lib/pq" // PostgreSQL driver
+	_ "github.com/lib/pq"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 
@@ -32,18 +35,18 @@ import (
 	"ms-ticketing/internal/order/order_api"
 	rediswrap "ms-ticketing/internal/order/redis"
 
-	// Import the logger package
 	"ms-ticketing/internal/logger"
 )
 
 type DB interface {
 	GetSessionIdBySeat(seatID string) (string, error)
+	GetOrderBySeat(seatID string) (*models.Order, error)
+	UpdateOrder(order models.Order) error
 }
 
 func subscribeSeatUnlocks(rdb *redis.Client, producer *kafka.Producer, db DB, logger *logger.Logger, kafkaBrokers []string) {
 	ctx := context.Background()
 
-	// Ensure keyspace notifications are enabled
 	val, err := rdb.ConfigGet(ctx, "notify-keyspace-events").Result()
 	if err != nil {
 		logger.Error("REDIS", fmt.Sprintf("Failed to get keyspace config: %v", err))
@@ -64,14 +67,30 @@ func subscribeSeatUnlocks(rdb *redis.Client, producer *kafka.Producer, db DB, lo
 				seatID := strings.TrimPrefix(msg.Payload, "seat_lock:")
 				logger.Info("SEAT_UNLOCK", fmt.Sprintf("Seat lock expired for seat: %s", seatID))
 
-				// Get session ID from database
 				sessionID, err := db.GetSessionIdBySeat(seatID)
 				if err != nil {
 					logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to get session ID for seat %s: %v", seatID, err))
 					continue
 				}
 
-				// Create SeatStatusChangeEventDto using the proper model
+				order, err := db.GetOrderBySeat(seatID)
+				if err != nil {
+					logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to get order for seat %s: %v", seatID, err))
+				} else {
+					logger.Info("SEAT_UNLOCK", fmt.Sprintf("Found order %s for seat %s with status: %s", order.OrderID, seatID, order.Status))
+					if order.Status == "pending" {
+						order.Status = "cancelled"
+						err = db.UpdateOrder(*order)
+						if err != nil {
+							logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to update order %s to cancelled: %v", order.OrderID, err))
+						} else {
+							logger.Info("SEAT_UNLOCK", fmt.Sprintf("Order %s status updated to cancelled due to seat lock expiry", order.OrderID))
+						}
+					} else {
+						logger.Info("SEAT_UNLOCK", fmt.Sprintf("Order %s status is '%s', not updating to cancelled (only pending orders are updated)", order.OrderID, order.Status))
+					}
+				}
+
 				seatEvent, err := models.NewSeatStatusChangeEventDto(sessionID, []string{seatID}, models.SeatStatusAvailable)
 				if err != nil {
 					logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to create seat status event DTO: %v", err))
@@ -84,16 +103,13 @@ func subscribeSeatUnlocks(rdb *redis.Client, producer *kafka.Producer, db DB, lo
 					continue
 				}
 
-				// Use the generic Publish method
 				err = producer.Publish("ticketly.seats.status", seatID, value)
 				if err != nil {
 					logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to publish seat unlock event: %v", err))
-					// Try to create the topic if it doesn't exist
 					err = kafka.CreateTopicIfNotExists(kafkaBrokers, "ticketly.seats.status")
 					if err != nil {
 						logger.Error("KAFKA", fmt.Sprintf("Failed to create topic: %v", err))
 					} else {
-						// Try publishing again
 						err = producer.Publish("ticketly.seats.status", seatID, value)
 						if err != nil {
 							logger.Error("SEAT_UNLOCK", fmt.Sprintf("Still failed to publish after topic creation: %v", err))
@@ -109,14 +125,12 @@ func subscribeSeatUnlocks(rdb *redis.Client, producer *kafka.Producer, db DB, lo
 	}()
 }
 
-// Verify PostgreSQL + Redis connections
 func verifyConnections(ctx context.Context, logger *logger.Logger) (*bun.DB, *redis.Client) {
 	dsn := os.Getenv("POSTGRES_DSN")
 	if dsn == "" {
 		logger.Fatal("CONFIG", "POSTGRES_DSN not set")
 	}
 
-	// Open PostgreSQL with retry logic
 	var sqldb *sql.DB
 	var err error
 	maxRetries := 5
@@ -132,7 +146,7 @@ func verifyConnections(ctx context.Context, logger *logger.Logger) (*bun.DB, *re
 
 		err = sqldb.Ping()
 		if err == nil {
-			break // Connection successful
+			break
 		}
 
 		logger.Error("DATABASE", fmt.Sprintf("Failed to connect to PostgreSQL: %v", err))
@@ -141,18 +155,15 @@ func verifyConnections(ctx context.Context, logger *logger.Logger) (*bun.DB, *re
 		}
 	}
 
-	// Final check after all retries
 	if err != nil {
 		logger.Fatal("DATABASE", fmt.Sprintf("Failed to connect to PostgreSQL after %d attempts: %v", maxRetries, err))
 	}
 
 	logger.Info("DATABASE", "✅ PostgreSQL connection successful")
 
-	// Wrap with Bun
 	bunDB := bun.NewDB(sqldb, pgdialect.New())
 
-	// Redis connection
-	redisAddr := os.Getenv("REDIS_ADDR") // e.g. localhost:6379
+	redisAddr := os.Getenv("REDIS_ADDR")
 	if redisAddr == "" {
 		logger.Fatal("CONFIG", "REDIS_ADDR not set")
 	}
@@ -162,37 +173,33 @@ func verifyConnections(ctx context.Context, logger *logger.Logger) (*bun.DB, *re
 	if err := redisClient.Ping(ctx).Err(); err != nil {
 		logger.Fatal("DATABASE", fmt.Sprintf("Redis connection error: %v", err))
 	}
-	// Configure Redis keyspace notifications
+
 	_, err = redisClient.ConfigSet(ctx, "notify-keyspace-events", "Ex").Result()
 	if err != nil {
 		logger.Warn("REDIS", fmt.Sprintf("Failed to enable keyspace notifications: %v", err))
 	} else {
 		logger.Info("REDIS", "Keyspace notifications enabled for expired events")
 	}
-	logger.Info("DATABASE", fmt.Sprintf("✅ Redis connection successful to %s (DB: %d)", redisAddr, redisClient.Options().DB))
 
+	logger.Info("DATABASE", fmt.Sprintf("✅ Redis connection successful to %s (DB: %d)", redisAddr, redisClient.Options().DB))
 	return bunDB, redisClient
 }
 
-// Secure test handler
 func SecureHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id") // injected from AuthMiddleware
+	userID := r.Context().Value("user_id")
 	w.WriteHeader(http.StatusOK)
 	_, err := w.Write([]byte("🔒 Secure endpoint accessed by user: " + userID.(string)))
 	if err != nil {
 		fmt.Printf("Error writing response: %v", err)
-		return
 	}
 }
 
 func main() {
-	// Initialize logger first
 	logger := logger.NewLogger()
 	defer logger.Close()
 
 	logger.Info("APP", "Starting Order Service initialization")
 
-	// Load .env if present
 	if err := godotenv.Load(); err != nil {
 		logger.Warn("CONFIG", ".env file not found, using environment variables")
 	} else {
@@ -205,36 +212,16 @@ func main() {
 	ctx := context.Background()
 
 	logger.Info("APP", "Verifying database connections")
-	// Verify DB + Redis connections
 	bunDB, redisClient := verifyConnections(ctx, logger)
-	defer func() {
-		err := bunDB.Close()
-		if err != nil {
-			logger.Error("DATABASE", fmt.Sprintf("Error closing PostgreSQL connection: %v", err))
-			return
-		}
-		logger.Info("DATABASE", "PostgreSQL connection closed")
-	}()
-	defer func() {
-		err := redisClient.Close()
-		if err != nil {
-			logger.Error("DATABASE", fmt.Sprintf("Error closing Redis connection: %v", err))
-			return
-		}
-		logger.Info("DATABASE", "Redis connection closed")
-	}()
+	defer bunDB.Close()
+	defer redisClient.Close()
 
-	logger.Info("KAFKA", "Initializing Kafka producer")
-	// Kafka producer
 	kafkaADDR := os.Getenv("KAFKA_ADDR")
 	logger.Info("KAFKA", fmt.Sprintf("Using Kafka address from environment variable: %s", kafkaADDR))
 	kafkaBrokers := []string{kafkaADDR}
-	logger.Info("KAFKA", fmt.Sprintf("Kafka brokers configured: %v", kafkaBrokers))
 	kafkaProducer := kafka.NewProducer(kafkaBrokers)
 	logger.Info("KAFKA", "Kafka producer initialized successfully")
 
-	// Ensure Kafka topics exist
-	logger.Info("KAFKA", "Ensuring required topics exist")
 	requiredTopics := []string{
 		"ticketly.order.created",
 		"ticketly.order.updated",
@@ -249,14 +236,19 @@ func main() {
 		logger.Info("KAFKA", "Required topics ensured successfully")
 	}
 
-	logger.Info("SERVICE", "Initializing ticket service")
 	ticketService := tickets.NewTicketService(&ticket_db.DB{Bun: bunDB})
-
-	logger.Info("SERVICE", "Initializing analytics service")
 	analyticsService := analytics.NewService(bunDB)
 
-	logger.Info("SERVICE", "Initializing order service")
-	// Service layer
+	paymentStore, err := storage.NewPostgreSQLStoreWithDB(bunDB.DB, logger)
+	if err != nil {
+		logger.Fatal("PAYMENT", fmt.Sprintf("Failed to initialize payment storage: %v", err))
+	}
+
+	stripeService, err := services.NewStripeService(logger)
+	if err != nil {
+		logger.Fatal("PAYMENT", fmt.Sprintf("Failed to initialize Stripe service: %v", err))
+	}
+
 	orderService := order.NewOrderService(
 		&db.DB{Bun: bunDB},
 		rediswrap.NewRedis(redisClient, kafkaProducer),
@@ -276,40 +268,33 @@ func main() {
 
 	analyticsHandler := analytics_api.NewHandler(analyticsService, logger)
 
-	// main.go
+	// Create payment handler
+	paymentHandler := payment_handler.NewStripeHandler(stripeService, paymentStore, kafkaProducer, orderService, logger)
 
 	logger.Info("HTTP", "Setting up router and middleware")
-	// Router setup
 	r := chi.NewRouter()
 
 	// --- Public Routes ---
-	// Define any routes that DO NOT require authentication first.
-	// We are getting rid of the separate publicRouter for simplicity.
 	r.Get("/api/order/tickets/count", ticketHandler.GetTotalTicketsCount)
-	logger.Info("ROUTER", "Public ticket count endpoint registered at /api/orders/tickets/count")
+	logger.Info("ROUTER", "Public ticket count endpoint registered at /api/order/tickets/count")
 
 	// --- Protected Routes ---
-	// Use a Group to apply middleware to a specific set of routes.
 	r.Group(func(r chi.Router) {
-		// Apply the JWT middleware ONLY to this group.
 		r.Use(auth.Middleware())
 		logger.Info("AUTH", "JWT middleware applied to protected API routes")
 
-		// All your protected API routes go inside this group.
 		r.Route("/api", func(r chi.Router) {
-			// Secure test route
 			r.Get("/secure", SecureHandler)
 
-			// Order routes with /order prefix
 			r.Route("/order", func(r chi.Router) {
 				r.Post("/", handler.SeatValidationAndPlaceOrder)
 				r.Get("/{orderId}", handler.GetOrder)
 				r.Put("/{orderId}", handler.UpdateOrder)
 				r.Delete("/{orderId}", handler.DeleteOrder)
+				r.Post("/payment/process", paymentHandler.ProcessPaymentChi)
 			})
 			logger.Info("ROUTER", "Order routes registered under /api/order")
 
-			// Ticket routes under order service
 			r.Route("/order/ticket", func(r chi.Router) {
 				r.Get("/", ticketHandler.ListTicketsByOrder)
 				r.Get("/{ticketId}", ticketHandler.ViewTicket)
@@ -319,26 +304,19 @@ func main() {
 			})
 			logger.Info("ROUTER", "Ticket routes registered under /api/order/ticket")
 
-			// Register analytics routes
 			analyticsHandler.RegisterRoutes(r)
 			logger.Info("ROUTER", "Analytics routes registered under /api/order/analytics")
 		})
 	})
 
-	// HTTP Server
-	// ... (the rest of your main function remains the same)
-
-	// HTTP Server
 	server := &http.Server{
 		Addr:    ":8084",
 		Handler: r,
 	}
 
-	// Start seat unlock subscription
 	logger.Info("REDIS", "Starting seat unlock subscription")
 	subscribeSeatUnlocks(redisClient, kafkaProducer, &db.DB{Bun: bunDB}, logger, kafkaBrokers)
 
-	// Start server
 	go func() {
 		logger.Info("HTTP", "🚀 Order Service running on :8084")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -346,7 +324,6 @@ func main() {
 		}
 	}()
 
-	// Wait for shutdown signal
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	logger.Info("APP", "Service started successfully, waiting for shutdown signal")

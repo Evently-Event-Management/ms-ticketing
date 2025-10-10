@@ -62,7 +62,8 @@ func migrate(db *sql.DB) error {
 		discount_code TEXT,
 		discount_amount NUMERIC(10,2) DEFAULT 0,
 		price    NUMERIC(10,2) NOT NULL,
-		created_at TIMESTAMP NOT NULL DEFAULT NOW()
+		created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+		payment_at TIMESTAMP NULL DEFAULT NOW()
 	);
 
 	CREATE TABLE tickets (

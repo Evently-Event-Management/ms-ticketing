@@ -27,6 +27,7 @@ type Order struct {
 	DiscountAmount float64   `bun:"discount_amount"`        // Amount of discount applied
 	Price          float64   `bun:"price"`                  // Final price after discount
 	CreatedAt      time.Time `bun:"created_at"`
+	PaymentAT      time.Time `bun:"payment_at"`
 }
 
 // OrderWithSeats extends the Order model with seat information
@@ -53,11 +54,35 @@ type TicketForStreaming struct {
 	CheckedInTime   time.Time `json:"checked_in_time,omitempty"`
 }
 
+// TicketWithQRCode includes the QR code for complete ticket information
+// Used when QR code data is needed (e.g., for user ticket retrieval)
+type TicketWithQRCode struct {
+	TicketID        string    `json:"ticket_id"`
+	OrderID         string    `json:"order_id"`
+	SeatID          string    `json:"seat_id"`
+	SeatLabel       string    `json:"seat_label"`
+	Colour          string    `json:"colour"`
+	TierID          string    `json:"tier_id"`
+	TierName        string    `json:"tier_name"`
+	QRCode          []byte    `json:"qr_code"`
+	PriceAtPurchase float64   `json:"price_at_purchase"`
+	IssuedAt        time.Time `json:"issued_at"`
+	CheckedIn       bool      `json:"checked_in"`
+	CheckedInTime   time.Time `json:"checked_in_time,omitempty"`
+}
+
 // OrderWithTickets extends the Order model with full ticket information
 // This denormalized structure is used for streaming order events
 type OrderWithTickets struct {
 	Order
 	Tickets []TicketForStreaming `json:"tickets"`
+}
+
+// OrderWithTicketsAndQR extends the Order model with complete ticket information including QR codes
+// Used when full ticket details including QR codes are needed
+type OrderWithTicketsAndQR struct {
+	Order
+	Tickets []TicketWithQRCode `json:"tickets"`
 }
 
 type Tier struct {

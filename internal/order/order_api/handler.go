@@ -221,3 +221,32 @@ func (h *Handler) SeatValidationAndPlaceOrder(w http.ResponseWriter, r *http.Req
 	}
 	h.Logger.Info("API", "SeatValidationAndPlaceOrder: order created successfully")
 }
+
+func (h *Handler) GetOrdersWithTicketsByUserID(w http.ResponseWriter, r *http.Request) {
+	userID := chi.URLParam(r, "userId")
+	h.Logger.Info("API", fmt.Sprintf("GetOrdersWithTicketsByUserID: userId=%s", userID))
+
+	if userID == "" {
+		h.Logger.Error("API", "GetOrdersWithTicketsByUserID: user ID is required")
+		http.Error(w, "User ID is required", http.StatusBadRequest)
+		return
+	}
+
+	// Use the new method that includes QR codes
+	ordersWithTicketsAndQR, err := h.OrderService.GetOrdersWithTicketsAndQRByUserID(userID)
+	if err != nil {
+		h.Logger.Error("API", fmt.Sprintf("GetOrdersWithTicketsByUserID: failed to get orders with tickets and QR codes: %v", err))
+		http.Error(w, "Failed to retrieve orders: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	h.Logger.Debug("API", fmt.Sprintf("GetOrdersWithTicketsByUserID: found %d orders for user %s", len(ordersWithTicketsAndQR), userID))
+
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(ordersWithTicketsAndQR)
+	if err != nil {
+		h.Logger.Error("API", fmt.Sprintf("GetOrdersWithTicketsByUserID: failed to encode response: %v", err))
+		return
+	}
+	h.Logger.Info("API", fmt.Sprintf("GetOrdersWithTicketsByUserID: response sent successfully for user %s", userID))
+}

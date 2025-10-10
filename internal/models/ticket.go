@@ -39,3 +39,21 @@ func (t Ticket) ToStreamingTicket() TicketForStreaming {
 		CheckedInTime:   t.CheckedInTime,
 	}
 }
+
+// ToTicketWithQRCode converts a Ticket to TicketWithQRCode including the QR code
+func (t Ticket) ToTicketWithQRCode() TicketWithQRCode {
+	return TicketWithQRCode{
+		TicketID:        t.TicketID,
+		OrderID:         t.OrderID,
+		SeatID:          t.SeatID,
+		SeatLabel:       t.SeatLabel,
+		Colour:          t.Colour,
+		TierID:          t.TierID,
+		TierName:        t.TierName,
+		QRCode:          t.QRCode,
+		PriceAtPurchase: t.PriceAtPurchase,
+		IssuedAt:        t.IssuedAt,
+		CheckedIn:       t.CheckedIn,
+		CheckedInTime:   t.CheckedInTime,
+	}
+}
