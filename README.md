@@ -13,6 +13,15 @@ A microservice-based ticketing system for event management, built with Go, Kafka
 - Stripe payment integration for processing payments
 - Redis-based caching for machine-to-machine authentication tokens
 
+## Token Caching
+The service uses Redis to cache M2M (machine-to-machine) authentication tokens, which reduces the number of requests to the authentication server. This is particularly useful in high-traffic scenarios where multiple microservices are communicating with each other. Token caching provides:
+
+- Reduced latency for API calls requiring authentication
+- Lower load on the authentication server
+- Improved overall system performance
+
+The caching mechanism automatically refreshes tokens before they expire and falls back to direct token requests if Redis is unavailable.
+
 ## Architecture
 - **internal/order/**: Order service logic
 - **internal/tickets/**: Ticket service logic
@@ -41,6 +50,7 @@ A microservice-based ticketing system for event management, built with Go, Kafka
    - `STRIPE_SECRET_KEY`: Your Stripe API secret key
    - `SEAT_LOCK_TTL_MINUTES`: Duration in minutes for seat locks (default: 5)
    - `STRIPE_WEBHOOK_SECRET`: Your Stripe webhook signing secret
+   - `REDIS_ADDR`: Redis address for seat locks and M2M token caching
 3. **Run migrations:**
    ```sh
    # Using docker-compose with the migration profile

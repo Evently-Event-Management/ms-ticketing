@@ -435,7 +435,8 @@ func main() {
 		TicketService: ticketService,
 	}
 
-	analyticsHandler := analytics_api.NewHandler(analyticsService, logger)
+	// Use Redis client for M2M token caching in analytics
+	analyticsHandler := analytics_api.NewHandlerWithRedis(analyticsService, logger, redisClient)
 
 	logger.Info("HTTP", "Setting up router and middleware")
 	r := chi.NewRouter()

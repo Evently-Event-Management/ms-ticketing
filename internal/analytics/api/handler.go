@@ -12,13 +12,15 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-redis/redis/v8"
 )
 
 // Handler handles analytics HTTP endpoints
 type Handler struct {
-	Service *analytics.Service
-	Logger  *logger.Logger
-	Client  *http.Client
+	Service     *analytics.Service
+	Logger      *logger.Logger
+	Client      *http.Client
+	RedisClient *redis.Client
 }
 
 // NewHandler creates a new analytics handler
@@ -27,6 +29,16 @@ func NewHandler(service *analytics.Service, logger *logger.Logger) *Handler {
 		Service: service,
 		Logger:  logger,
 		Client:  &http.Client{Timeout: 10 * time.Second},
+	}
+}
+
+// NewHandlerWithRedis creates a new analytics handler with Redis client for token caching
+func NewHandlerWithRedis(service *analytics.Service, logger *logger.Logger, redisClient *redis.Client) *Handler {
+	return &Handler{
+		Service:     service,
+		Logger:      logger,
+		Client:      &http.Client{Timeout: 10 * time.Second},
+		RedisClient: redisClient,
 	}
 }
 
@@ -65,9 +77,8 @@ func (h *Handler) verifyEventOwnership(eventID string, userID string) (bool, err
 		ClientSecret:  os.Getenv("TICKET_CLIENT_SECRET"),
 	}
 
-	// Pass nil for Redis client and logger in analytics as we don't have them here
-	// In production, you might want to pass these from the analytics service
-	token, err := auth.GetM2MToken(config, h.Client, nil, h.Logger)
+	// Use the Redis client if available
+	token, err := auth.GetM2MToken(config, h.Client, h.RedisClient, h.Logger)
 	if err != nil {
 		h.Logger.Error("AUTH", fmt.Sprintf("Failed to get M2M token: %v", err))
 		return false, err
