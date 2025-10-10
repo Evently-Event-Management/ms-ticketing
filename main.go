@@ -461,6 +461,7 @@ func main() {
 				r.Get("/{orderId}", handler.GetOrder)
 				r.Delete("/{orderId}", handler.DeleteOrder)
 				r.Post("/{orderId}/create-payment-intent", handler.CreatePaymentIntent)
+				r.Get("/user/{userId}", handler.GetOrdersWithTicketsByUserID)
 			})
 			logger.Info("ROUTER", "Order routes registered under /api/order")
 
