@@ -166,6 +166,17 @@ func (s *OrderService) CancelOrder(id string) error {
 		return fmt.Errorf("failed to get seat IDs: %w", err)
 	}
 
+	// Cancel the associated payment intent if it exists
+	if order.PaymentIntentID != "" {
+		s.logger.Info("PAYMENT", fmt.Sprintf("Cancelling payment intent %s for order %s", order.PaymentIntentID, id))
+		if err := s.CancelPaymentIntent(order.PaymentIntentID); err != nil {
+			s.logger.Error("PAYMENT", fmt.Sprintf("Failed to cancel payment intent %s: %v", order.PaymentIntentID, err))
+			// Continue with order cancellation even if payment intent cancellation fails
+		}
+		// Reset the payment intent ID
+		order.PaymentIntentID = ""
+	}
+
 	order.Status = "cancelled"
 	if err := s.DB.UpdateOrder(*order); err != nil {
 		s.logger.Error("ORDER", fmt.Sprintf("Failed to cancel order %s: %v", id, err))
@@ -217,6 +228,12 @@ func (s *OrderService) Checkout(id string) error {
 	if order.Status != "pending" {
 		s.logger.Warn("ORDER", fmt.Sprintf("Order %s is not in a valid state for checkout (status: %s)", id, order.Status))
 		return errors.New("order is not in a valid state for checkout")
+	}
+
+	// Ensure payment has been processed (payment intent should exist)
+	if order.PaymentIntentID == "" {
+		s.logger.Warn("ORDER", fmt.Sprintf("Order %s has no payment intent ID", id))
+		return errors.New("order has no payment intent ID")
 	}
 
 	// First get the tickets which contain seat IDs

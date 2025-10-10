@@ -58,11 +58,10 @@ func (d *DB) GetOrderWithSeats(id string) (*models.OrderWithSeats, error) {
 	}, nil
 }
 
-// UpdateOrder → update allowed fields
 func (d *DB) UpdateOrder(order models.Order) error {
 	_, err := d.Bun.NewUpdate().
 		Model(&order).
-		Column("session_id", "event_id", "user_id", "status", "price", "created_at").
+		Column("session_id", "event_id", "user_id", "status", "price", "created_at", "payment_intent_id").
 		Where("order_id = ?", order.OrderID).
 		Exec(context.Background())
 	return err
