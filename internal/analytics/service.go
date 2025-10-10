@@ -84,20 +84,33 @@ type DiscountUsage struct {
 }
 
 // GetEventAnalytics returns revenue analytics for a specific event
-func (s *Service) GetEventAnalytics(ctx context.Context, eventID string) (*EventAnalytics, error) {
-	// Query orders directly by event_id field
+func (s *Service) GetEventAnalytics(ctx context.Context, eventID string, status string) (*EventAnalytics, error) {
+	// Query orders directly by event_id field and optionally by status
 	var orders []models.Order
-	err := s.db.NewSelect().
+	query := s.db.NewSelect().
 		Model(&orders).
-		Where("event_id = ?", eventID).
-		Scan(ctx)
+		Where("event_id = ?", eventID)
+	
+	if status != "" {
+		query = query.Where("status = ?", status)
+	}
+	
+	err := query.Scan(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	// Count tickets - using a simpler query approach
 	var ticketCount int
-	err = s.db.NewRaw("SELECT COUNT(*) FROM tickets t JOIN orders o ON t.order_id = o.order_id WHERE o.event_id = ?", eventID).
+	rawSQL := "SELECT COUNT(*) FROM tickets t JOIN orders o ON t.order_id = o.order_id WHERE o.event_id = ?"
+	args := []interface{}{eventID}
+	
+	if status != "" {
+		rawSQL += " AND o.status = ?"
+		args = append(args, status)
+	}
+	
+	err = s.db.NewRaw(rawSQL, args...).
 		Scan(ctx, &ticketCount)
 	if err != nil {
 		return nil, err
@@ -112,7 +125,7 @@ func (s *Service) GetEventAnalytics(ctx context.Context, eventID string) (*Event
 
 	var dailySales []dailySalesRaw
 	// Use raw SQL to count tickets per day rather than orders
-	err = s.db.NewRaw(`
+	rawSQL = `
 		SELECT 
 			DATE(o.created_at) AS sales_date,
 			SUM(o.price) AS daily_revenue,
@@ -123,11 +136,22 @@ func (s *Service) GetEventAnalytics(ctx context.Context, eventID string) (*Event
 			tickets t ON t.order_id = o.order_id
 		WHERE 
 			o.event_id = ?
+	`
+	args = []interface{}{eventID}
+	
+	if status != "" {
+		rawSQL += " AND o.status = ?"
+		args = append(args, status)
+	}
+	
+	rawSQL += `
 		GROUP BY 
 			DATE(o.created_at)
 		ORDER BY 
 			DATE(o.created_at)
-	`, eventID).Scan(ctx, &dailySales)
+	`
+	
+	err = s.db.NewRaw(rawSQL, args...).Scan(ctx, &dailySales)
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +174,7 @@ func (s *Service) GetEventAnalytics(ctx context.Context, eventID string) (*Event
 	}
 
 	var tierSales []tierSalesRaw
-	err = s.db.NewRaw(`
+	rawSQL = `
 		SELECT 
 			t.tier_id,
 			t.tier_name,
@@ -163,11 +187,22 @@ func (s *Service) GetEventAnalytics(ctx context.Context, eventID string) (*Event
 			orders o ON t.order_id = o.order_id
 		WHERE 
 			o.event_id = ?
+	`
+	args = []interface{}{eventID}
+	
+	if status != "" {
+		rawSQL += " AND o.status = ?"
+		args = append(args, status)
+	}
+	
+	rawSQL += `
 		GROUP BY 
 			t.tier_id, t.tier_name, t.colour
 		ORDER BY 
 			t.tier_name
-	`, eventID).Scan(ctx, &tierSales)
+	`
+	
+	err = s.db.NewRaw(rawSQL, args...).Scan(ctx, &tierSales)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +239,7 @@ func (s *Service) GetEventAnalytics(ctx context.Context, eventID string) (*Event
 }
 
 // GetEventDiscountAnalytics returns discount usage analytics for a specific event
-func (s *Service) GetEventDiscountAnalytics(ctx context.Context, eventID string) (*EventDiscountAnalytics, error) {
+func (s *Service) GetEventDiscountAnalytics(ctx context.Context, eventID string, status string) (*EventDiscountAnalytics, error) {
 	// Query orders directly by event_id field
 	// Get discount usage
 	type discountUsageRaw struct {
@@ -215,13 +250,19 @@ func (s *Service) GetEventDiscountAnalytics(ctx context.Context, eventID string)
 	}
 
 	var discountUsage []discountUsageRaw
-	err := s.db.NewSelect().
+	query := s.db.NewSelect().
 		ColumnExpr("DATE(orders.created_at) AS usage_date").
 		ColumnExpr("orders.discount_code").
 		ColumnExpr("COUNT(*) AS code_usage_count").
 		ColumnExpr("SUM(orders.discount_amount) AS discount_amount_sum").
 		TableExpr("orders").
-		Where("orders.event_id = ? AND orders.discount_code IS NOT NULL AND orders.discount_code != ''", eventID).
+		Where("orders.event_id = ? AND orders.discount_code IS NOT NULL AND orders.discount_code != ''", eventID)
+	
+	if status != "" {
+		query = query.Where("orders.status = ?", status)
+	}
+	
+	err := query.
 		GroupExpr("DATE(orders.created_at), orders.discount_code").
 		OrderExpr("DATE(orders.created_at), orders.discount_code").
 		Scan(ctx, &discountUsage)
@@ -248,7 +289,7 @@ func (s *Service) GetEventDiscountAnalytics(ctx context.Context, eventID string)
 }
 
 // GetEventSessionsAnalytics returns summary analytics for all sessions of an event
-func (s *Service) GetEventSessionsAnalytics(ctx context.Context, eventID string) (*EventSessionsAnalytics, error) {
+func (s *Service) GetEventSessionsAnalytics(ctx context.Context, eventID string, status string) (*EventSessionsAnalytics, error) {
 	// sessionSummaryRaw is used to scan the raw SQL query result.
 	type sessionSummaryRaw struct {
 		SessionID        string  `bun:"session_id"`
@@ -259,7 +300,7 @@ func (s *Service) GetEventSessionsAnalytics(ctx context.Context, eventID string)
 
 	var sessionSummaries []sessionSummaryRaw
 	// The corrected query using Common Table Expressions (CTEs)
-	err := s.db.NewRaw(`
+	rawSQL := `
         WITH OrderTotals AS (
             -- First, calculate the total revenue and subtotal from the orders table
             SELECT
@@ -269,7 +310,16 @@ func (s *Service) GetEventSessionsAnalytics(ctx context.Context, eventID string)
             FROM
                 orders
             WHERE
-                event_id = ?
+                event_id = ?`
+    
+	args := []interface{}{eventID}
+	
+	if status != "" {
+		rawSQL += " AND status = ?"
+		args = append(args, status)
+	}
+	
+	rawSQL += `
             GROUP BY
                 session_id
         ),
@@ -283,7 +333,16 @@ func (s *Service) GetEventSessionsAnalytics(ctx context.Context, eventID string)
             JOIN
                 orders o ON t.order_id = o.order_id
             WHERE
-                o.event_id = ?
+                o.event_id = ?`
+                
+	args = append(args, eventID)
+	
+	if status != "" {
+		rawSQL += " AND o.status = ?"
+		args = append(args, status)
+	}
+	
+	rawSQL += `
             GROUP BY
                 o.session_id
         )
@@ -299,7 +358,10 @@ func (s *Service) GetEventSessionsAnalytics(ctx context.Context, eventID string)
             TicketCounts tc ON ot.session_id = tc.session_id
         ORDER BY
             ot.session_id;
-    `, eventID, eventID).Scan(ctx, &sessionSummaries) // Pass eventID twice for the two placeholders
+    `
+    
+    var err error
+    err = s.db.NewRaw(rawSQL, args...).Scan(ctx, &sessionSummaries)
 
 	if err != nil {
 		return nil, err
@@ -324,20 +386,34 @@ func (s *Service) GetEventSessionsAnalytics(ctx context.Context, eventID string)
 }
 
 // GetSessionAnalytics returns analytics for a specific session
-func (s *Service) GetSessionAnalytics(ctx context.Context, eventID, sessionID string) (*SessionAnalytics, error) {
+func (s *Service) GetSessionAnalytics(ctx context.Context, eventID, sessionID string, status string) (*SessionAnalytics, error) {
 	// Get all orders for this session
 	var orders []models.Order
-	err := s.db.NewSelect().
+	query := s.db.NewSelect().
 		Model(&orders).
-		Where("session_id = ?", sessionID).
-		Scan(ctx)
+		Where("session_id = ?", sessionID)
+		
+	if status != "" {
+		query = query.Where("status = ?", status)
+	}
+	
+	var err error
+	err = query.Scan(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	// Count tickets - using a simpler query approach
 	var ticketCount int
-	err = s.db.NewRaw("SELECT COUNT(*) FROM tickets t JOIN orders o ON t.order_id = o.order_id WHERE o.session_id = ?", sessionID).
+	rawSQL := "SELECT COUNT(*) FROM tickets t JOIN orders o ON t.order_id = o.order_id WHERE o.session_id = ?"
+	args := []interface{}{sessionID}
+	
+	if status != "" {
+		rawSQL += " AND o.status = ?"
+		args = append(args, status)
+	}
+	
+	err = s.db.NewRaw(rawSQL, args...).
 		Scan(ctx, &ticketCount)
 	if err != nil {
 		return nil, err
@@ -352,7 +428,7 @@ func (s *Service) GetSessionAnalytics(ctx context.Context, eventID, sessionID st
 
 	var dailySales []dailySalesRaw
 	// Use raw SQL to count tickets per day rather than orders
-	err = s.db.NewRaw(`
+	rawSQL = `
 		SELECT 
 			DATE(o.created_at) AS sales_date,
 			SUM(o.price) AS daily_revenue,
@@ -363,11 +439,22 @@ func (s *Service) GetSessionAnalytics(ctx context.Context, eventID, sessionID st
 			tickets t ON t.order_id = o.order_id
 		WHERE 
 			o.session_id = ?
+	`
+	args = []interface{}{sessionID}
+	
+	if status != "" {
+		rawSQL += " AND o.status = ?"
+		args = append(args, status)
+	}
+	
+	rawSQL += `
 		GROUP BY 
 			DATE(o.created_at)
 		ORDER BY 
 			DATE(o.created_at)
-	`, sessionID).Scan(ctx, &dailySales)
+	`
+	
+	err = s.db.NewRaw(rawSQL, args...).Scan(ctx, &dailySales)
 	if err != nil {
 		return nil, err
 	}
@@ -390,7 +477,7 @@ func (s *Service) GetSessionAnalytics(ctx context.Context, eventID, sessionID st
 	}
 
 	var tierSales []tierSalesRaw
-	err = s.db.NewRaw(`
+	rawSQL = `
 		SELECT 
 			t.tier_id,
 			t.tier_name,
@@ -403,11 +490,22 @@ func (s *Service) GetSessionAnalytics(ctx context.Context, eventID, sessionID st
 			orders o ON t.order_id = o.order_id
 		WHERE 
 			o.session_id = ?
+	`
+	args = []interface{}{sessionID}
+	
+	if status != "" {
+		rawSQL += " AND o.status = ?"
+		args = append(args, status)
+	}
+	
+	rawSQL += `
 		GROUP BY 
 			t.tier_id, t.tier_name, t.colour
 		ORDER BY 
 			t.tier_name
-	`, sessionID).Scan(ctx, &tierSales)
+	`
+	
+	err = s.db.NewRaw(rawSQL, args...).Scan(ctx, &tierSales)
 	if err != nil {
 		return nil, err
 	}

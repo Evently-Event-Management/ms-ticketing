@@ -147,7 +147,8 @@ func (h *Handler) GetEventAnalytics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	analytics, err := h.Service.GetEventAnalytics(r.Context(), eventID)
+	// Only consider orders with status "completed"
+	analytics, err := h.Service.GetEventAnalytics(r.Context(), eventID, "completed")
 	if err != nil {
 		h.Logger.Error("ANALYTICS", "Error getting event analytics: "+err.Error())
 		sendJSONResponse(w, http.StatusInternalServerError, map[string]string{"error": "Failed to get analytics"})
@@ -188,7 +189,8 @@ func (h *Handler) GetEventDiscountAnalytics(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	discountAnalytics, err := h.Service.GetEventDiscountAnalytics(r.Context(), eventID)
+	// Only consider orders with status "completed"
+	discountAnalytics, err := h.Service.GetEventDiscountAnalytics(r.Context(), eventID, "completed")
 	if err != nil {
 		h.Logger.Error("ANALYTICS", "Error getting discount analytics: "+err.Error())
 		sendJSONResponse(w, http.StatusInternalServerError, map[string]string{"error": "Failed to get discount analytics"})
@@ -229,7 +231,8 @@ func (h *Handler) GetEventSessionsAnalytics(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	sessionsAnalytics, err := h.Service.GetEventSessionsAnalytics(r.Context(), eventID)
+	// Only consider orders with status "completed"
+	sessionsAnalytics, err := h.Service.GetEventSessionsAnalytics(r.Context(), eventID, "completed")
 	if err != nil {
 		h.Logger.Error("ANALYTICS", "Error getting sessions analytics: "+err.Error())
 		sendJSONResponse(w, http.StatusInternalServerError, map[string]string{"error": "Failed to get sessions analytics"})
@@ -273,7 +276,8 @@ func (h *Handler) GetSessionAnalytics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	analytics, err := h.Service.GetSessionAnalytics(r.Context(), eventID, sessionID)
+	// Only consider orders with status "completed"
+	analytics, err := h.Service.GetSessionAnalytics(r.Context(), eventID, sessionID, "completed")
 	if err != nil {
 		h.Logger.Error("ANALYTICS", "Error getting session analytics: "+err.Error())
 		sendJSONResponse(w, http.StatusInternalServerError, map[string]string{"error": "Failed to get analytics"})
