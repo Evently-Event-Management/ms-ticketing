@@ -3,9 +3,12 @@ package redis
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
 	"time"
 
 	kafka "ms-ticketing/internal/kafka"
+	"ms-ticketing/internal/logger"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -13,19 +16,46 @@ import (
 type Redis struct {
 	Client   *redis.Client
 	Producer *kafka.Producer
+	Logger   *logger.Logger
 }
 
 func NewRedis(client *redis.Client, producer *kafka.Producer) *Redis {
-	return &Redis{Client: client, Producer: producer}
+	return &Redis{
+		Client:   client,
+		Producer: producer,
+		Logger:   logger.NewLogger(),
+	}
 }
 
-// Shorter lock TTL for testing purposes
-const lockTTL = 1 * time.Minute
+// getSeatLockDuration returns the seat lock duration from environment variables or the default value
+func (r *Redis) getSeatLockDuration() time.Duration {
+	// Default lock TTL is 5 minutes
+	defaultDuration := 5 * time.Minute
+
+	// Get the lock TTL from environment variable, default to 5 minutes if not set
+	lockTTLStr := os.Getenv("SEAT_LOCK_TTL_MINUTES")
+	if lockTTLStr == "" {
+		r.Logger.Info("REDIS", "SEAT_LOCK_TTL_MINUTES not set, using default 5 minutes")
+		return defaultDuration
+	}
+
+	// Parse the string to an integer
+	lockTTLMin, err := strconv.Atoi(lockTTLStr)
+	if err != nil {
+		r.Logger.Warn("REDIS", fmt.Sprintf("Invalid SEAT_LOCK_TTL_MINUTES value '%s', using default 5 minutes", lockTTLStr))
+		return defaultDuration
+	}
+
+	// Log the duration we're using
+	r.Logger.Info("REDIS", fmt.Sprintf("Using seat lock duration of %d minutes from environment", lockTTLMin))
+	return time.Duration(lockTTLMin) * time.Minute
+}
 
 // Lock a single seat
 func (r *Redis) LockSeat(seatID, orderID string) (bool, error) {
 	key := "seat_lock:" + seatID
-	ok, err := r.Client.SetNX(context.Background(), key, orderID, lockTTL).Result()
+	lockDuration := r.getSeatLockDuration()
+	ok, err := r.Client.SetNX(context.Background(), key, orderID, lockDuration).Result()
 	return ok, err
 }
 

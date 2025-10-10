@@ -38,6 +38,7 @@ A microservice-based ticketing system for event management, built with Go, Kafka
    - `QR_SECRET_KEY`: Secret for QR code encryption
    - `SEAT_SERVICE_URL`: Seat validation service URL
    - `STRIPE_SECRET_KEY`: Your Stripe API secret key
+   - `SEAT_LOCK_TTL_MINUTES`: Duration in minutes for seat locks (default: 5)
    - `STRIPE_WEBHOOK_SECRET`: Your Stripe webhook signing secret
 3. **Run migrations:**
    ```sh
