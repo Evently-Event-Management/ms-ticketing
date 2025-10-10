@@ -9,10 +9,13 @@ import (
 	"ms-ticketing/internal/auth"
 	"ms-ticketing/internal/models"
 	"ms-ticketing/internal/order/discount"
+	rediswrap "ms-ticketing/internal/order/redis"
 	tickets "ms-ticketing/internal/tickets/service"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/go-redis/redis/v8"
 
 	"github.com/google/uuid"
 
@@ -239,7 +242,17 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 	config.KeycloakRealm = os.Getenv("KEYCLOAK_REALM")
 
 	s.logger.Debug("AUTH", "Requesting M2M token for seat validation")
-	m2m_token, err := auth.GetM2MToken(config, s.client)
+
+	// Get Redis client from the existing Redis object if available
+	var redisClient *redis.Client
+	if s.Redis != nil {
+		// Try to get the Redis client from our Redis wrapper
+		if redisWrapper, ok := s.Redis.(*rediswrap.Redis); ok && redisWrapper != nil {
+			redisClient = redisWrapper.Client
+		}
+	}
+
+	m2m_token, err := auth.GetM2MToken(config, s.client, redisClient, s.logger)
 	if err != nil {
 		s.logger.Error("AUTH", fmt.Sprintf("Failed to get M2M token: %v", err))
 		return nil, fmt.Errorf("failed to get M2M token: %w", err)

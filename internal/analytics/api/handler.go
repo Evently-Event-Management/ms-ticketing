@@ -65,7 +65,9 @@ func (h *Handler) verifyEventOwnership(eventID string, userID string) (bool, err
 		ClientSecret:  os.Getenv("TICKET_CLIENT_SECRET"),
 	}
 
-	token, err := auth.GetM2MToken(config, h.Client)
+	// Pass nil for Redis client and logger in analytics as we don't have them here
+	// In production, you might want to pass these from the analytics service
+	token, err := auth.GetM2MToken(config, h.Client, nil, h.Logger)
 	if err != nil {
 		h.Logger.Error("AUTH", fmt.Sprintf("Failed to get M2M token: %v", err))
 		return false, err

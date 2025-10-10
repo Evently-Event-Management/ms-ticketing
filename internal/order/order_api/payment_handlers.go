@@ -6,6 +6,8 @@ import (
 	"ms-ticketing/internal/models"
 	"ms-ticketing/internal/order"
 	"net/http"
+	"os"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -36,15 +38,31 @@ func (h *Handler) CreatePaymentIntent(w http.ResponseWriter, r *http.Request) {
 		// Continue anyway as we have the payment intent
 	}
 
-	// Return client secret, payment intent ID, and order details to the client
+	// Get seat lock duration from environment variables
+	seatLockDurationMinutes := 5 // Default to 5 minutes
+	lockTTLStr := os.Getenv("SEAT_LOCK_TTL_MINUTES")
+	if lockTTLStr != "" {
+		if duration, err := strconv.Atoi(lockTTLStr); err == nil {
+			seatLockDurationMinutes = duration
+			h.Logger.Debug("API", fmt.Sprintf("Using seat lock duration of %d minutes from environment", seatLockDurationMinutes))
+		} else {
+			h.Logger.Warn("API", fmt.Sprintf("Invalid SEAT_LOCK_TTL_MINUTES value: %s, using default 5 minutes", lockTTLStr))
+		}
+	} else {
+		h.Logger.Debug("API", "SEAT_LOCK_TTL_MINUTES not set, using default 5 minutes")
+	}
+
+	// Return client secret, payment intent ID, seat lock duration, and order details to the client
 	response := struct {
-		ClientSecret    string                   `json:"clientSecret"`
-		PaymentIntentID string                   `json:"paymentIntentId"`
-		Order           *models.OrderWithTickets `json:"order,omitempty"`
+		ClientSecret         string                   `json:"clientSecret"`
+		PaymentIntentID      string                   `json:"paymentIntentId"`
+		SeatLockDurationMins int                      `json:"seatLockDurationMins"`
+		Order                *models.OrderWithTickets `json:"order,omitempty"`
 	}{
-		ClientSecret:    intent.ClientSecret,
-		PaymentIntentID: intent.ID,
-		Order:           orderWithTickets,
+		ClientSecret:         intent.ClientSecret,
+		PaymentIntentID:      intent.ID,
+		SeatLockDurationMins: seatLockDurationMinutes,
+		Order:                orderWithTickets,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

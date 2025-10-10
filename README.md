@@ -11,6 +11,7 @@ A microservice-based ticketing system for event management, built with Go, Kafka
 - Keycloak for authentication (OIDC)
 - QR code generation for tickets
 - Stripe payment integration for processing payments
+- Redis-based caching for machine-to-machine authentication tokens
 
 ## Architecture
 - **internal/order/**: Order service logic
