@@ -27,6 +27,7 @@ type DBLayer interface {
 	UpdateOrder(order models.Order) error
 	CancelOrder(id string) error
 	GetOrderBySeat(seatID string) (*models.Order, error)
+	GetPendingOrdersBySeat(seatID string) ([]*models.Order, error)
 	GetSeatsByOrder(orderID string) ([]string, error)
 	GetSessionIdBySeat(seatID string) (string, error)
 	GetOrdersWithTicketsByUserID(userID string) ([]models.OrderWithTickets, error)

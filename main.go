@@ -41,6 +41,7 @@ import (
 type DB interface {
 	GetSessionIdBySeat(seatID string) (string, error)
 	GetOrderBySeat(seatID string) (*models.Order, error)
+	GetPendingOrdersBySeat(seatID string) ([]*models.Order, error)
 	UpdateOrder(order models.Order) error
 }
 
@@ -52,6 +53,10 @@ type DBAdapter struct {
 // Implement all methods required by order.DBLayer
 func (a *DBAdapter) GetOrderBySeat(seatID string) (*models.Order, error) {
 	return a.DB.GetOrderBySeat(seatID)
+}
+
+func (a *DBAdapter) GetPendingOrdersBySeat(seatID string) ([]*models.Order, error) {
+	return a.DB.GetPendingOrdersBySeat(seatID)
 }
 
 func (a *DBAdapter) UpdateOrder(order models.Order) error {
@@ -191,59 +196,103 @@ func subscribeSeatUnlocks(rdb *redis.Client, producer *kafka.Producer, db DB, lo
 					continue
 				}
 
-				order, err := db.GetOrderBySeat(seatID)
+				// Get all pending orders that contain this seat
+				pendingOrders, err := db.GetPendingOrdersBySeat(seatID)
 				if err != nil {
-					logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to get order for seat %s: %v", seatID, err))
-				} else {
-					logger.Info("SEAT_UNLOCK", fmt.Sprintf("Found order %s for seat %s with status: %s", order.OrderID, seatID, order.Status))
+					logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to get pending orders for seat %s: %v", seatID, err))
+				} else if len(pendingOrders) == 0 {
+					logger.Info("SEAT_UNLOCK", fmt.Sprintf("No pending orders found for seat %s", seatID))
 
-					if order.Status == "pending" {
+					// No pending orders to cancel, publish seat status event directly
+					logger.Info("SEAT_UNLOCK", "Publishing seat status event directly since no pending orders were found")
+					seatEvent, err := models.NewSeatStatusChangeEventDto(sessionID, []string{seatID}, models.SeatStatusAvailable)
+					if err != nil {
+						logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to create seat status event DTO: %v", err))
+						continue
+					}
+
+					value, err := json.Marshal(seatEvent)
+					if err != nil {
+						logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to marshal seat unlock payload: %v", err))
+						continue
+					}
+
+					err = producer.Publish("ticketly.seats.status", seatID, value)
+					if err != nil {
+						logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to publish seat unlock event: %v", err))
+						err = kafka.CreateTopicIfNotExists(kafkaBrokers, "ticketly.seats.status")
+						if err != nil {
+							logger.Error("KAFKA", fmt.Sprintf("Failed to create topic: %v", err))
+						} else {
+							err = producer.Publish("ticketly.seats.status", seatID, value)
+							if err != nil {
+								logger.Error("SEAT_UNLOCK", fmt.Sprintf("Still failed to publish after topic creation: %v", err))
+							} else {
+								logger.Info("KAFKA", fmt.Sprintf("Published seat unlock event for seat: %s after retry", seatID))
+							}
+						}
+					} else {
+						logger.Info("KAFKA", fmt.Sprintf("Published seat unlock event for seat: %s", seatID))
+					}
+				} else {
+					// Cancel all pending orders that contain this seat
+					logger.Info("SEAT_UNLOCK", fmt.Sprintf("Found %d pending orders for seat %s", len(pendingOrders), seatID))
+					orderService := NewOrderServiceForSeatUnlock(db, producer, logger)
+					ordersCancelled := false
+
+					// Loop through all pending orders and cancel them
+					for _, order := range pendingOrders {
+						logger.Info("SEAT_UNLOCK", fmt.Sprintf("Processing order %s with status: %s", order.OrderID, order.Status))
+
 						// Always cancel the order when seat lock expires
 						logger.Info("SEAT_UNLOCK", fmt.Sprintf("Cancelling order %s due to seat lock expiry", order.OrderID))
-						orderService := NewOrderServiceForSeatUnlock(db, producer, logger)
 						err = orderService.CancelOrder(order.OrderID)
 						if err != nil {
 							logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to cancel order %s: %v", order.OrderID, err))
 						} else {
 							logger.Info("SEAT_UNLOCK", fmt.Sprintf("Order %s cancelled successfully due to seat lock expiry", order.OrderID))
 							// No need to publish seat status event here as CancelOrder already does it
-							logger.Debug("SEAT_UNLOCK", "Seat status event handled by CancelOrder method")
+							ordersCancelled = true
+						}
+					}
+
+					// If we successfully cancelled at least one order, no need to publish seat event
+					// as the CancelOrder method already does it
+					if ordersCancelled {
+						logger.Debug("SEAT_UNLOCK", "Seat status event handled by CancelOrder method")
+						continue
+					}
+
+					// If we didn't cancel any orders (unlikely but possible), publish seat status event directly
+					logger.Info("SEAT_UNLOCK", "Publishing seat status event directly since no orders were successfully cancelled")
+					seatEvent, err := models.NewSeatStatusChangeEventDto(sessionID, []string{seatID}, models.SeatStatusAvailable)
+					if err != nil {
+						logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to create seat status event DTO: %v", err))
+						continue
+					}
+
+					value, err := json.Marshal(seatEvent)
+					if err != nil {
+						logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to marshal seat unlock payload: %v", err))
+						continue
+					}
+
+					err = producer.Publish("ticketly.seats.status", seatID, value)
+					if err != nil {
+						logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to publish seat unlock event: %v", err))
+						err = kafka.CreateTopicIfNotExists(kafkaBrokers, "ticketly.seats.status")
+						if err != nil {
+							logger.Error("KAFKA", fmt.Sprintf("Failed to create topic: %v", err))
+						} else {
+							err = producer.Publish("ticketly.seats.status", seatID, value)
+							if err != nil {
+								logger.Error("SEAT_UNLOCK", fmt.Sprintf("Still failed to publish after topic creation: %v", err))
+							} else {
+								logger.Info("KAFKA", fmt.Sprintf("Published seat unlock event for seat: %s after retry", seatID))
+							}
 						}
 					} else {
-						logger.Info("SEAT_UNLOCK", fmt.Sprintf("Order %s status is '%s', not updating to cancelled (only pending orders are updated)", order.OrderID, order.Status))
-
-						// Only publish seat status event if we didn't cancel an order
-						// (because CancelOrder already publishes this event)
-						logger.Info("SEAT_UNLOCK", "Publishing seat status event directly since no order was cancelled")
-						seatEvent, err := models.NewSeatStatusChangeEventDto(sessionID, []string{seatID}, models.SeatStatusAvailable)
-						if err != nil {
-							logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to create seat status event DTO: %v", err))
-							continue
-						}
-
-						value, err := json.Marshal(seatEvent)
-						if err != nil {
-							logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to marshal seat unlock payload: %v", err))
-							continue
-						}
-
-						err = producer.Publish("ticketly.seats.status", seatID, value)
-						if err != nil {
-							logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to publish seat unlock event: %v", err))
-							err = kafka.CreateTopicIfNotExists(kafkaBrokers, "ticketly.seats.status")
-							if err != nil {
-								logger.Error("KAFKA", fmt.Sprintf("Failed to create topic: %v", err))
-							} else {
-								err = producer.Publish("ticketly.seats.status", seatID, value)
-								if err != nil {
-									logger.Error("SEAT_UNLOCK", fmt.Sprintf("Still failed to publish after topic creation: %v", err))
-								} else {
-									logger.Info("KAFKA", fmt.Sprintf("Published seat unlock event for seat: %s after retry", seatID))
-								}
-							}
-						} else {
-							logger.Info("KAFKA", fmt.Sprintf("Published seat unlock event for seat: %s", seatID))
-						}
+						logger.Info("KAFKA", fmt.Sprintf("Published seat unlock event for seat: %s", seatID))
 					}
 				}
 			}
