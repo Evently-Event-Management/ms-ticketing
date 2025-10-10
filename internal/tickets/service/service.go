@@ -16,6 +16,7 @@ type TicketDBLayer interface {
 	CancelTicket(ticketID string) error
 	GetTicketsByOrder(orderID string) ([]models.Ticket, error)
 	GetTicketsByUser(userID string) ([]models.Ticket, error)
+	GetTotalTicketsCount() (int, error)
 }
 
 type TicketService struct {

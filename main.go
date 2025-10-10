@@ -276,42 +276,57 @@ func main() {
 
 	analyticsHandler := analytics_api.NewHandler(analyticsService, logger)
 
+	// main.go
+
 	logger.Info("HTTP", "Setting up router and middleware")
 	// Router setup
 	r := chi.NewRouter()
 
-	// Apply JWT middleware globally
-	r.Use(auth.Middleware())
-	logger.Info("AUTH", "JWT middleware applied globally")
+	// --- Public Routes ---
+	// Define any routes that DO NOT require authentication first.
+	// We are getting rid of the separate publicRouter for simplicity.
+	r.Get("/api/orders/tickets/count", ticketHandler.GetTotalTicketsCount)
+	logger.Info("ROUTER", "Public ticket count endpoint registered at /api/orders/tickets/count")
 
-	// API Routes with /api prefix
-	r.Route("/api", func(r chi.Router) {
-		// Secure test route
-		r.Get("/secure", SecureHandler)
+	// --- Protected Routes ---
+	// Use a Group to apply middleware to a specific set of routes.
+	r.Group(func(r chi.Router) {
+		// Apply the JWT middleware ONLY to this group.
+		r.Use(auth.Middleware())
+		logger.Info("AUTH", "JWT middleware applied to protected API routes")
 
-		// Order routes with /order prefix
-		r.Route("/order", func(r chi.Router) {
-			r.Post("/", handler.SeatValidationAndPlaceOrder)
-			r.Get("/{orderId}", handler.GetOrder)
-			r.Put("/{orderId}", handler.UpdateOrder)
-			r.Delete("/{orderId}", handler.DeleteOrder)
+		// All your protected API routes go inside this group.
+		r.Route("/api", func(r chi.Router) {
+			// Secure test route
+			r.Get("/secure", SecureHandler)
+
+			// Order routes with /order prefix
+			r.Route("/order", func(r chi.Router) {
+				r.Post("/", handler.SeatValidationAndPlaceOrder)
+				r.Get("/{orderId}", handler.GetOrder)
+				r.Put("/{orderId}", handler.UpdateOrder)
+				r.Delete("/{orderId}", handler.DeleteOrder)
+			})
+			logger.Info("ROUTER", "Order routes registered under /api/order")
+
+			// Ticket routes under order service
+			r.Route("/order/ticket", func(r chi.Router) {
+				r.Get("/", ticketHandler.ListTicketsByOrder)
+				r.Get("/{ticketId}", ticketHandler.ViewTicket)
+				r.Post("/", ticketHandler.CreateTicket)
+				r.Put("/{ticketId}", ticketHandler.UpdateTicket)
+				r.Delete("/{ticketId}", ticketHandler.DeleteTicket)
+			})
+			logger.Info("ROUTER", "Ticket routes registered under /api/order/ticket")
+
+			// Register analytics routes
+			analyticsHandler.RegisterRoutes(r)
+			logger.Info("ROUTER", "Analytics routes registered under /api/order/analytics")
 		})
-		logger.Info("ROUTER", "Order routes registered under /api/order")
-
-		// Ticket routes under order service
-		r.Route("/order/ticket", func(r chi.Router) {
-			r.Get("/", ticketHandler.ListTicketsByOrder)
-			r.Get("/{ticketId}", ticketHandler.ViewTicket)
-			r.Post("/", ticketHandler.CreateTicket)
-			r.Put("/{ticketId}", ticketHandler.UpdateTicket)
-			r.Delete("/{ticketId}", ticketHandler.DeleteTicket)
-		})
-		logger.Info("ROUTER", "Ticket routes registered under /api/order/ticket")
-
-		// Register analytics routes
-		analyticsHandler.RegisterRoutes(r)
-		logger.Info("ROUTER", "Analytics routes registered under /api/order/analytics")
 	})
+
+	// HTTP Server
+	// ... (the rest of your main function remains the same)
 
 	// HTTP Server
 	server := &http.Server{
