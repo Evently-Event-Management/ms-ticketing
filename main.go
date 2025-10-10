@@ -285,7 +285,7 @@ func main() {
 	// --- Public Routes ---
 	// Define any routes that DO NOT require authentication first.
 	// We are getting rid of the separate publicRouter for simplicity.
-	r.Get("/api/orders/tickets/count", ticketHandler.GetTotalTicketsCount)
+	r.Get("/api/order/tickets/count", ticketHandler.GetTotalTicketsCount)
 	logger.Info("ROUTER", "Public ticket count endpoint registered at /api/orders/tickets/count")
 
 	// --- Protected Routes ---
