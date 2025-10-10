@@ -3,6 +3,7 @@ package order_api
 import (
 	"encoding/json"
 	"fmt"
+	"ms-ticketing/internal/models"
 	"ms-ticketing/internal/order"
 	"net/http"
 
@@ -28,13 +29,22 @@ func (h *Handler) CreatePaymentIntent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Return client secret and payment intent ID to the client
+	// Get order with tickets for comprehensive response
+	orderWithTickets, err := h.OrderService.GetOrderWithTickets(orderID)
+	if err != nil {
+		h.Logger.Error("API", fmt.Sprintf("CreatePaymentIntent: failed to get order with tickets: %v", err))
+		// Continue anyway as we have the payment intent
+	}
+
+	// Return client secret, payment intent ID, and order details to the client
 	response := struct {
-		ClientSecret    string `json:"clientSecret"`
-		PaymentIntentID string `json:"paymentIntentId"`
+		ClientSecret    string                   `json:"clientSecret"`
+		PaymentIntentID string                   `json:"paymentIntentId"`
+		Order           *models.OrderWithTickets `json:"order,omitempty"`
 	}{
 		ClientSecret:    intent.ClientSecret,
 		PaymentIntentID: intent.ID,
+		Order:           orderWithTickets,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
