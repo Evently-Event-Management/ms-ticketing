@@ -202,3 +202,61 @@ func (d *DB) GetOrdersWithTicketsByUserID(userID string) ([]models.OrderWithTick
 
 	return result, nil
 }
+
+// GetOrdersWithTicketsAndQRByUserID → fetch all orders with tickets including QR codes for a given user_id
+func (d *DB) GetOrdersWithTicketsAndQRByUserID(userID string) ([]models.OrderWithTicketsAndQR, error) {
+	// First get all orders for the user
+	var orders []models.Order
+	err := d.Bun.NewSelect().
+		Model(&orders).
+		Where("user_id = ?", userID).
+		Order("created_at DESC").
+		Scan(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	// If no orders found, return empty slice
+	if len(orders) == 0 {
+		return []models.OrderWithTicketsAndQR{}, nil
+	}
+
+	// Build a slice of order IDs for ticket query
+	orderIDs := make([]string, len(orders))
+	for i, order := range orders {
+		orderIDs[i] = order.OrderID
+	}
+
+	// Get all tickets for these orders INCLUDING QR codes
+	var tickets []models.Ticket
+	err = d.Bun.NewSelect().
+		Model(&tickets).
+		Where("order_id IN (?)", bun.In(orderIDs)).
+		Order("order_id", "issued_at").
+		Scan(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	// Group tickets by order_id
+	ticketsByOrder := make(map[string][]models.TicketWithQRCode)
+	for _, ticket := range tickets {
+		ticketWithQR := ticket.ToTicketWithQRCode()
+		ticketsByOrder[ticket.OrderID] = append(ticketsByOrder[ticket.OrderID], ticketWithQR)
+	}
+
+	// Build the result with orders and their tickets (including QR codes)
+	result := make([]models.OrderWithTicketsAndQR, len(orders))
+	for i, order := range orders {
+		result[i] = models.OrderWithTicketsAndQR{
+			Order:   order,
+			Tickets: ticketsByOrder[order.OrderID],
+		}
+		// If no tickets found for this order, initialize empty slice
+		if result[i].Tickets == nil {
+			result[i].Tickets = []models.TicketWithQRCode{}
+		}
+	}
+
+	return result, nil
+}
