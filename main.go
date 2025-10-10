@@ -1,3 +1,6 @@
+//go:build !migrate
+// +build !migrate
+
 package main
 
 import (
@@ -10,9 +13,6 @@ import (
 	"ms-ticketing/internal/auth"
 	"ms-ticketing/internal/kafka"
 	"ms-ticketing/internal/models"
-	payment_handler "ms-ticketing/internal/payment/handler"
-	"ms-ticketing/internal/payment/services"
-	"ms-ticketing/internal/payment/storage"
 	ticket_db "ms-ticketing/internal/tickets/db"
 	tickets "ms-ticketing/internal/tickets/service"
 	"ms-ticketing/internal/tickets/ticket_api"
@@ -41,7 +41,130 @@ import (
 type DB interface {
 	GetSessionIdBySeat(seatID string) (string, error)
 	GetOrderBySeat(seatID string) (*models.Order, error)
+	GetPendingOrdersBySeat(seatID string) ([]*models.Order, error)
 	UpdateOrder(order models.Order) error
+}
+
+// DBAdapter adapts our local DB interface to satisfy order.DBLayer interface
+type DBAdapter struct {
+	DB DB
+}
+
+// Implement all methods required by order.DBLayer
+func (a *DBAdapter) GetOrderBySeat(seatID string) (*models.Order, error) {
+	return a.DB.GetOrderBySeat(seatID)
+}
+
+func (a *DBAdapter) GetPendingOrdersBySeat(seatID string) ([]*models.Order, error) {
+	return a.DB.GetPendingOrdersBySeat(seatID)
+}
+
+func (a *DBAdapter) UpdateOrder(order models.Order) error {
+	return a.DB.UpdateOrder(order)
+}
+
+func (a *DBAdapter) GetSessionIdBySeat(seatID string) (string, error) {
+	return a.DB.GetSessionIdBySeat(seatID)
+}
+
+func (a *DBAdapter) CreateOrder(order models.Order) error {
+	// Not needed for the seat unlock flow
+	return nil
+}
+
+func (a *DBAdapter) GetOrderByID(id string) (*models.Order, error) {
+	// We need to use a real DB connection here to get the order details
+	// Create a temporary db.DB
+	sqldb, err := sql.Open("postgres", os.Getenv("POSTGRES_DSN"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to database: %v", err)
+	}
+	defer sqldb.Close()
+
+	bunDB := bun.NewDB(sqldb, pgdialect.New())
+	dbImpl := db.DB{Bun: bunDB}
+	return dbImpl.GetOrderByID(id)
+}
+
+func (a *DBAdapter) GetOrderWithSeats(id string) (*models.OrderWithSeats, error) {
+	// Not needed for the seat unlock flow
+	return nil, nil
+}
+
+func (a *DBAdapter) CancelOrder(id string) error {
+	// Get the order first
+	order, err := a.GetOrderByID(id)
+	if err != nil {
+		return err
+	}
+
+	// Update the status to cancelled
+	order.Status = "cancelled"
+	return a.DB.UpdateOrder(*order)
+}
+
+func (a *DBAdapter) GetSeatsByOrder(orderID string) ([]string, error) {
+	// For our simple use case in seat unlock, we'll implement this minimally
+	// Create a temporary db.DB to get seat IDs
+	sqldb, err := sql.Open("postgres", os.Getenv("POSTGRES_DSN"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to database: %v", err)
+	}
+	defer sqldb.Close()
+
+	bunDB := bun.NewDB(sqldb, pgdialect.New())
+	dbImpl := db.DB{Bun: bunDB}
+	return dbImpl.GetSeatsByOrder(orderID)
+}
+
+func (a *DBAdapter) GetOrdersWithTicketsByUserID(userID string) ([]models.OrderWithTickets, error) {
+	// Not needed for the seat unlock flow
+	return nil, nil
+}
+
+func (a *DBAdapter) GetOrdersWithTicketsAndQRByUserID(userID string) ([]models.OrderWithTicketsAndQR, error) {
+	// Not needed for the seat unlock flow
+	return nil, nil
+}
+
+// NewOrderServiceForSeatUnlock creates a minimal OrderService instance for handling seat unlock events
+func NewOrderServiceForSeatUnlock(db DB, producer *kafka.Producer, logger *logger.Logger) *order.OrderService {
+	// Create a DB adapter that converts our local DB interface to order.DBLayer
+	dbAdapter := &DBAdapter{
+		DB: db,
+	}
+
+	// Create a minimal Redis implementation that satisfies the RedisLock interface
+	redisLock := &MinimalRedisLock{}
+
+	// Create a basic HTTP client
+	client := &http.Client{
+		Timeout: time.Second * 10,
+	}
+
+	// Initialize a ticket service with a properly initialized bun DB
+	sqldb, err := sql.Open("postgres", os.Getenv("POSTGRES_DSN"))
+	if err != nil {
+		logger.Error("DATABASE", fmt.Sprintf("Failed to initialize database for seat unlock: %v", err))
+		return nil
+	}
+	bunDB := bun.NewDB(sqldb, pgdialect.New())
+	ticketService := tickets.NewTicketService(&ticket_db.DB{Bun: bunDB})
+
+	return order.NewOrderService(dbAdapter, redisLock, producer, ticketService, client)
+}
+
+// MinimalRedisLock implements the RedisLock interface with minimal functionality
+type MinimalRedisLock struct{}
+
+func (r *MinimalRedisLock) LockSeats(seatIDs []string, orderID string) (bool, error) {
+	// Not needed for seat unlock flow
+	return true, nil
+}
+
+func (r *MinimalRedisLock) UnlockSeats(seatIDs []string, orderID string) error {
+	// Not needed for seat unlock flow
+	return nil
 }
 
 func subscribeSeatUnlocks(rdb *redis.Client, producer *kafka.Producer, db DB, logger *logger.Logger, kafkaBrokers []string) {
@@ -73,52 +196,104 @@ func subscribeSeatUnlocks(rdb *redis.Client, producer *kafka.Producer, db DB, lo
 					continue
 				}
 
-				order, err := db.GetOrderBySeat(seatID)
+				// Get all pending orders that contain this seat
+				pendingOrders, err := db.GetPendingOrdersBySeat(seatID)
 				if err != nil {
-					logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to get order for seat %s: %v", seatID, err))
-				} else {
-					logger.Info("SEAT_UNLOCK", fmt.Sprintf("Found order %s for seat %s with status: %s", order.OrderID, seatID, order.Status))
-					if order.Status == "pending" {
-						order.Status = "cancelled"
-						err = db.UpdateOrder(*order)
-						if err != nil {
-							logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to update order %s to cancelled: %v", order.OrderID, err))
-						} else {
-							logger.Info("SEAT_UNLOCK", fmt.Sprintf("Order %s status updated to cancelled due to seat lock expiry", order.OrderID))
-						}
-					} else {
-						logger.Info("SEAT_UNLOCK", fmt.Sprintf("Order %s status is '%s', not updating to cancelled (only pending orders are updated)", order.OrderID, order.Status))
-					}
-				}
+					logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to get pending orders for seat %s: %v", seatID, err))
+				} else if len(pendingOrders) == 0 {
+					logger.Info("SEAT_UNLOCK", fmt.Sprintf("No pending orders found for seat %s", seatID))
 
-				seatEvent, err := models.NewSeatStatusChangeEventDto(sessionID, []string{seatID}, models.SeatStatusAvailable)
-				if err != nil {
-					logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to create seat status event DTO: %v", err))
-					continue
-				}
-
-				value, err := json.Marshal(seatEvent)
-				if err != nil {
-					logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to marshal seat unlock payload: %v", err))
-					continue
-				}
-
-				err = producer.Publish("ticketly.seats.status", seatID, value)
-				if err != nil {
-					logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to publish seat unlock event: %v", err))
-					err = kafka.CreateTopicIfNotExists(kafkaBrokers, "ticketly.seats.status")
+					// No pending orders to cancel, publish seat status event directly
+					logger.Info("SEAT_UNLOCK", "Publishing seat status event directly since no pending orders were found")
+					seatEvent, err := models.NewSeatStatusChangeEventDto(sessionID, []string{seatID}, models.SeatStatusAvailable)
 					if err != nil {
-						logger.Error("KAFKA", fmt.Sprintf("Failed to create topic: %v", err))
-					} else {
-						err = producer.Publish("ticketly.seats.status", seatID, value)
+						logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to create seat status event DTO: %v", err))
+						continue
+					}
+
+					value, err := json.Marshal(seatEvent)
+					if err != nil {
+						logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to marshal seat unlock payload: %v", err))
+						continue
+					}
+
+					err = producer.Publish("ticketly.seats.status", seatID, value)
+					if err != nil {
+						logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to publish seat unlock event: %v", err))
+						err = kafka.CreateTopicIfNotExists(kafkaBrokers, "ticketly.seats.status")
 						if err != nil {
-							logger.Error("SEAT_UNLOCK", fmt.Sprintf("Still failed to publish after topic creation: %v", err))
+							logger.Error("KAFKA", fmt.Sprintf("Failed to create topic: %v", err))
 						} else {
-							logger.Info("KAFKA", fmt.Sprintf("Published seat unlock event for seat: %s after retry", seatID))
+							err = producer.Publish("ticketly.seats.status", seatID, value)
+							if err != nil {
+								logger.Error("SEAT_UNLOCK", fmt.Sprintf("Still failed to publish after topic creation: %v", err))
+							} else {
+								logger.Info("KAFKA", fmt.Sprintf("Published seat unlock event for seat: %s after retry", seatID))
+							}
 						}
+					} else {
+						logger.Info("KAFKA", fmt.Sprintf("Published seat unlock event for seat: %s", seatID))
 					}
 				} else {
-					logger.Info("KAFKA", fmt.Sprintf("Published seat unlock event for seat: %s", seatID))
+					// Cancel all pending orders that contain this seat
+					logger.Info("SEAT_UNLOCK", fmt.Sprintf("Found %d pending orders for seat %s", len(pendingOrders), seatID))
+					orderService := NewOrderServiceForSeatUnlock(db, producer, logger)
+					ordersCancelled := false
+
+					// Loop through all pending orders and cancel them
+					for _, order := range pendingOrders {
+						logger.Info("SEAT_UNLOCK", fmt.Sprintf("Processing order %s with status: %s", order.OrderID, order.Status))
+
+						// Always cancel the order when seat lock expires
+						logger.Info("SEAT_UNLOCK", fmt.Sprintf("Cancelling order %s due to seat lock expiry", order.OrderID))
+						err = orderService.CancelOrder(order.OrderID)
+						if err != nil {
+							logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to cancel order %s: %v", order.OrderID, err))
+						} else {
+							logger.Info("SEAT_UNLOCK", fmt.Sprintf("Order %s cancelled successfully due to seat lock expiry", order.OrderID))
+							// No need to publish seat status event here as CancelOrder already does it
+							ordersCancelled = true
+						}
+					}
+
+					// If we successfully cancelled at least one order, no need to publish seat event
+					// as the CancelOrder method already does it
+					if ordersCancelled {
+						logger.Debug("SEAT_UNLOCK", "Seat status event handled by CancelOrder method")
+						continue
+					}
+
+					// If we didn't cancel any orders (unlikely but possible), publish seat status event directly
+					logger.Info("SEAT_UNLOCK", "Publishing seat status event directly since no orders were successfully cancelled")
+					seatEvent, err := models.NewSeatStatusChangeEventDto(sessionID, []string{seatID}, models.SeatStatusAvailable)
+					if err != nil {
+						logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to create seat status event DTO: %v", err))
+						continue
+					}
+
+					value, err := json.Marshal(seatEvent)
+					if err != nil {
+						logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to marshal seat unlock payload: %v", err))
+						continue
+					}
+
+					err = producer.Publish("ticketly.seats.status", seatID, value)
+					if err != nil {
+						logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to publish seat unlock event: %v", err))
+						err = kafka.CreateTopicIfNotExists(kafkaBrokers, "ticketly.seats.status")
+						if err != nil {
+							logger.Error("KAFKA", fmt.Sprintf("Failed to create topic: %v", err))
+						} else {
+							err = producer.Publish("ticketly.seats.status", seatID, value)
+							if err != nil {
+								logger.Error("SEAT_UNLOCK", fmt.Sprintf("Still failed to publish after topic creation: %v", err))
+							} else {
+								logger.Info("KAFKA", fmt.Sprintf("Published seat unlock event for seat: %s after retry", seatID))
+							}
+						}
+					} else {
+						logger.Info("KAFKA", fmt.Sprintf("Published seat unlock event for seat: %s", seatID))
+					}
 				}
 			}
 		}
@@ -216,6 +391,10 @@ func main() {
 	defer bunDB.Close()
 	defer redisClient.Close()
 
+	// Initialize Stripe
+	logger.Info("PAYMENT", "Initializing Stripe")
+	order.InitStripe()
+
 	kafkaADDR := os.Getenv("KAFKA_ADDR")
 	logger.Info("KAFKA", fmt.Sprintf("Using Kafka address from environment variable: %s", kafkaADDR))
 	kafkaBrokers := []string{kafkaADDR}
@@ -239,16 +418,6 @@ func main() {
 	ticketService := tickets.NewTicketService(&ticket_db.DB{Bun: bunDB})
 	analyticsService := analytics.NewService(bunDB)
 
-	paymentStore, err := storage.NewPostgreSQLStoreWithDB(bunDB.DB, logger)
-	if err != nil {
-		logger.Fatal("PAYMENT", fmt.Sprintf("Failed to initialize payment storage: %v", err))
-	}
-
-	stripeService, err := services.NewStripeService(logger)
-	if err != nil {
-		logger.Fatal("PAYMENT", fmt.Sprintf("Failed to initialize Stripe service: %v", err))
-	}
-
 	orderService := order.NewOrderService(
 		&db.DB{Bun: bunDB},
 		rediswrap.NewRedis(redisClient, kafkaProducer),
@@ -268,15 +437,15 @@ func main() {
 
 	analyticsHandler := analytics_api.NewHandler(analyticsService, logger)
 
-	// Create payment handler
-	paymentHandler := payment_handler.NewStripeHandler(stripeService, paymentStore, kafkaProducer, orderService, logger)
-
 	logger.Info("HTTP", "Setting up router and middleware")
 	r := chi.NewRouter()
 
 	// --- Public Routes ---
 	r.Get("/api/order/tickets/count", ticketHandler.GetTotalTicketsCount)
+	// Stripe webhook endpoint doesn't require authentication
+	r.Post("/api/order/webhook/stripe", handler.StripeWebhook)
 	logger.Info("ROUTER", "Public ticket count endpoint registered at /api/order/tickets/count")
+	logger.Info("ROUTER", "Stripe webhook endpoint registered at /api/order/webhook/stripe")
 
 	// --- Protected Routes ---
 	r.Group(func(r chi.Router) {
@@ -289,9 +458,8 @@ func main() {
 			r.Route("/order", func(r chi.Router) {
 				r.Post("/", handler.SeatValidationAndPlaceOrder)
 				r.Get("/{orderId}", handler.GetOrder)
-				r.Put("/{orderId}", handler.UpdateOrder)
 				r.Delete("/{orderId}", handler.DeleteOrder)
-				r.Post("/payment/process", paymentHandler.ProcessPaymentChi)
+				r.Post("/{orderId}/create-payment-intent", handler.CreatePaymentIntent)
 			})
 			logger.Info("ROUTER", "Order routes registered under /api/order")
 

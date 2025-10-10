@@ -27,6 +27,7 @@ type DBLayer interface {
 	UpdateOrder(order models.Order) error
 	CancelOrder(id string) error
 	GetOrderBySeat(seatID string) (*models.Order, error)
+	GetPendingOrdersBySeat(seatID string) ([]*models.Order, error)
 	GetSeatsByOrder(orderID string) ([]string, error)
 	GetSessionIdBySeat(seatID string) (string, error)
 	GetOrdersWithTicketsByUserID(userID string) ([]models.OrderWithTickets, error)
@@ -77,76 +78,6 @@ func (s *OrderService) GetOrder(id string) (*models.Order, error) {
 	return s.DB.GetOrderByID(id)
 }
 
-func (s *OrderService) UpdateOrder(id string, updateData models.Order) error {
-	s.logger.Info("ORDER", fmt.Sprintf("Updating order: %s", id))
-	order, err := s.DB.GetOrderByID(id)
-	if err != nil {
-		s.logger.Error("ORDER", fmt.Sprintf("Order %s not found: %v", id, err))
-		return fmt.Errorf("order %s not found: %w", id, err)
-	}
-
-	// Allow updates regardless of status (for testing purposes)
-	// In a real-world application, you might want to restrict this
-	// to specific status transitions
-
-	// Create a merged order with original values preserved for empty fields
-	mergedOrder := *order // Start with original order
-
-	// Only update specific fields if they are provided in updateData
-	if updateData.Status != "" {
-		mergedOrder.Status = updateData.Status
-	}
-	if updateData.Price > 0 {
-		mergedOrder.Price = updateData.Price
-	}
-
-	// Always ensure ID consistency
-	mergedOrder.OrderID = id
-
-	s.logger.Debug("ORDER", fmt.Sprintf("Merged order data: %+v", mergedOrder))
-
-	if err := s.DB.UpdateOrder(mergedOrder); err != nil {
-		s.logger.Error("ORDER", fmt.Sprintf("Failed to update order %s: %v", id, err))
-		return fmt.Errorf("failed to update order: %w", err)
-	}
-
-	if err := s.publishOrderUpdated(mergedOrder); err != nil {
-		s.logger.Error("KAFKA", fmt.Sprintf("Kafka publish error (order updated): %v", err))
-	}
-
-	s.logger.Info("ORDER", fmt.Sprintf("Order %s updated successfully", id))
-	return nil
-}
-
-// UpdateOrderStatus updates only the status of an order
-func (s *OrderService) UpdateOrderStatus(orderID string, status string) error {
-	s.logger.Debug("ORDER", fmt.Sprintf("Updating order %s status to %s", orderID, status))
-
-	// Get the existing order
-	order, err := s.DB.GetOrderByID(orderID)
-	if err != nil {
-		s.logger.Error("ORDER", fmt.Sprintf("Failed to get order %s: %v", orderID, err))
-		return fmt.Errorf("failed to get order: %w", err)
-	}
-
-	// Update only the status
-	order.Status = status
-
-	// Save the updated order
-	if err := s.DB.UpdateOrder(*order); err != nil {
-		s.logger.Error("ORDER", fmt.Sprintf("Failed to update order %s status: %v", orderID, err))
-		return fmt.Errorf("failed to update order status: %w", err)
-	}
-
-	// Publish order updated event
-	if err := s.publishOrderUpdated(*order); err != nil {
-		s.logger.Error("KAFKA", fmt.Sprintf("Kafka publish error (order status updated): %v", err))
-	}
-
-	s.logger.Info("ORDER", fmt.Sprintf("Order %s status updated to %s", orderID, status))
-	return nil
-}
-
 func (s *OrderService) CancelOrder(id string) error {
 	s.logger.Info("ORDER", fmt.Sprintf("Cancelling order: %s", id))
 	order, err := s.DB.GetOrderByID(id)
@@ -164,6 +95,17 @@ func (s *OrderService) CancelOrder(id string) error {
 	if err != nil {
 		s.logger.Error("ORDER", fmt.Sprintf("Failed to get seat IDs for order %s: %v", id, err))
 		return fmt.Errorf("failed to get seat IDs: %w", err)
+	}
+
+	// Cancel the associated payment intent if it exists
+	if order.PaymentIntentID != "" {
+		s.logger.Info("PAYMENT", fmt.Sprintf("Cancelling payment intent %s for order %s", order.PaymentIntentID, id))
+		if err := s.CancelPaymentIntent(order.PaymentIntentID); err != nil {
+			s.logger.Error("PAYMENT", fmt.Sprintf("Failed to cancel payment intent %s: %v", order.PaymentIntentID, err))
+			// Continue with order cancellation even if payment intent cancellation fails
+		}
+		// Reset the payment intent ID
+		order.PaymentIntentID = ""
 	}
 
 	order.Status = "cancelled"
@@ -217,6 +159,12 @@ func (s *OrderService) Checkout(id string) error {
 	if order.Status != "pending" {
 		s.logger.Warn("ORDER", fmt.Sprintf("Order %s is not in a valid state for checkout (status: %s)", id, order.Status))
 		return errors.New("order is not in a valid state for checkout")
+	}
+
+	// Ensure payment has been processed (payment intent should exist)
+	if order.PaymentIntentID == "" {
+		s.logger.Warn("ORDER", fmt.Sprintf("Order %s has no payment intent ID", id))
+		return errors.New("order has no payment intent ID")
 	}
 
 	// First get the tickets which contain seat IDs

@@ -1,3 +1,6 @@
+//go:build migrate
+// +build migrate
+
 package main
 
 import (
@@ -63,7 +66,7 @@ func migrate(db *sql.DB) error {
 		discount_amount NUMERIC(10,2) DEFAULT 0,
 		price    NUMERIC(10,2) NOT NULL,
 		created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-		payment_at TIMESTAMP NULL DEFAULT NOW()
+		payment_intent_id TEXT
 	);
 
 	CREATE TABLE tickets (

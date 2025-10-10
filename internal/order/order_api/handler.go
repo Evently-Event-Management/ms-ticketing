@@ -49,76 +49,6 @@ func (h *Handler) GetOrder(w http.ResponseWriter, r *http.Request) {
 	h.Logger.Info("API", "GetOrder: response sent successfully")
 }
 
-func (h *Handler) UpdateOrder(w http.ResponseWriter, r *http.Request) {
-	orderID := chi.URLParam(r, "orderId")
-	h.Logger.Info("API", fmt.Sprintf("UpdateOrder: orderId=%s", orderID))
-
-	// Parse the raw request to better understand what's being sent
-	var rawData map[string]interface{}
-	if err := json.NewDecoder(r.Body).Decode(&rawData); err != nil {
-		h.Logger.Error("API", fmt.Sprintf("UpdateOrder: failed to decode body: %v", err))
-		http.Error(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-	h.Logger.Debug("API", fmt.Sprintf("UpdateOrder: raw request data: %+v", rawData))
-
-	// Create an update data object
-	updateData := models.Order{
-		OrderID: orderID,
-	}
-
-	// Handle status field if present
-	if status, ok := rawData["status"].(string); ok && status != "" {
-		updateData.Status = status
-	}
-
-	// Handle user_id field if present
-	if userID, ok := rawData["user_id"].(string); ok && userID != "" {
-		updateData.UserID = userID
-	}
-
-	h.Logger.Debug("API", fmt.Sprintf("UpdateOrder: processed update data: %+v", updateData))
-
-	// Get current order to check if it exists
-	currentOrder, err := h.OrderService.GetOrder(orderID)
-	if err != nil {
-		h.Logger.Error("API", fmt.Sprintf("UpdateOrder: order not found: %v", err))
-		http.Error(w, "Order not found: "+err.Error(), http.StatusNotFound)
-		return
-	}
-
-	h.Logger.Debug("API", fmt.Sprintf("UpdateOrder: current order data: %+v", currentOrder))
-
-	err = h.OrderService.UpdateOrder(orderID, updateData)
-	if err != nil {
-		h.Logger.Error("API", fmt.Sprintf("UpdateOrder: failed to update order: %v", err))
-		http.Error(w, "Could not update order: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-	h.Logger.Info("API", "UpdateOrder: order updated successfully")
-
-	// Return the updated order
-	updatedOrder, err := h.OrderService.GetOrder(orderID)
-	if err != nil {
-		h.Logger.Warn("API", fmt.Sprintf("UpdateOrder: could not fetch updated order: %v", err))
-		w.WriteHeader(http.StatusOK)
-		_, err := w.Write([]byte(`{"status":"success"}`))
-		if err != nil {
-			h.Logger.Error("API", fmt.Sprintf("UpdateOrder: failed to write response: %v", err))
-			return
-		}
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(updatedOrder)
-	if err != nil {
-		h.Logger.Error("API", fmt.Sprintf("UpdateOrder: failed to encode response: %v", err))
-		return
-	}
-	h.Logger.Info("API", "UpdateOrder: response sent successfully")
-}
-
 func (h *Handler) DeleteOrder(w http.ResponseWriter, r *http.Request) {
 	orderID := chi.URLParam(r, "orderId")
 	h.Logger.Info("API", fmt.Sprintf("DeleteOrder: orderId=%s", orderID))
@@ -166,27 +96,6 @@ func (h *Handler) DeleteOrder(w http.ResponseWriter, r *http.Request) {
 // 	w.WriteHeader(http.StatusOK)
 // 	w.Write([]byte(`{"message":"Promo code applied successfully"}`))
 // }
-
-func (h *Handler) CheckoutOrder(w http.ResponseWriter, r *http.Request) {
-	orderID := chi.URLParam(r, "orderId")
-	h.Logger.Info("API", fmt.Sprintf("CheckoutOrder: orderId=%s", orderID))
-
-	if err := h.OrderService.Checkout(orderID); err != nil {
-		h.Logger.Error("API", fmt.Sprintf("CheckoutOrder: failed to checkout: %v", err))
-		http.Error(w, "Failed to checkout order: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-	h.Logger.Info("API", "CheckoutOrder: order checked out successfully")
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_, err := w.Write([]byte(`{"message":"Order checked out successfully"}`))
-	if err != nil {
-		h.Logger.Error("API", fmt.Sprintf("CheckoutOrder: failed to write response: %v", err))
-		return
-	}
-	h.Logger.Info("API", "CheckoutOrder: response sent successfully")
-}
 
 func (h *Handler) SeatValidationAndPlaceOrder(w http.ResponseWriter, r *http.Request) {
 	h.Logger.Info("API", "SeatValidationAndPlaceOrder: received request")

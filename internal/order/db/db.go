@@ -58,11 +58,10 @@ func (d *DB) GetOrderWithSeats(id string) (*models.OrderWithSeats, error) {
 	}, nil
 }
 
-// UpdateOrder → update allowed fields
 func (d *DB) UpdateOrder(order models.Order) error {
 	_, err := d.Bun.NewUpdate().
 		Model(&order).
-		Column("session_id", "event_id", "user_id", "status", "price", "created_at").
+		Column("session_id", "event_id", "user_id", "status", "price", "created_at", "payment_intent_id").
 		Where("order_id = ?", order.OrderID).
 		Exec(context.Background())
 	return err
@@ -98,6 +97,21 @@ func (d *DB) GetOrderBySeat(seatID string) (*models.Order, error) {
 		return nil, err
 	}
 	return &order, nil
+}
+
+// GetPendingOrdersBySeat retrieves all pending orders that have a ticket with the given seat ID
+func (d *DB) GetPendingOrdersBySeat(seatID string) ([]*models.Order, error) {
+	var orders []*models.Order
+	err := d.Bun.NewSelect().
+		Model(&orders).
+		Join("JOIN tickets t ON t.order_id = \"order\".order_id").
+		Where("t.seat_id = ?", seatID).
+		Where("\"order\".status = ?", "pending").
+		Scan(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	return orders, nil
 }
 
 // GetTicketsByOrder → fetch all tickets linked to an order
