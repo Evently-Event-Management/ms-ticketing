@@ -10,6 +10,17 @@ A microservice-based ticketing system for event management, built with Go, Kafka
 - Redis for seat locking
 - Keycloak for authentication (OIDC)
 - QR code generation for tickets
+- Stripe payment integration for processing payments
+- Redis-based caching for machine-to-machine authentication tokens
+
+## Token Caching
+The service uses Redis to cache M2M (machine-to-machine) authentication tokens, which reduces the number of requests to the authentication server. This is particularly useful in high-traffic scenarios where multiple microservices are communicating with each other. Token caching provides:
+
+- Reduced latency for API calls requiring authentication
+- Lower load on the authentication server
+- Improved overall system performance
+
+The caching mechanism automatically refreshes tokens before they expire and falls back to direct token requests if Redis is unavailable.
 
 ## Architecture
 - **internal/order/**: Order service logic
@@ -17,6 +28,7 @@ A microservice-based ticketing system for event management, built with Go, Kafka
 - **internal/auth/**: Authentication and middleware
 - **internal/kafka/**: Kafka producer and consumer
 - **internal/models/**: Data models
+- **internal/order/stripe.go**: Stripe payment integration
 - **db.go**: Database layer for tickets and orders
 - **main.go**: Service entrypoint and router setup
 - **migrate.go**: Database migration and sample data
@@ -35,6 +47,10 @@ A microservice-based ticketing system for event management, built with Go, Kafka
    - `KEYCLOAK_URL`, `KEYCLOAK_REALM`, etc. for authentication
    - `QR_SECRET_KEY`: Secret for QR code encryption
    - `SEAT_SERVICE_URL`: Seat validation service URL
+   - `STRIPE_SECRET_KEY`: Your Stripe API secret key
+   - `SEAT_LOCK_TTL_MINUTES`: Duration in minutes for seat locks (default: 5)
+   - `STRIPE_WEBHOOK_SECRET`: Your Stripe webhook signing secret
+   - `REDIS_ADDR`: Redis address for seat locks and M2M token caching
 3. **Run migrations:**
    ```sh
    # Using docker-compose with the migration profile
@@ -163,8 +179,17 @@ VALUES (
 );
 ```
 
+## Payment Flow
+1. Create an order via `/api/order` endpoint (initial status is "pending")
+2. Obtain the order ID from the response
+3. Create a payment intent via `/api/order/{orderId}/create-payment-intent`
+4. Use the returned client secret with Stripe.js in your frontend to process the payment
+5. Upon successful payment, Stripe will call the webhook endpoint which will update the order status to "completed"
+
 ## API Endpoints
 - `/api/order`: Place, update, cancel, and view orders
+- `/api/order/{orderId}/create-payment-intent`: Create a Stripe payment intent for an order
+- `/api/webhook/stripe`: Webhook endpoint for Stripe event handling
 - `/api/order/ticket`: Create, update, delete, view, and check-in tickets
 - `/api/secure`: Test endpoint for JWT authentication
 

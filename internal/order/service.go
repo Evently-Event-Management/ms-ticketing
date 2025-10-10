@@ -9,10 +9,13 @@ import (
 	"ms-ticketing/internal/auth"
 	"ms-ticketing/internal/models"
 	"ms-ticketing/internal/order/discount"
+	rediswrap "ms-ticketing/internal/order/redis"
 	tickets "ms-ticketing/internal/tickets/service"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/go-redis/redis/v8"
 
 	"github.com/google/uuid"
 
@@ -27,9 +30,11 @@ type DBLayer interface {
 	UpdateOrder(order models.Order) error
 	CancelOrder(id string) error
 	GetOrderBySeat(seatID string) (*models.Order, error)
+	GetPendingOrdersBySeat(seatID string) ([]*models.Order, error)
 	GetSeatsByOrder(orderID string) ([]string, error)
 	GetSessionIdBySeat(seatID string) (string, error)
 	GetOrdersWithTicketsByUserID(userID string) ([]models.OrderWithTickets, error)
+	GetOrdersWithTicketsAndQRByUserID(userID string) ([]models.OrderWithTicketsAndQR, error)
 }
 
 type RedisLock interface {
@@ -76,47 +81,6 @@ func (s *OrderService) GetOrder(id string) (*models.Order, error) {
 	return s.DB.GetOrderByID(id)
 }
 
-func (s *OrderService) UpdateOrder(id string, updateData models.Order) error {
-	s.logger.Info("ORDER", fmt.Sprintf("Updating order: %s", id))
-	order, err := s.DB.GetOrderByID(id)
-	if err != nil {
-		s.logger.Error("ORDER", fmt.Sprintf("Order %s not found: %v", id, err))
-		return fmt.Errorf("order %s not found: %w", id, err)
-	}
-
-	// Allow updates regardless of status (for testing purposes)
-	// In a real-world application, you might want to restrict this
-	// to specific status transitions
-
-	// Create a merged order with original values preserved for empty fields
-	mergedOrder := *order // Start with original order
-
-	// Only update specific fields if they are provided in updateData
-	if updateData.Status != "" {
-		mergedOrder.Status = updateData.Status
-	}
-	if updateData.Price > 0 {
-		mergedOrder.Price = updateData.Price
-	}
-
-	// Always ensure ID consistency
-	mergedOrder.OrderID = id
-
-	s.logger.Debug("ORDER", fmt.Sprintf("Merged order data: %+v", mergedOrder))
-
-	if err := s.DB.UpdateOrder(mergedOrder); err != nil {
-		s.logger.Error("ORDER", fmt.Sprintf("Failed to update order %s: %v", id, err))
-		return fmt.Errorf("failed to update order: %w", err)
-	}
-
-	if err := s.publishOrderUpdated(mergedOrder); err != nil {
-		s.logger.Error("KAFKA", fmt.Sprintf("Kafka publish error (order updated): %v", err))
-	}
-
-	s.logger.Info("ORDER", fmt.Sprintf("Order %s updated successfully", id))
-	return nil
-}
-
 func (s *OrderService) CancelOrder(id string) error {
 	s.logger.Info("ORDER", fmt.Sprintf("Cancelling order: %s", id))
 	order, err := s.DB.GetOrderByID(id)
@@ -134,6 +98,17 @@ func (s *OrderService) CancelOrder(id string) error {
 	if err != nil {
 		s.logger.Error("ORDER", fmt.Sprintf("Failed to get seat IDs for order %s: %v", id, err))
 		return fmt.Errorf("failed to get seat IDs: %w", err)
+	}
+
+	// Cancel the associated payment intent if it exists
+	if order.PaymentIntentID != "" {
+		s.logger.Info("PAYMENT", fmt.Sprintf("Cancelling payment intent %s for order %s", order.PaymentIntentID, id))
+		if err := s.CancelPaymentIntent(order.PaymentIntentID); err != nil {
+			s.logger.Error("PAYMENT", fmt.Sprintf("Failed to cancel payment intent %s: %v", order.PaymentIntentID, err))
+			// Continue with order cancellation even if payment intent cancellation fails
+		}
+		// Reset the payment intent ID
+		order.PaymentIntentID = ""
 	}
 
 	order.Status = "cancelled"
@@ -187,6 +162,12 @@ func (s *OrderService) Checkout(id string) error {
 	if order.Status != "pending" {
 		s.logger.Warn("ORDER", fmt.Sprintf("Order %s is not in a valid state for checkout (status: %s)", id, order.Status))
 		return errors.New("order is not in a valid state for checkout")
+	}
+
+	// Ensure payment has been processed (payment intent should exist)
+	if order.PaymentIntentID == "" {
+		s.logger.Warn("ORDER", fmt.Sprintf("Order %s has no payment intent ID", id))
+		return errors.New("order has no payment intent ID")
 	}
 
 	// First get the tickets which contain seat IDs
@@ -261,7 +242,17 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 	config.KeycloakRealm = os.Getenv("KEYCLOAK_REALM")
 
 	s.logger.Debug("AUTH", "Requesting M2M token for seat validation")
-	m2m_token, err := auth.GetM2MToken(config, s.client)
+
+	// Get Redis client from the existing Redis object if available
+	var redisClient *redis.Client
+	if s.Redis != nil {
+		// Try to get the Redis client from our Redis wrapper
+		if redisWrapper, ok := s.Redis.(*rediswrap.Redis); ok && redisWrapper != nil {
+			redisClient = redisWrapper.Client
+		}
+	}
+
+	m2m_token, err := auth.GetM2MToken(config, s.client, redisClient, s.logger)
 	if err != nil {
 		s.logger.Error("AUTH", fmt.Sprintf("Failed to get M2M token: %v", err))
 		return nil, fmt.Errorf("failed to get M2M token: %w", err)
@@ -626,6 +617,20 @@ func (s *OrderService) GetOrdersWithTicketsByUserID(userID string) ([]models.Ord
 
 	s.logger.Info("ORDER", fmt.Sprintf("Retrieved %d orders with tickets for user %s", len(ordersWithTickets), userID))
 	return ordersWithTickets, nil
+}
+
+// GetOrdersWithTicketsAndQRByUserID retrieves all orders with their associated tickets including QR codes for a given user
+func (s *OrderService) GetOrdersWithTicketsAndQRByUserID(userID string) ([]models.OrderWithTicketsAndQR, error) {
+	s.logger.Debug("ORDER", fmt.Sprintf("Getting orders with tickets and QR codes for user: %s", userID))
+
+	ordersWithTicketsAndQR, err := s.DB.GetOrdersWithTicketsAndQRByUserID(userID)
+	if err != nil {
+		s.logger.Error("ORDER", fmt.Sprintf("Failed to get orders with tickets and QR codes for user %s: %v", userID, err))
+		return nil, fmt.Errorf("failed to get orders with tickets and QR codes for user: %w", err)
+	}
+
+	s.logger.Info("ORDER", fmt.Sprintf("Retrieved %d orders with tickets and QR codes for user %s", len(ordersWithTicketsAndQR), userID))
+	return ordersWithTicketsAndQR, nil
 }
 
 // Helper methods for Kafka publishing

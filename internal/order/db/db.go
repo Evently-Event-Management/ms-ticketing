@@ -58,11 +58,10 @@ func (d *DB) GetOrderWithSeats(id string) (*models.OrderWithSeats, error) {
 	}, nil
 }
 
-// UpdateOrder → update allowed fields
 func (d *DB) UpdateOrder(order models.Order) error {
 	_, err := d.Bun.NewUpdate().
 		Model(&order).
-		Column("session_id", "event_id", "user_id", "status", "price", "created_at").
+		Column("session_id", "event_id", "user_id", "status", "price", "created_at", "payment_intent_id").
 		Where("order_id = ?", order.OrderID).
 		Exec(context.Background())
 	return err
@@ -98,6 +97,21 @@ func (d *DB) GetOrderBySeat(seatID string) (*models.Order, error) {
 		return nil, err
 	}
 	return &order, nil
+}
+
+// GetPendingOrdersBySeat retrieves all pending orders that have a ticket with the given seat ID
+func (d *DB) GetPendingOrdersBySeat(seatID string) ([]*models.Order, error) {
+	var orders []*models.Order
+	err := d.Bun.NewSelect().
+		Model(&orders).
+		Join("JOIN tickets t ON t.order_id = \"order\".order_id").
+		Where("t.seat_id = ?", seatID).
+		Where("\"order\".status = ?", "pending").
+		Scan(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	return orders, nil
 }
 
 // GetTicketsByOrder → fetch all tickets linked to an order
@@ -197,6 +211,64 @@ func (d *DB) GetOrdersWithTicketsByUserID(userID string) ([]models.OrderWithTick
 		// If no tickets found for this order, initialize empty slice
 		if result[i].Tickets == nil {
 			result[i].Tickets = []models.TicketForStreaming{}
+		}
+	}
+
+	return result, nil
+}
+
+// GetOrdersWithTicketsAndQRByUserID → fetch all orders with tickets including QR codes for a given user_id
+func (d *DB) GetOrdersWithTicketsAndQRByUserID(userID string) ([]models.OrderWithTicketsAndQR, error) {
+	// First get all orders for the user
+	var orders []models.Order
+	err := d.Bun.NewSelect().
+		Model(&orders).
+		Where("user_id = ?", userID).
+		Order("created_at DESC").
+		Scan(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	// If no orders found, return empty slice
+	if len(orders) == 0 {
+		return []models.OrderWithTicketsAndQR{}, nil
+	}
+
+	// Build a slice of order IDs for ticket query
+	orderIDs := make([]string, len(orders))
+	for i, order := range orders {
+		orderIDs[i] = order.OrderID
+	}
+
+	// Get all tickets for these orders INCLUDING QR codes
+	var tickets []models.Ticket
+	err = d.Bun.NewSelect().
+		Model(&tickets).
+		Where("order_id IN (?)", bun.In(orderIDs)).
+		Order("order_id", "issued_at").
+		Scan(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	// Group tickets by order_id
+	ticketsByOrder := make(map[string][]models.TicketWithQRCode)
+	for _, ticket := range tickets {
+		ticketWithQR := ticket.ToTicketWithQRCode()
+		ticketsByOrder[ticket.OrderID] = append(ticketsByOrder[ticket.OrderID], ticketWithQR)
+	}
+
+	// Build the result with orders and their tickets (including QR codes)
+	result := make([]models.OrderWithTicketsAndQR, len(orders))
+	for i, order := range orders {
+		result[i] = models.OrderWithTicketsAndQR{
+			Order:   order,
+			Tickets: ticketsByOrder[order.OrderID],
+		}
+		// If no tickets found for this order, initialize empty slice
+		if result[i].Tickets == nil {
+			result[i].Tickets = []models.TicketWithQRCode{}
 		}
 	}
 
