@@ -10,9 +10,6 @@ import (
 	"ms-ticketing/internal/auth"
 	"ms-ticketing/internal/kafka"
 	"ms-ticketing/internal/models"
-	payment_handler "ms-ticketing/internal/payment/handler"
-	"ms-ticketing/internal/payment/services"
-	"ms-ticketing/internal/payment/storage"
 	ticket_db "ms-ticketing/internal/tickets/db"
 	tickets "ms-ticketing/internal/tickets/service"
 	"ms-ticketing/internal/tickets/ticket_api"
@@ -239,16 +236,6 @@ func main() {
 	ticketService := tickets.NewTicketService(&ticket_db.DB{Bun: bunDB})
 	analyticsService := analytics.NewService(bunDB)
 
-	paymentStore, err := storage.NewPostgreSQLStoreWithDB(bunDB.DB, logger)
-	if err != nil {
-		logger.Fatal("PAYMENT", fmt.Sprintf("Failed to initialize payment storage: %v", err))
-	}
-
-	stripeService, err := services.NewStripeService(logger)
-	if err != nil {
-		logger.Fatal("PAYMENT", fmt.Sprintf("Failed to initialize Stripe service: %v", err))
-	}
-
 	orderService := order.NewOrderService(
 		&db.DB{Bun: bunDB},
 		rediswrap.NewRedis(redisClient, kafkaProducer),
@@ -267,9 +254,6 @@ func main() {
 	}
 
 	analyticsHandler := analytics_api.NewHandler(analyticsService, logger)
-
-	// Create payment handler
-	paymentHandler := payment_handler.NewStripeHandler(stripeService, paymentStore, kafkaProducer, orderService, logger)
 
 	logger.Info("HTTP", "Setting up router and middleware")
 	r := chi.NewRouter()
@@ -291,7 +275,6 @@ func main() {
 				r.Get("/{orderId}", handler.GetOrder)
 				r.Put("/{orderId}", handler.UpdateOrder)
 				r.Delete("/{orderId}", handler.DeleteOrder)
-				r.Post("/payment/process", paymentHandler.ProcessPaymentChi)
 			})
 			logger.Info("ROUTER", "Order routes registered under /api/order")
 
