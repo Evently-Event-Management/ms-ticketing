@@ -35,7 +35,9 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 	r.Route("/order/analytics", func(r chi.Router) {
 		r.Get("/events/{eventId}", h.GetEventAnalytics)
 		r.Get("/events/{eventId}/discounts", h.GetEventDiscountAnalytics)
+		r.Get("/events/{eventId}/sessions", h.GetEventSessionsAnalytics)
 		r.Get("/events/{eventId}/sessions/{sessionId}", h.GetSessionAnalytics)
+		r.Get("/events/{eventId}/orders", h.GetEventOrders)
 	})
 }
 
@@ -145,7 +147,8 @@ func (h *Handler) GetEventAnalytics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	analytics, err := h.Service.GetEventAnalytics(r.Context(), eventID)
+	// Only consider orders with status "completed"
+	analytics, err := h.Service.GetEventAnalytics(r.Context(), eventID, "completed")
 	if err != nil {
 		h.Logger.Error("ANALYTICS", "Error getting event analytics: "+err.Error())
 		sendJSONResponse(w, http.StatusInternalServerError, map[string]string{"error": "Failed to get analytics"})
@@ -186,7 +189,8 @@ func (h *Handler) GetEventDiscountAnalytics(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	discountAnalytics, err := h.Service.GetEventDiscountAnalytics(r.Context(), eventID)
+	// Only consider orders with status "completed"
+	discountAnalytics, err := h.Service.GetEventDiscountAnalytics(r.Context(), eventID, "completed")
 	if err != nil {
 		h.Logger.Error("ANALYTICS", "Error getting discount analytics: "+err.Error())
 		sendJSONResponse(w, http.StatusInternalServerError, map[string]string{"error": "Failed to get discount analytics"})
@@ -194,6 +198,48 @@ func (h *Handler) GetEventDiscountAnalytics(w http.ResponseWriter, r *http.Reque
 	}
 
 	sendJSONResponse(w, http.StatusOK, discountAnalytics)
+}
+
+// GetEventSessionsAnalytics handles analytics request for all sessions of an event
+func (h *Handler) GetEventSessionsAnalytics(w http.ResponseWriter, r *http.Request) {
+	eventID := chi.URLParam(r, "eventId")
+	if eventID == "" {
+		h.Logger.Error("ANALYTICS", "event_id is required")
+		sendJSONResponse(w, http.StatusBadRequest, map[string]string{"error": "event_id is required"})
+		return
+	}
+
+	// Extract user ID from context (injected by auth middleware)
+	userID := auth.UserID(r.Context())
+	if userID == "" {
+		h.Logger.Error("ANALYTICS", "User ID not found in context")
+		sendJSONResponse(w, http.StatusUnauthorized, map[string]string{"error": "Unauthorized access"})
+		return
+	}
+
+	// Verify ownership before proceeding
+	isOwner, err := h.verifyEventOwnership(eventID, userID)
+	if err != nil {
+		h.Logger.Error("ANALYTICS", "Error verifying event ownership: "+err.Error())
+		sendJSONResponse(w, http.StatusInternalServerError, map[string]string{"error": "Failed to verify event ownership"})
+		return
+	}
+
+	if !isOwner {
+		h.Logger.Warn("ANALYTICS", fmt.Sprintf("User %s attempted to access sessions analytics for event %s without ownership", userID, eventID))
+		sendJSONResponse(w, http.StatusForbidden, map[string]string{"error": "You do not have permission to access these analytics"})
+		return
+	}
+
+	// Only consider orders with status "completed"
+	sessionsAnalytics, err := h.Service.GetEventSessionsAnalytics(r.Context(), eventID, "completed")
+	if err != nil {
+		h.Logger.Error("ANALYTICS", "Error getting sessions analytics: "+err.Error())
+		sendJSONResponse(w, http.StatusInternalServerError, map[string]string{"error": "Failed to get sessions analytics"})
+		return
+	}
+
+	sendJSONResponse(w, http.StatusOK, sessionsAnalytics)
 }
 
 // GetSessionAnalytics handles analytics request for a session
@@ -230,7 +276,8 @@ func (h *Handler) GetSessionAnalytics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	analytics, err := h.Service.GetSessionAnalytics(r.Context(), eventID, sessionID)
+	// Only consider orders with status "completed"
+	analytics, err := h.Service.GetSessionAnalytics(r.Context(), eventID, sessionID, "completed")
 	if err != nil {
 		h.Logger.Error("ANALYTICS", "Error getting session analytics: "+err.Error())
 		sendJSONResponse(w, http.StatusInternalServerError, map[string]string{"error": "Failed to get analytics"})
@@ -238,4 +285,70 @@ func (h *Handler) GetSessionAnalytics(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sendJSONResponse(w, http.StatusOK, analytics)
+}
+
+// GetEventOrders handles request to get orders for an event with optional filters and sorting
+func (h *Handler) GetEventOrders(w http.ResponseWriter, r *http.Request) {
+	eventID := chi.URLParam(r, "eventId")
+	if eventID == "" {
+		h.Logger.Error("ANALYTICS", "event_id is required")
+		sendJSONResponse(w, http.StatusBadRequest, map[string]string{"error": "event_id is required"})
+		return
+	}
+
+	// Extract user ID from context (injected by auth middleware)
+	userID := auth.UserID(r.Context())
+	if userID == "" {
+		h.Logger.Error("ANALYTICS", "User ID not found in context")
+		sendJSONResponse(w, http.StatusUnauthorized, map[string]string{"error": "Unauthorized access"})
+		return
+	}
+
+	// Verify ownership before proceeding
+	isOwner, err := h.verifyEventOwnership(eventID, userID)
+	if err != nil {
+		h.Logger.Error("ANALYTICS", "Error verifying event ownership: "+err.Error())
+		sendJSONResponse(w, http.StatusInternalServerError, map[string]string{"error": "Failed to verify event ownership"})
+		return
+	}
+
+	if !isOwner {
+		h.Logger.Warn("ANALYTICS", fmt.Sprintf("User %s attempted to access orders for event %s without ownership", userID, eventID))
+		sendJSONResponse(w, http.StatusForbidden, map[string]string{"error": "You do not have permission to access these orders"})
+		return
+	}
+
+	// Parse query parameters
+	options := analytics.EventOrderOptions{
+		SessionID: r.URL.Query().Get("sessionId"),
+		Status:    r.URL.Query().Get("status"),
+		SortBy:    r.URL.Query().Get("sort"),
+		SortDesc:  r.URL.Query().Get("order") == "desc",
+	}
+
+	// Parse pagination parameters
+	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
+		var limit int
+		_, err := fmt.Sscanf(limitStr, "%d", &limit)
+		if err == nil && limit > 0 {
+			options.Limit = limit
+		}
+	}
+
+	if offsetStr := r.URL.Query().Get("offset"); offsetStr != "" {
+		var offset int
+		_, err := fmt.Sscanf(offsetStr, "%d", &offset)
+		if err == nil && offset >= 0 {
+			options.Offset = offset
+		}
+	}
+
+	orders, err := h.Service.GetEventOrders(r.Context(), eventID, options)
+	if err != nil {
+		h.Logger.Error("ANALYTICS", "Error getting event orders: "+err.Error())
+		sendJSONResponse(w, http.StatusInternalServerError, map[string]string{"error": "Failed to get orders"})
+		return
+	}
+
+	sendJSONResponse(w, http.StatusOK, orders)
 }
