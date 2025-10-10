@@ -27,6 +27,7 @@ type Order struct {
 	DiscountAmount float64   `bun:"discount_amount"`        // Amount of discount applied
 	Price          float64   `bun:"price"`                  // Final price after discount
 	CreatedAt      time.Time `bun:"created_at"`
+	PaymentIntentID string    `bun:"payment_intent_id,nullzero"`
 }
 
 // OrderWithSeats extends the Order model with seat information
