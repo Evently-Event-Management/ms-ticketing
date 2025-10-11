@@ -5,3 +5,4 @@ tmp/
 .env.example
 logs/
 ms-ticketing
+coverage/
