@@ -17,6 +17,7 @@ type TicketDBLayer interface {
 	GetTicketsByOrder(orderID string) ([]models.Ticket, error)
 	GetTicketsByUser(userID string) ([]models.Ticket, error)
 	GetTotalTicketsCount() (int, error)
+	CheckinTicket(ticketID string, checkedIn bool, checkedInTime time.Time) error
 }
 
 type TicketService struct {
@@ -103,18 +104,28 @@ func (s *TicketService) CancelTicket(ticketID string) error {
 	return nil
 }
 
-// Checkout generates QR and PDF for a ticket
+// Checkin marks a ticket as checked in
 func (s *TicketService) Checkin(ticketID string) (bool, error) {
+	// First verify the ticket exists
 	ticket, err := s.DB.GetTicketByID(ticketID)
 	if err != nil {
 		return false, fmt.Errorf("ticket %s not found: %w", ticketID, err)
 	}
-	ticket.CheckedIn = true
-	ticket.CheckedInTime = time.Now()
-	if err := s.DB.UpdateTicket(*ticket); err != nil {
-		return false, fmt.Errorf("failed to update ticket: %w", err)
+
+	fmt.Printf("Found ticket: %s, currently checked in: %t\n", ticket.TicketID, ticket.CheckedIn)
+
+	// Check if already checked in
+	if ticket.CheckedIn {
+		return false, fmt.Errorf("ticket %s is already checked in", ticketID)
 	}
-	fmt.Println("✅ Checkin complete.")
+
+	// Use the dedicated checkin method for atomic update
+	checkinTime := time.Now()
+	if err := s.DB.CheckinTicket(ticketID, true, checkinTime); err != nil {
+		return false, fmt.Errorf("failed to checkin ticket: %w", err)
+	}
+
+	fmt.Printf("✅ Ticket %s checked in successfully at %v\n", ticketID, checkinTime)
 	return true, nil
 }
 

@@ -7,11 +7,24 @@ import (
 )
 
 type Config struct {
-	Server   ServerConfig
-	Email    EmailConfig
-	Redis    RedisConfig // Assuming RedisConfig is defined in the redis package
-	Kafka    KafkaConfig
-	Database DatabaseConfig // Added database configuration
+	Server              ServerConfig
+	Email               EmailConfig
+	Redis               RedisConfig // Assuming RedisConfig is defined in the redis package
+	Kafka               KafkaConfig
+	Database            DatabaseConfig // Added database configuration
+	EventSeatingService EventSeatingServiceConfig
+	Auth                AuthConfig
+}
+
+type EventSeatingServiceConfig struct {
+	URL string
+}
+
+type AuthConfig struct {
+	KeycloakURL   string
+	KeycloakRealm string
+	ClientID      string
+	ClientSecret  string
 }
 
 type ServerConfig struct {
@@ -87,6 +100,15 @@ func Load() *Config {
 			MaxOpenConns: getEnvInt("DB_MAX_OPEN_CONNS", 25),
 			MaxIdleConns: getEnvInt("DB_MAX_IDLE_CONNS", 25),
 			MaxLifetime:  time.Duration(getEnvInt("DB_MAX_LIFETIME_MINUTES", 5)) * time.Minute,
+		},
+		EventSeatingService: EventSeatingServiceConfig{
+			URL: getEnv("EVENT_SEATING_SERVICE_URL", "http://localhost:8081"),
+		},
+		Auth: AuthConfig{
+			KeycloakURL:   getEnv("KEYCLOAK_URL", "http://localhost:8080"),
+			KeycloakRealm: getEnv("KEYCLOAK_REALM", "evently"),
+			ClientID:      getEnv("TICKET_CLIENT_ID", "ticket-service-client"),
+			ClientSecret:  getEnv("TICKET_CLIENT_SECRET", "KEXBfroAvRIVp6fi2svsQeKKjZTu4wnu"),
 		},
 		Kafka: KafkaConfig{
 			Brokers:  []string{getEnv("KAFKA_BROKERS", "localhost:9092")},
