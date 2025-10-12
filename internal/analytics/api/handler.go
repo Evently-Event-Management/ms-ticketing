@@ -52,6 +52,7 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 		r.Get("/events/{eventId}/sessions/{sessionId}", h.GetSessionAnalytics)
 		r.Get("/events/{eventId}/orders", h.GetEventOrders)
 		r.Post("/events/batch", h.GetBatchEventAnalytics)
+		r.Post("/events/batch/individual", h.GetBatchEventAnalyticsIndividual)
 	})
 }
 
@@ -429,6 +430,62 @@ func (h *Handler) GetBatchEventAnalytics(w http.ResponseWriter, r *http.Request)
 
 	// Log how many events were processed
 	h.Logger.Info("ANALYTICS", fmt.Sprintf("Returning aggregated analytics for %d events", len(analytics.EventIDs)))
+	sendJSONResponse(w, http.StatusOK, analytics)
+}
+
+// GetBatchEventAnalyticsIndividual handles analytics requests for multiple events
+// Returns individual analytics for each event, not aggregated
+func (h *Handler) GetBatchEventAnalyticsIndividual(w http.ResponseWriter, r *http.Request) {
+	// Parse request body to get event IDs
+	var request struct {
+		EventIDs []string `json:"eventIds"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		h.Logger.Error("ANALYTICS", "Failed to parse request body: "+err.Error())
+		sendJSONResponse(w, http.StatusBadRequest, map[string]string{"error": "Invalid request format"})
+		return
+	}
+
+	if len(request.EventIDs) == 0 {
+		h.Logger.Error("ANALYTICS", "No event IDs provided")
+		sendJSONResponse(w, http.StatusBadRequest, map[string]string{"error": "No event IDs provided"})
+		return
+	}
+
+	// Extract user ID from context (injected by auth middleware)
+	userID := auth.UserID(r.Context())
+	if userID == "" {
+		h.Logger.Error("ANALYTICS", "User ID not found in context")
+		sendJSONResponse(w, http.StatusUnauthorized, map[string]string{"error": "Unauthorized access"})
+		return
+	}
+
+	// Verify ownership of all events
+	ownedEvents, err := h.verifyBatchEventOwnership(request.EventIDs, userID)
+	if err != nil {
+		h.Logger.Error("ANALYTICS", "Error verifying batch event ownership: "+err.Error())
+		sendJSONResponse(w, http.StatusInternalServerError, map[string]string{"error": "Failed to verify event ownership"})
+		return
+	}
+
+	// If user doesn't own any of the requested events
+	if len(ownedEvents) == 0 {
+		h.Logger.Warn("ANALYTICS", fmt.Sprintf("User %s attempted to access batch analytics without ownership of any events", userID))
+		sendJSONResponse(w, http.StatusForbidden, map[string]string{"error": "You do not have permission to access analytics for any of the requested events"})
+		return
+	}
+
+	// Only consider orders with status "completed" and only for owned events
+	analytics, err := h.Service.GetBatchEventAnalyticsMap(r.Context(), ownedEvents, "completed")
+	if err != nil {
+		h.Logger.Error("ANALYTICS", "Error getting batch event analytics: "+err.Error())
+		sendJSONResponse(w, http.StatusInternalServerError, map[string]string{"error": "Failed to get analytics"})
+		return
+	}
+
+	// Log how many events were processed
+	h.Logger.Info("ANALYTICS", fmt.Sprintf("Returning individual analytics for %d events", len(analytics.EventAnalytics)))
 	sendJSONResponse(w, http.StatusOK, analytics)
 }
 

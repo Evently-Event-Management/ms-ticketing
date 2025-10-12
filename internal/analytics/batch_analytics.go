@@ -205,3 +205,33 @@ func (s *Service) GetBatchEventAnalytics(ctx context.Context, eventIDs []string,
 
 	return result, nil
 }
+
+// BatchEventAnalyticsMap represents analytics data for individual events in a map
+type BatchEventAnalyticsMap struct {
+	EventAnalytics map[string]*EventAnalytics `json:"eventAnalytics"`
+}
+
+// GetBatchEventAnalyticsMap returns individual analytics for each event in a batch
+func (s *Service) GetBatchEventAnalyticsMap(ctx context.Context, eventIDs []string, status string) (*BatchEventAnalyticsMap, error) {
+	// Initialize result map
+	result := &BatchEventAnalyticsMap{
+		EventAnalytics: make(map[string]*EventAnalytics),
+	}
+
+	// If no events provided, return empty map
+	if len(eventIDs) == 0 {
+		return result, nil
+	}
+
+	// Fetch analytics for each event individually
+	for _, eventID := range eventIDs {
+		analytics, err := s.GetEventAnalytics(ctx, eventID, status)
+		if err != nil {
+			// Log the error but continue with other events
+			continue
+		}
+		result.EventAnalytics[eventID] = analytics
+	}
+
+	return result, nil
+}
