@@ -44,7 +44,7 @@ func (d *DB) GetTicketByID(ticketID string) (*models.Ticket, error) {
 func (d *DB) UpdateTicket(ticket models.Ticket) error {
 	_, err := d.Bun.NewUpdate().
 		Model(&ticket).
-		Column("order_id", "seat_id", "seat_label", "colour", "tier_id", "tier_name", "qr_code", "price_at_purchase", "issued_at").
+		Column("order_id", "seat_id", "seat_label", "colour", "tier_id", "tier_name", "qr_code", "price_at_purchase", "issued_at", "checked_in").
 		Where("ticket_id = ?", ticket.TicketID).
 		Exec(context.Background())
 	return err
