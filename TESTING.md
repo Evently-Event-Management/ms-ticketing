@@ -44,6 +44,15 @@ chmod +x run_tests.sh
 ./run_tests.sh
 ```
 
+The test script provides verbose output with real-time test status:
+- ✓ PASSED: [Test Name] - For successful tests
+- ✗ FAILED: [Test Name] - For failed tests
+
+At the end, you'll see a summary showing:
+- Total number of tests
+- Number of passed tests
+- Number of failed tests (if any)
+
 ### Running All Tests Manually
 
 To run all tests in the project:
