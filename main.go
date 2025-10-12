@@ -11,6 +11,7 @@ import (
 	"ms-ticketing/internal/analytics"
 	analytics_api "ms-ticketing/internal/analytics/api"
 	"ms-ticketing/internal/auth"
+	"ms-ticketing/internal/config"
 	"ms-ticketing/internal/kafka"
 	"ms-ticketing/internal/models"
 	ticket_db "ms-ticketing/internal/tickets/db"
@@ -381,6 +382,10 @@ func main() {
 		logger.Info("CONFIG", "Loaded environment variables from .env file")
 	}
 
+	// Load configuration
+	cfg := config.Load()
+	logger.Info("CONFIG", "Configuration loaded successfully")
+
 	client := &http.Client{
 		Timeout: time.Second * 10,
 	}
@@ -431,9 +436,7 @@ func main() {
 		Logger:       logger,
 	}
 
-	ticketHandler := &ticket_api.Handler{
-		TicketService: ticketService,
-	}
+	ticketHandler := ticket_api.NewHandler(ticketService, &db.DB{Bun: bunDB}, cfg, client, redisClient)
 
 	// Use Redis client for M2M token caching in analytics
 	analyticsHandler := analytics_api.NewHandlerWithRedis(analyticsService, logger, redisClient)
@@ -471,6 +474,7 @@ func main() {
 				r.Post("/", ticketHandler.CreateTicket)
 				r.Put("/{ticketId}", ticketHandler.UpdateTicket)
 				r.Delete("/{ticketId}", ticketHandler.DeleteTicket)
+				r.Post("/checkin", ticketHandler.CheckinTicket)
 			})
 			logger.Info("ROUTER", "Ticket routes registered under /api/order/ticket")
 

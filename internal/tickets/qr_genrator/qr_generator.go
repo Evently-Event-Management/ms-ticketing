@@ -54,3 +54,42 @@ func encryptAES(data []byte, key []byte) (string, error) {
 
 	return base64.URLEncoding.EncodeToString(ciphertext), nil
 }
+
+// DecryptQRData decrypts the encrypted QR code data and returns the ticket
+func (q *QRGenerator) DecryptQRData(encryptedData string) (*models.Ticket, error) {
+	decryptedData, err := decryptAES(encryptedData, q.secret)
+	if err != nil {
+		return nil, err
+	}
+
+	var ticket models.Ticket
+	if err := json.Unmarshal(decryptedData, &ticket); err != nil {
+		return nil, err
+	}
+
+	return &ticket, nil
+}
+
+func decryptAES(encryptedData string, key []byte) ([]byte, error) {
+	ciphertext, err := base64.URLEncoding.DecodeString(encryptedData)
+	if err != nil {
+		return nil, err
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(ciphertext) < aes.BlockSize {
+		return nil, err
+	}
+
+	iv := ciphertext[:aes.BlockSize]
+	ciphertext = ciphertext[aes.BlockSize:]
+
+	stream := cipher.NewCFBDecrypter(block, iv)
+	stream.XORKeyStream(ciphertext, ciphertext)
+
+	return ciphertext, nil
+}

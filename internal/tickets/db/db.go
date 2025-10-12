@@ -44,8 +44,19 @@ func (d *DB) GetTicketByID(ticketID string) (*models.Ticket, error) {
 func (d *DB) UpdateTicket(ticket models.Ticket) error {
 	_, err := d.Bun.NewUpdate().
 		Model(&ticket).
-		Column("order_id", "seat_id", "seat_label", "colour", "tier_id", "tier_name", "qr_code", "price_at_purchase", "issued_at").
+		Column("order_id", "seat_id", "seat_label", "colour", "tier_id", "tier_name", "qr_code", "price_at_purchase", "issued_at", "checked_in", "checked_in_time").
 		Where("ticket_id = ?", ticket.TicketID).
+		Exec(context.Background())
+	return err
+}
+
+// CheckinTicket updates only the checkin-related fields for a ticket
+func (d *DB) CheckinTicket(ticketID string, checkedIn bool, checkedInTime time.Time) error {
+	_, err := d.Bun.NewUpdate().
+		Model((*models.Ticket)(nil)).
+		Set("checked_in = ?", checkedIn).
+		Set("checked_in_time = ?", checkedInTime).
+		Where("ticket_id = ?", ticketID).
 		Exec(context.Background())
 	return err
 }
