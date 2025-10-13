@@ -53,6 +53,7 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 		r.Get("/events/{eventId}/orders", h.GetEventOrders)
 		r.Post("/events/batch", h.GetBatchEventAnalytics)
 		r.Post("/events/batch/individual", h.GetBatchEventAnalyticsIndividual)
+		r.Get("/organizations/{organizationId}", h.GetOrganizationAnalytics)
 	})
 }
 

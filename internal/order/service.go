@@ -429,6 +429,7 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 		OrderID:        orderID,
 		UserID:         userID,
 		EventID:        orderReq.EventID,
+		OrganizationID: orderReq.OrganizationID,
 		SessionID:      orderReq.SessionID,
 		Status:         "pending",
 		SubTotal:       subtotal,
@@ -515,10 +516,11 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 	// Step 10: Build response
 	s.logger.Info("ORDER", fmt.Sprintf("Order %s completed successfully for user %s", orderID, userID))
 	return &models.OrderResponse{
-		OrderID:   orderID,
-		SessionID: orderReq.SessionID,
-		SeatIDs:   orderReq.SeatIDs,
-		UserID:    userID,
+		OrderID:        orderID,
+		SessionID:      orderReq.SessionID,
+		OrganizationID: orderReq.OrganizationID,
+		SeatIDs:        orderReq.SeatIDs,
+		UserID:         userID,
 	}, nil
 }
 

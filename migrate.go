@@ -58,6 +58,7 @@ func migrate(db *sql.DB) error {
 		order_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
 		user_id UUID NOT NULL,
 		event_id UUID,
+		organization_id UUID,
 		session_id UUID NOT NULL,
 		status   TEXT NOT NULL,
 		subtotal NUMERIC(10,2) NOT NULL,
@@ -95,6 +96,7 @@ func seed(db *sql.DB) error {
 	userID := "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
 	eventID := "cccccccc-cccc-cccc-cccc-cccccccccccc" // Added eventID
 	sessionID := "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+	organizationID := "dddddddd-dddd-dddd-dddd-dddddddddddd" // Added organizationID
 	seat1 := "11111111-1111-1111-1111-111111111111"
 	seat2 := "22222222-2222-2222-2222-222222222222"
 	tier1 := "33333333-3333-3333-3333-333333333333"
@@ -104,11 +106,12 @@ func seed(db *sql.DB) error {
 	// Insert sample Order
 	var orderID string
 	err := db.QueryRow(
-		`INSERT INTO orders (user_id, event_id, session_id, status, subtotal, discount_id, discount_code, discount_amount, price, created_at)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING order_id`,
+		`INSERT INTO orders (user_id, event_id, session_id, organization_id, status, subtotal, discount_id, discount_code, discount_amount, price, created_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING order_id`,
 		userID,
 		eventID,
 		sessionID,
+		organizationID,
 		"completed",
 		300.00,
 		discountID,
@@ -150,11 +153,11 @@ func printData(db *sql.DB) error {
 		var status string
 		var price float64
 		var created time.Time
-		if err := rows.Scan(&id, &userID, &eventID, &sessionID, &status, &price, &created); err != nil {
+		if err := rows.Scan(&id, &userID, &eventID, &sessionID, &organizationID, &status, &price, &created); err != nil {
 			return err
 		}
-		fmt.Printf("- Order %s | User %s | Event %s | Session %s | Status: %s | Price: %.2f | Created: %s\n",
-			id, userID, eventID, sessionID, status, price, created)
+		fmt.Printf("- Order %s | User %s | Event %s | Session %s | Organization %s | Status: %s | Price: %.2f | Created: %s\n",
+			id, userID, eventID, sessionID, organizationID, status, price, created)
 	}
 
 	fmt.Println("\n🎟 Tickets:")
