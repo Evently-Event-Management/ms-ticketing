@@ -85,35 +85,47 @@ func (s *Service) GetBatchEventAnalytics(ctx context.Context, eventIDs []string,
 	type dailySalesRaw struct {
 		SalesDate     time.Time `bun:"sales_date"`
 		DailyRevenue  float64   `bun:"daily_revenue"`
-		DailyQuantity int       `bun:"daily_quantity"`
+		DailyQuantity int       `bun:"tickets_sold_on_date"`
 	}
 
 	var dailySales []dailySalesRaw
 	rawSQL = fmt.Sprintf(`
-		SELECT 
+		SELECT
 			DATE(o.created_at) AS sales_date,
 			SUM(o.price) AS daily_revenue,
-			COUNT(t.ticket_id) AS daily_quantity
-		FROM 
-			orders o
-		JOIN 
-			tickets t ON t.order_id = o.order_id
-		WHERE 
-			o.event_id IN (%s)`, inClause)
+			COALESCE(SUM(ticket_count), 0) AS tickets_sold_on_date
+		FROM (
+			SELECT
+				order_id,
+				event_id,
+				price,
+				status,
+				created_at
+			FROM orders
+			WHERE
+				event_id IN (%s)`, inClause)
 
-	dailyArgs := make([]interface{}, len(args))
-	copy(dailyArgs, args)
+	dailyArgs := make([]interface{}, len(eventIDs))
+	copy(dailyArgs, args[:len(eventIDs)])
 
 	if status != "" {
-		rawSQL += " AND o.status = ?"
+		rawSQL += " AND status = ?"
 		dailyArgs = append(dailyArgs, status)
 	}
 
 	rawSQL += `
-		GROUP BY 
+		) o
+		LEFT JOIN (
+			SELECT
+				order_id,
+				COUNT(ticket_id) AS ticket_count
+			FROM tickets
+			GROUP BY order_id
+		) t ON t.order_id = o.order_id
+		GROUP BY
 			DATE(o.created_at)
-		ORDER BY 
-			DATE(o.created_at)
+		ORDER BY
+			sales_date
 	`
 
 	err = s.db.NewRaw(rawSQL, dailyArgs...).Scan(ctx, &dailySales)

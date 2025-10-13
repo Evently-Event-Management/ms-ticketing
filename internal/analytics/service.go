@@ -120,35 +120,47 @@ func (s *Service) GetEventAnalytics(ctx context.Context, eventID string, status 
 	type dailySalesRaw struct {
 		SalesDate     time.Time `bun:"sales_date"`
 		DailyRevenue  float64   `bun:"daily_revenue"`
-		DailyQuantity int       `bun:"daily_quantity"`
+		DailyQuantity int       `bun:"tickets_sold_on_date"`
 	}
 
 	var dailySales []dailySalesRaw
-	// Use raw SQL to count tickets per day rather than orders
+	// Use raw SQL to count tickets per day with proper status filtering
 	rawSQL = `
-		SELECT 
+		SELECT
 			DATE(o.created_at) AS sales_date,
 			SUM(o.price) AS daily_revenue,
-			COUNT(t.ticket_id) AS daily_quantity
-		FROM 
-			orders o
-		JOIN 
-			tickets t ON t.order_id = o.order_id
-		WHERE 
-			o.event_id = ?
+			COALESCE(SUM(ticket_count), 0) AS tickets_sold_on_date
+		FROM (
+			SELECT
+				order_id,
+				event_id,
+				price,
+				status,
+				created_at
+			FROM orders
+			WHERE
+				event_id = ?
 	`
 	args = []interface{}{eventID}
 
 	if status != "" {
-		rawSQL += " AND o.status = ?"
+		rawSQL += " AND status = ?"
 		args = append(args, status)
 	}
 
 	rawSQL += `
-		GROUP BY 
+		) o
+		LEFT JOIN (
+			SELECT
+				order_id,
+				COUNT(ticket_id) AS ticket_count
+			FROM tickets
+			GROUP BY order_id
+		) t ON t.order_id = o.order_id
+		GROUP BY
 			DATE(o.created_at)
-		ORDER BY 
-			DATE(o.created_at)
+		ORDER BY
+			sales_date
 	`
 
 	err = s.db.NewRaw(rawSQL, args...).Scan(ctx, &dailySales)
@@ -417,35 +429,47 @@ func (s *Service) GetSessionAnalytics(ctx context.Context, eventID, sessionID st
 	type dailySalesRaw struct {
 		SalesDate     time.Time `bun:"sales_date"`
 		DailyRevenue  float64   `bun:"daily_revenue"`
-		DailyQuantity int       `bun:"daily_quantity"`
+		DailyQuantity int       `bun:"tickets_sold_on_date"`
 	}
 
 	var dailySales []dailySalesRaw
-	// Use raw SQL to count tickets per day rather than orders
+	// Use raw SQL to count tickets per day with proper status filtering
 	rawSQL = `
-		SELECT 
+		SELECT
 			DATE(o.created_at) AS sales_date,
 			SUM(o.price) AS daily_revenue,
-			COUNT(t.ticket_id) AS daily_quantity
-		FROM 
-			orders o
-		JOIN 
-			tickets t ON t.order_id = o.order_id
-		WHERE 
-			o.session_id = ?
+			COALESCE(SUM(ticket_count), 0) AS tickets_sold_on_date
+		FROM (
+			SELECT
+				order_id,
+				session_id,
+				price,
+				status,
+				created_at
+			FROM orders
+			WHERE
+				session_id = ?
 	`
 	args = []interface{}{sessionID}
 
 	if status != "" {
-		rawSQL += " AND o.status = ?"
+		rawSQL += " AND status = ?"
 		args = append(args, status)
 	}
 
 	rawSQL += `
-		GROUP BY 
+		) o
+		LEFT JOIN (
+			SELECT
+				order_id,
+				COUNT(ticket_id) AS ticket_count
+			FROM tickets
+			GROUP BY order_id
+		) t ON t.order_id = o.order_id
+		GROUP BY
 			DATE(o.created_at)
-		ORDER BY 
-			DATE(o.created_at)
+		ORDER BY
+			sales_date
 	`
 
 	err = s.db.NewRaw(rawSQL, args...).Scan(ctx, &dailySales)
