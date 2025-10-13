@@ -7,26 +7,28 @@ import (
 )
 
 type OrderRequest struct {
-	SessionID  string   `json:"session_id"`
-	EventID    string   `json:"event_id"`
-	SeatIDs    []string `json:"seat_ids"`
-	DiscountID string   `json:"discount_id"`
+	SessionID      string   `json:"session_id"`
+	EventID        string   `json:"event_id"`
+	OrganizationID string   `json:"organization_id"`
+	SeatIDs        []string `json:"seat_ids"`
+	DiscountID     string   `json:"discount_id"`
 }
 
 type Order struct {
 	bun.BaseModel `bun:"table:orders"`
 
-	OrderID        string    `bun:"order_id,pk"`
-	UserID         string    `bun:"user_id"`
-	EventID        string    `bun:"event_id"` // Added event_id field
-	SessionID      string    `bun:"session_id"`
-	Status         string    `bun:"status"`
-	SubTotal       float64   `bun:"subtotal"`               // Price before discount
-	DiscountID     string    `bun:"discount_id,nullzero"`   // ID of applied discount code
-	DiscountCode   string    `bun:"discount_code,nullzero"` // Code of applied discount
-	DiscountAmount float64   `bun:"discount_amount"`        // Amount of discount applied
-	Price          float64   `bun:"price"`                  // Final price after discount
-	CreatedAt      time.Time `bun:"created_at"`
+	OrderID         string    `bun:"order_id,pk"`
+	UserID          string    `bun:"user_id"`
+	EventID         string    `bun:"event_id"`
+	OrganizationID  string    `bun:"organization_id"`
+	SessionID       string    `bun:"session_id"`
+	Status          string    `bun:"status"`
+	SubTotal        float64   `bun:"subtotal"`               // Price before discount
+	DiscountID      string    `bun:"discount_id,nullzero"`   // ID of applied discount code
+	DiscountCode    string    `bun:"discount_code,nullzero"` // Code of applied discount
+	DiscountAmount  float64   `bun:"discount_amount"`        // Amount of discount applied
+	Price           float64   `bun:"price"`                  // Final price after discount
+	CreatedAt       time.Time `bun:"created_at"`
 	PaymentIntentID string    `bun:"payment_intent_id,nullzero"`
 }
 
@@ -99,10 +101,11 @@ type SeatDetails struct {
 }
 
 type OrderResponse struct {
-	OrderID   string   `json:"order_id"`
-	SessionID string   `json:"session_id"`
-	SeatIDs   []string `json:"seat_ids"`
-	UserID    string   `json:"user_id"`
+	OrderID        string   `json:"order_id"`
+	SessionID      string   `json:"session_id"`
+	OrganizationID string   `json:"organization_id"`
+	SeatIDs        []string `json:"seat_ids"`
+	UserID         string   `json:"user_id"`
 }
 
 type DiscountType string
