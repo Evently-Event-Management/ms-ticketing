@@ -22,8 +22,8 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /ms-ticketing ./main.go
 # Use a minimal, non-root image for the final container
 FROM alpine:3.18
 
-# Install CA certificates for HTTPS connections and Redis CLI for debugging
-RUN apk add --no-cache ca-certificates tzdata redis
+# Install CA certificates, curl for health checks, and Redis CLI for debugging
+RUN apk add --no-cache ca-certificates tzdata redis curl
 
 # Create a non-root user to run the application
 RUN adduser -D -H -h /app appuser
@@ -50,6 +50,11 @@ USER appuser
 
 # Expose the application port
 EXPOSE 8084
+
+# Add the health check instruction for port 8084
+# NOTE: Update '/health' to your Go application's actual health endpoint.
+HEALTHCHECK --interval=30s --timeout=10s --retries=5 \
+  CMD curl -f http://localhost:8084/api/order/health || exit 1
 
 # Set the command to run the application
 CMD ["/app/ms-ticketing"]
