@@ -500,8 +500,40 @@ func main() {
 	r.Get("/api/order/tickets/count", ticketHandler.GetTotalTicketsCount)
 	// Stripe webhook endpoint doesn't require authentication
 	r.Post("/api/order/webhook/stripe", handler.StripeWebhook)
+	// Health check endpoint
+	r.Get("/api/order/health", func(w http.ResponseWriter, r *http.Request) {
+		// Perform basic health checks
+		healthStatus := map[string]interface{}{
+			"status":    "UP",
+			"timestamp": time.Now().Format(time.RFC3339),
+			"service":   "ms-ticketing",
+			"version":   "1.0.0",
+		}
+
+		// Check database connection
+		if err := bunDB.Ping(); err != nil {
+			healthStatus["status"] = "DOWN"
+			healthStatus["database"] = "connection error"
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+
+		// Check Redis connection
+		if err := redisClient.Ping(r.Context()).Err(); err != nil {
+			healthStatus["status"] = "DOWN"
+			healthStatus["redis"] = "connection error"
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if healthStatus["status"] == "UP" {
+			w.WriteHeader(http.StatusOK)
+		}
+
+		json.NewEncoder(w).Encode(healthStatus)
+	})
 	logger.Info("ROUTER", "Public ticket count endpoint registered at /api/order/tickets/count")
 	logger.Info("ROUTER", "Stripe webhook endpoint registered at /api/order/webhook/stripe")
+	logger.Info("ROUTER", "Health check endpoint registered at /api/order/health")
 
 	// --- Protected Routes ---
 	r.Group(func(r chi.Router) {
