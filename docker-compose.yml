@@ -99,17 +99,22 @@ services:
   migration:
     build:
       context: .
-      dockerfile: Dockerfile.migrate
+      dockerfile: Dockerfile.migrations
     container_name: ms-ticketing-migrate
     depends_on:
       - postgres
     environment:
       # Database
       POSTGRES_DSN: postgres://appuser:secretpass@postgres:5432/appdb?sslmode=disable
+      # Migration options
+      MIGRATIONS_DIR: /migrations
+      # Default action is "up" - can be overridden via command
     # This service is designed to run and exit, not to stay running
     restart: "no"
     profiles:
       - migrate
+    # Can override with: docker-compose run --rm migration -a version
+    command: ["-a", "up"]
 
 volumes:
   postgres_data:

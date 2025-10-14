@@ -12,6 +12,7 @@ import (
 	analytics_api "ms-ticketing/internal/analytics/api"
 	"ms-ticketing/internal/auth"
 	"ms-ticketing/internal/config"
+	"ms-ticketing/internal/database/migrations"
 	"ms-ticketing/internal/kafka"
 	"ms-ticketing/internal/models"
 	ticket_db "ms-ticketing/internal/tickets/db"
@@ -26,6 +27,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-redis/redis/v8"
+	_ "github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/uptrace/bun"
@@ -338,6 +342,54 @@ func verifyConnections(ctx context.Context, logger *logger.Logger) (*bun.DB, *re
 	logger.Info("DATABASE", "✅ PostgreSQL connection successful")
 
 	bunDB := bun.NewDB(sqldb, pgdialect.New())
+
+	// Run database migrations
+	migrationsDir := os.Getenv("MIGRATIONS_DIR")
+	if migrationsDir == "" {
+		migrationsDir = "./migrations"
+		logger.Info("MIGRATIONS", fmt.Sprintf("Using default migrations directory: %s", migrationsDir))
+	}
+
+	// Check if migrations should be run automatically
+	autoMigrate := true
+	if os.Getenv("AUTO_MIGRATE") == "false" {
+		autoMigrate = false
+	}
+
+	// Check if seed data should be included
+	seedData := false
+	if os.Getenv("SEED_DATA") == "true" {
+		seedData = true
+	}
+
+	if autoMigrate {
+		logger.Info("MIGRATIONS", "Running database migrations...")
+
+		// Create migration options
+		migrationOpts := migrations.MigrateOptions{
+			MigrationsDir: migrationsDir,
+			AutoMigrate:   autoMigrate,
+			SeedData:      seedData,
+		}
+
+		// Create migration runner
+		migrationRunner := migrations.NewRunner(bunDB, migrationOpts)
+		defer migrationRunner.Close()
+
+		// Initialize migration system
+		if err := migrationRunner.Initialize(); err != nil {
+			logger.Error("MIGRATIONS", fmt.Sprintf("Failed to initialize migrations: %v", err))
+		} else {
+			// Run migrations
+			if err := migrationRunner.RunMigrations(); err != nil {
+				logger.Error("MIGRATIONS", fmt.Sprintf("Failed to run migrations: %v", err))
+			} else {
+				logger.Info("MIGRATIONS", "✅ Database migrations completed successfully")
+			}
+		}
+	} else {
+		logger.Info("MIGRATIONS", "Automatic migrations disabled. Skipping.")
+	}
 
 	redisAddr := os.Getenv("REDIS_ADDR")
 	if redisAddr == "" {

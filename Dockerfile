@@ -28,14 +28,22 @@ RUN apk add --no-cache ca-certificates tzdata redis
 # Create a non-root user to run the application
 RUN adduser -D -H -h /app appuser
 
-# Create a directory for logs
-RUN mkdir -p /app/logs && chown -R appuser:appuser /app
+# Create directories for the application
+RUN mkdir -p /app/logs /app/migrations && chown -R appuser:appuser /app
 
 # Copy the built binary from the builder stage
 COPY --from=builder /ms-ticketing /app/ms-ticketing
 
+# Copy migration files to the container
+COPY migrations/ /app/migrations/
+
 # Set the working directory
 WORKDIR /app
+
+# Set environment variables for migrations
+ENV AUTO_MIGRATE=true
+ENV MIGRATIONS_DIR=/app/migrations
+ENV SEED_DATA=false
 
 # Switch to non-root user for security
 USER appuser
