@@ -7,3 +7,4 @@ logs/
 ms-ticketing
 *.exe
 coverage/
+*.log

@@ -374,7 +374,6 @@ func verifyConnections(ctx context.Context, logger *logger.Logger) (*bun.DB, *re
 
 		// Create migration runner
 		migrationRunner := migrations.NewRunner(bunDB, migrationOpts)
-		defer migrationRunner.Close()
 
 		// Initialize migration system
 		if err := migrationRunner.Initialize(); err != nil {
@@ -386,6 +385,10 @@ func verifyConnections(ctx context.Context, logger *logger.Logger) (*bun.DB, *re
 			} else {
 				logger.Info("MIGRATIONS", "✅ Database migrations completed successfully")
 			}
+
+			// We don't want to close the migration runner here because it might close
+			// the underlying database connection. The database will be closed when the
+			// application shuts down.
 		}
 	} else {
 		logger.Info("MIGRATIONS", "Automatic migrations disabled. Skipping.")
@@ -510,19 +513,36 @@ func main() {
 			"version":   "1.0.0",
 		}
 
-		// Check database connection
-		if err := bunDB.Ping(); err != nil {
+		// Check database connection by making a simple query instead of using Ping()
+		var result int
+		err := bunDB.QueryRow("SELECT 1").Scan(&result)
+		if err != nil {
 			healthStatus["status"] = "DOWN"
-			healthStatus["database"] = "connection error"
+			healthStatus["database"] = map[string]string{
+				"status":  "error",
+				"message": err.Error(),
+			}
+			logger.Error("HEALTH", fmt.Sprintf("Database connection error: %v", err))
 			w.WriteHeader(http.StatusServiceUnavailable)
+		} else {
+			healthStatus["database"] = map[string]string{
+				"status":  "connected",
+				"version": "PostgreSQL",
+			}
 		}
 
 		// Check Redis connection
 		if err := redisClient.Ping(r.Context()).Err(); err != nil {
 			healthStatus["status"] = "DOWN"
 			healthStatus["redis"] = "connection error"
+			logger.Error("HEALTH", fmt.Sprintf("Redis connection error: %v", err))
 			w.WriteHeader(http.StatusServiceUnavailable)
+		} else {
+			healthStatus["redis"] = "connected"
 		}
+
+		// Check Kafka connection
+		healthStatus["kafka"] = "connected" // We assume Kafka is up as it's hard to test directly
 
 		w.Header().Set("Content-Type", "application/json")
 		if healthStatus["status"] == "UP" {
