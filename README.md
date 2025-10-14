@@ -12,6 +12,7 @@ A microservice-based ticketing system for event management, built with Go, Kafka
 - QR code generation for tickets
 - Stripe payment integration for processing payments
 - Redis-based caching for machine-to-machine authentication tokens
+- Database migrations using golang-migrate
 
 ## Token Caching
 The service uses Redis to cache M2M (machine-to-machine) authentication tokens, which reduces the number of requests to the authentication server. This is particularly useful in high-traffic scenarios where multiple microservices are communicating with each other. Token caching provides:
@@ -29,9 +30,48 @@ The caching mechanism automatically refreshes tokens before they expire and fall
 - **internal/kafka/**: Kafka producer and consumer
 - **internal/models/**: Data models
 - **internal/order/stripe.go**: Stripe payment integration
-- **db.go**: Database layer for tickets and orders
+- **internal/database/migrations/**: Database migration system
+- **migrations/**: SQL migration files
 - **main.go**: Service entrypoint and router setup
-- **migrate.go**: Database migration and sample data
+
+## Database Migrations
+The application uses [golang-migrate/migrate](https://github.com/golang-migrate/migrate) for database schema management. Migrations are automatically applied when the application starts (configurable via environment variables).
+
+### Migration Files
+- Migration files are stored in the `migrations` directory
+- Files are named with a version number and description: `000001_init_schema.up.sql`
+- Each migration has an "up" file for applying changes and a "down" file for rolling back
+
+### Running Migrations Manually
+Use the provided script:
+
+```sh
+./scripts/migrate.sh -a [action]
+```
+
+Available actions:
+- `up`: Apply all pending migrations
+- `down`: Rollback the most recent migration
+- `version`: Print the current migration version
+- `create`: Create a new migration (requires additional name argument)
+
+Examples:
+```sh
+# Apply all migrations
+./scripts/migrate.sh -a up
+
+# Roll back one migration
+./scripts/migrate.sh -a down
+
+# Create a new migration
+./scripts/migrate.sh -a create -n add_users_table
+```
+
+### Migration Configuration
+The migration system can be configured using environment variables:
+- `MIGRATIONS_DIR`: Directory containing migration files (default: `./migrations`)
+- `AUTO_MIGRATE`: Whether to run migrations automatically on startup (default: `true`)
+- `SEED_DATA`: Whether to include seed data migrations (default: `false`)
 
 ## Setup
 

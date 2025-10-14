@@ -1,0 +1,31 @@
+# Use the official Go image as a base image
+FROM golang:1.24-alpine
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Install build tools and dependencies
+RUN apk add --no-cache gcc musl-dev
+
+# Install the golang-migrate tool
+RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+
+# Create a directory for migrations
+RUN mkdir -p /migrations
+
+# Copy migration files
+COPY ./migrations /migrations
+
+# Set environment variables with defaults that can be overridden
+ENV MIGRATIONS_DIR=/migrations
+ENV POSTGRES_DSN="postgres://ticketly:ticketly@postgres:5432/order_service?sslmode=disable"
+
+# Copy the migration script
+COPY ./scripts/migrate.sh /app/migrate.sh
+RUN chmod +x /app/migrate.sh
+
+# Set the entrypoint to run migrations
+ENTRYPOINT ["/app/migrate.sh"]
+
+# Default command is to run "up" migrations
+CMD ["-a", "up"]
