@@ -48,13 +48,19 @@ type KafkaProducer interface {
 }
 
 type OrderService struct {
-	DB              DBLayer
-	Redis           RedisLock
-	Kafka           KafkaProducer
-	TicketService   *tickets.TicketService
-	DiscountService *discount.DiscountService
-	client          *http.Client
-	logger          *logger.Logger
+	DB                   DBLayer
+	Redis                RedisLock
+	Kafka                KafkaProducer
+	TicketService        *tickets.TicketService
+	DiscountService      *discount.DiscountService
+	client               *http.Client
+	logger               *logger.Logger
+	CheckoutEventEmitter CheckoutEventEmitter
+}
+
+// CheckoutEventEmitter is an interface for emitting checkout events
+type CheckoutEventEmitter interface {
+	EmitCheckoutEvent(order models.OrderWithTickets)
 }
 
 func NewOrderService(db DBLayer, redis RedisLock, kafka KafkaProducer, ticketService *tickets.TicketService, client *http.Client) *OrderService {
@@ -67,6 +73,11 @@ func NewOrderService(db DBLayer, redis RedisLock, kafka KafkaProducer, ticketSer
 		client:          client,
 		logger:          logger.NewLogger(), // Initialize logger
 	}
+}
+
+// SetCheckoutEventEmitter sets the checkout event emitter for SSE notifications
+func (s *OrderService) SetCheckoutEventEmitter(emitter CheckoutEventEmitter) {
+	s.CheckoutEventEmitter = emitter
 }
 
 // ---------------- ORDERS ----------------
@@ -155,26 +166,22 @@ func (s *OrderService) Checkout(id string) error {
 	s.logger.Info("ORDER", fmt.Sprintf("Checking out order: %s", id))
 	order, err := s.DB.GetOrderByID(id)
 	if err != nil {
-		s.logger.Error("ORDER", fmt.Sprintf("Order %s not found: %v", id, err))
-		return fmt.Errorf("order %s not found: %w", id, err)
+		return fmt.Errorf("failed to get order: %v", err)
 	}
 
 	if order.Status != "pending" {
-		s.logger.Warn("ORDER", fmt.Sprintf("Order %s is not in a valid state for checkout (status: %s)", id, order.Status))
-		return errors.New("order is not in a valid state for checkout")
+		return fmt.Errorf("order is not in pending status, current status: %s", order.Status)
 	}
 
 	// Ensure payment has been processed (payment intent should exist)
 	if order.PaymentIntentID == "" {
-		s.logger.Warn("ORDER", fmt.Sprintf("Order %s has no payment intent ID", id))
-		return errors.New("order has no payment intent ID")
+		return fmt.Errorf("payment intent not found for order")
 	}
 
 	// First get the tickets which contain seat IDs
 	orderWithTickets, err := s.GetOrderWithTickets(id)
 	if err != nil {
-		s.logger.Warn("ORDER", fmt.Sprintf("Could not get tickets for completed order %s: %v", id, err))
-		return fmt.Errorf("could not get tickets for completed order %s: %w", id, err)
+		return fmt.Errorf("failed to get tickets for order: %v", err)
 	} else {
 		// Extract seat IDs from tickets
 		var seatIDs []string
@@ -184,32 +191,38 @@ func (s *OrderService) Checkout(id string) error {
 
 		// Update order status
 		order.Status = "completed"
-		if err := s.DB.UpdateOrder(*order); err != nil {
-			s.logger.Error("ORDER", fmt.Sprintf("Failed to complete checkout for order %s: %v", id, err))
-			return fmt.Errorf("failed to complete checkout: %w", err)
+		err = s.DB.UpdateOrder(*order)
+		if err != nil {
+			return fmt.Errorf("failed to update order status: %v", err)
 		}
 
 		// Update the order in orderWithTickets to reflect the status change
-		orderWithTickets.Status = "completed"
+		orderWithTickets.Order.Status = "completed"
 
 		// Create an OrderWithSeats for publishing seats booked event
-		orderWithSeats := &models.OrderWithSeats{
+		orderWithSeats := models.OrderWithSeats{
 			Order:   *order,
 			SeatIDs: seatIDs,
 		}
 
 		// Publish seats booked event
-		if err := s.publishSeatsBooked(*orderWithSeats); err != nil {
-			s.logger.Error("KAFKA", fmt.Sprintf("Kafka publish error (seats booked): %v", err))
-			// Continue even if publishing fails
-		} else {
-			s.logger.Info("KAFKA", fmt.Sprintf("Published seats booked event for order %s with %d seats",
-				id, len(seatIDs)))
+		err = s.publishSeatsBooked(orderWithSeats)
+		if err != nil {
+			s.logger.Error("KAFKA", fmt.Sprintf("Failed to publish seats booked event: %v", err))
+			// Continue execution even if event publishing fails
 		}
 
 		// Use the denormalized order with tickets for better event payload
-		if err := s.publishOrderCompletedWithTickets(*orderWithTickets); err != nil {
-			s.logger.Error("KAFKA", fmt.Sprintf("Kafka publish error (order completed with tickets): %v", err))
+		err = s.publishOrderCompletedWithTickets(*orderWithTickets)
+		if err != nil {
+			s.logger.Error("KAFKA", fmt.Sprintf("Failed to publish order completed event: %v", err))
+			// Continue execution even if event publishing fails
+		}
+
+		// Emit SSE event for successful checkout if SSE handler is registered
+		if s.CheckoutEventEmitter != nil {
+			s.logger.Debug("SSE", fmt.Sprintf("Emitting checkout event for order: %s", id))
+			s.CheckoutEventEmitter.EmitCheckoutEvent(*orderWithTickets)
 		}
 	}
 

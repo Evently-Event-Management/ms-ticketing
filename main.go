@@ -486,10 +486,16 @@ func main() {
 		client,
 	)
 
+	// Initialize SSE handler for checkout events
+	sseHandler := order_api.NewSSEHandler(logger, redisClient)
+
 	handler := &order_api.Handler{
 		OrderService: orderService,
 		Logger:       logger,
 	}
+
+	// Register SSE handler as checkout event emitter for order service
+	orderService.SetCheckoutEventEmitter(sseHandler)
 
 	ticketHandler := ticket_api.NewHandler(ticketService, &db.DB{Bun: bunDB}, cfg, client, redisClient)
 
@@ -584,6 +590,13 @@ func main() {
 
 			analyticsHandler.RegisterRoutes(r)
 			logger.Info("ROUTER", "Analytics routes registered under /api/order/analytics")
+
+			// SSE endpoints for checkout events
+			r.Route("/order/sse", func(r chi.Router) {
+				r.Get("/checkouts/organization/{organizationID}", sseHandler.HandleOrganizationCheckouts)
+				r.Get("/checkouts/event/{eventID}", sseHandler.HandleEventCheckouts)
+			})
+			logger.Info("ROUTER", "SSE checkout event routes registered under /api/order/sse")
 		})
 	})
 
