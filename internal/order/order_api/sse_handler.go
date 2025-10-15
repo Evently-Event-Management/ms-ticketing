@@ -156,10 +156,15 @@ func (h *SSEHandler) EmitCheckoutEvent(order models.OrderWithTickets) {
 
 // Helper function to set up SSE headers
 func (h *SSEHandler) setupSSEHeaders(w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Content-Type", "text/event-stream;charset=UTF-8")
+	w.Header().Set("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate")
 	w.Header().Set("Connection", "keep-alive")
-	// CORS headers are handled by the API gateway
+	w.Header().Set("Pragma", "no-cache")
+	w.Header().Set("Expires", "0")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("X-Frame-Options", "DENY")
+	w.Header().Set("X-XSS-Protection", "0")
+	w.Header().Set("Referrer-Policy", "no-referrer")
 }
 
 // Helper function to verify organization access
