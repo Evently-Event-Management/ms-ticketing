@@ -509,7 +509,16 @@ func main() {
 	r.Get("/api/order/tickets/count", ticketHandler.GetTotalTicketsCount)
 	// Stripe webhook endpoint doesn't require authentication
 	r.Post("/api/order/webhook/stripe", handler.StripeWebhook)
-	// Health check endpoint
+
+	// Kubernetes health check endpoint for liveness and readiness probes
+	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		// Simple health check for Kubernetes probes - just return 200 OK if the service is running
+		// This endpoint should be lightweight and return quickly
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	})
+
+	// Detailed health check endpoint
 	r.Get("/api/order/health", func(w http.ResponseWriter, r *http.Request) {
 		// Perform basic health checks
 		healthStatus := map[string]interface{}{
@@ -559,6 +568,7 @@ func main() {
 	})
 	logger.Info("ROUTER", "Public ticket count endpoint registered at /api/order/tickets/count")
 	logger.Info("ROUTER", "Stripe webhook endpoint registered at /api/order/webhook/stripe")
+	logger.Info("ROUTER", "Kubernetes health check endpoint registered at /healthz")
 	logger.Info("ROUTER", "Health check endpoint registered at /api/order/health")
 
 	// --- Protected Routes ---
