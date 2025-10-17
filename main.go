@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 	"github.com/go-redis/redis/v8"
 	_ "github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -498,6 +499,17 @@ func main() {
 
 	logger.Info("HTTP", "Setting up router and middleware")
 	r := chi.NewRouter()
+
+	// Configure CORS middleware
+	corsMiddleware := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:8090", "http://ticketly.test:8090", "http://www.localhost:8090", "https://ticketly.dpiyumal.me"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"*"},
+		AllowCredentials: true,
+		MaxAge:           3600, // 1 hour in seconds
+	})
+	r.Use(corsMiddleware.Handler)
+	logger.Info("HTTP", "CORS middleware configured")
 
 	// --- Public Routes ---
 	r.Get("/api/order/tickets/count", ticketHandler.GetTotalTicketsCount)
