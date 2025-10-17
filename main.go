@@ -487,10 +487,16 @@ func main() {
 		client,
 	)
 
+	// Initialize SSE handler for checkout events
+	sseHandler := order_api.NewSSEHandler(logger, redisClient)
+
 	handler := &order_api.Handler{
 		OrderService: orderService,
 		Logger:       logger,
 	}
+
+	// Register SSE handler as checkout event emitter for order service
+	orderService.SetCheckoutEventEmitter(sseHandler)
 
 	ticketHandler := ticket_api.NewHandler(ticketService, &db.DB{Bun: bunDB}, cfg, client, redisClient)
 
@@ -515,7 +521,16 @@ func main() {
 	r.Get("/api/order/tickets/count", ticketHandler.GetTotalTicketsCount)
 	// Stripe webhook endpoint doesn't require authentication
 	r.Post("/api/order/webhook/stripe", handler.StripeWebhook)
-	// Health check endpoint
+
+	// Kubernetes health check endpoint for liveness and readiness probes
+	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		// Simple health check for Kubernetes probes - just return 200 OK if the service is running
+		// This endpoint should be lightweight and return quickly
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	})
+
+	// Detailed health check endpoint
 	r.Get("/api/order/health", func(w http.ResponseWriter, r *http.Request) {
 		// Perform basic health checks
 		healthStatus := map[string]interface{}{
@@ -565,6 +580,7 @@ func main() {
 	})
 	logger.Info("ROUTER", "Public ticket count endpoint registered at /api/order/tickets/count")
 	logger.Info("ROUTER", "Stripe webhook endpoint registered at /api/order/webhook/stripe")
+	logger.Info("ROUTER", "Kubernetes health check endpoint registered at /healthz")
 	logger.Info("ROUTER", "Health check endpoint registered at /api/order/health")
 
 	// --- Protected Routes ---
@@ -596,6 +612,13 @@ func main() {
 
 			analyticsHandler.RegisterRoutes(r)
 			logger.Info("ROUTER", "Analytics routes registered under /api/order/analytics")
+
+			// SSE endpoints for checkout events
+			r.Route("/order/sse", func(r chi.Router) {
+				r.Get("/checkouts/organization/{organizationID}", sseHandler.HandleOrganizationCheckouts)
+				r.Get("/checkouts/event/{eventID}", sseHandler.HandleEventCheckouts)
+			})
+			logger.Info("ROUTER", "SSE checkout event routes registered under /api/order/sse")
 		})
 	})
 
