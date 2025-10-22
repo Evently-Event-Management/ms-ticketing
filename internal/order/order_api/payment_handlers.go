@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -39,12 +40,12 @@ func (h *Handler) CreatePaymentIntent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get seat lock duration from environment variables
-	seatLockDurationMinutes := 5 // Default to 5 minutes
+	totalLockDurationMinutes := 5 // Default to 5 minutes
 	lockTTLStr := os.Getenv("SEAT_LOCK_TTL_MINUTES")
 	if lockTTLStr != "" {
 		if duration, err := strconv.Atoi(lockTTLStr); err == nil {
-			seatLockDurationMinutes = duration
-			h.Logger.Debug("API", fmt.Sprintf("Using seat lock duration of %d minutes from environment", seatLockDurationMinutes))
+			totalLockDurationMinutes = duration
+			h.Logger.Debug("API", fmt.Sprintf("Using seat lock duration of %d minutes from environment", totalLockDurationMinutes))
 		} else {
 			h.Logger.Warn("API", fmt.Sprintf("Invalid SEAT_LOCK_TTL_MINUTES value: %s, using default 5 minutes", lockTTLStr))
 		}
@@ -52,7 +53,29 @@ func (h *Handler) CreatePaymentIntent(w http.ResponseWriter, r *http.Request) {
 		h.Logger.Debug("API", "SEAT_LOCK_TTL_MINUTES not set, using default 5 minutes")
 	}
 
-	// Return client secret, payment intent ID, seat lock duration, and order details to the client
+	// Calculate remaining time based on order's CreatedAt
+	order, err := h.OrderService.GetOrder(orderID)
+	if err != nil {
+		h.Logger.Error("API", fmt.Sprintf("CreatePaymentIntent: failed to get order for remaining time calculation: %v", err))
+		// Fallback to total duration if we can't get the order
+		http.Error(w, "Failed to calculate remaining time", http.StatusInternalServerError)
+		return
+	}
+
+	// Calculate elapsed time since order creation
+	elapsedTime := time.Since(order.CreatedAt)
+	elapsedMinutes := int(elapsedTime.Minutes())
+
+	// Calculate remaining time
+	remainingMinutes := totalLockDurationMinutes - elapsedMinutes
+	if remainingMinutes < 0 {
+		remainingMinutes = 0 // Seat lock has expired
+		h.Logger.Warn("API", fmt.Sprintf("Order %s seat lock has expired (elapsed: %d mins, limit: %d mins)", orderID, elapsedMinutes, totalLockDurationMinutes))
+	}
+
+	h.Logger.Info("API", fmt.Sprintf("Order %s: elapsed=%d mins, remaining=%d mins", orderID, elapsedMinutes, remainingMinutes))
+
+	// Return client secret, payment intent ID, remaining seat lock time, and order details to the client
 	response := struct {
 		ClientSecret         string                   `json:"clientSecret"`
 		PaymentIntentID      string                   `json:"paymentIntentId"`
@@ -61,7 +84,7 @@ func (h *Handler) CreatePaymentIntent(w http.ResponseWriter, r *http.Request) {
 	}{
 		ClientSecret:         intent.ClientSecret,
 		PaymentIntentID:      intent.ID,
-		SeatLockDurationMins: seatLockDurationMinutes,
+		SeatLockDurationMins: remainingMinutes,
 		Order:                orderWithTickets,
 	}
 
