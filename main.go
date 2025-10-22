@@ -199,11 +199,49 @@ func subscribeSeatUnlocks(rdb *redis.Client, producer *kafka.Producer, db DB, lo
 			logger.Info("REDIS", fmt.Sprintf("Received expired key event: %s", msg.Payload))
 			if strings.HasPrefix(msg.Payload, "seat_lock:") {
 				seatID := strings.TrimPrefix(msg.Payload, "seat_lock:")
+
+				// --- ADDED: DISTRIBUTED LOCK ACQUISITION ---
+
+				// 1. Define a unique lock key for this specific job
+				lockKey := fmt.Sprintf("lock:seat_unlock:%s", seatID)
+
+				// 2. Set a lease time (safety net for pod crashes)
+				//    Adjust this based on your expected processing time.
+				lockLease := 30 * time.Second
+
+				// 3. Try to acquire the lock atomically using SETNX
+				lockAcquired, err := rdb.SetNX(ctx, lockKey, "processing", lockLease).Result()
+
+				if err != nil {
+					// Failed to even attempt the lock, log and skip
+					logger.Error("SEAT_UNLOCK_LOCK", fmt.Sprintf("Error trying to acquire lock for seat %s: %v", seatID, err))
+					continue
+				}
+
+				if !lockAcquired {
+					// 4. Lock failed. Another pod already has it.
+					logger.Info("SEAT_UNLOCK_LOCK", fmt.Sprintf("Lock for seat %s already held by another instance. Skipping.", seatID))
+					continue // <- This is the fix. We stop processing.
+				}
+
+				// 5. We got the lock! Proceed with processing.
+				logger.Info("SEAT_UNLOCK_LOCK", fmt.Sprintf("Acquired lock for seat: %s", seatID))
+
+				// --- END: DISTRIBUTED LOCK ACQUISITION ---
+
+				// vvvv THIS IS YOUR EXISTING LOGIC (NO CHANGES) vvvv
+
 				logger.Info("SEAT_UNLOCK", fmt.Sprintf("Seat lock expired for seat: %s", seatID))
 
 				sessionID, err := db.GetSessionIdBySeat(seatID)
 				if err != nil {
 					logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to get session ID for seat %s: %v", seatID, err))
+
+					// --- ADDED: Make sure to release lock on error ---
+					if err := rdb.Del(ctx, lockKey).Err(); err != nil {
+						logger.Error("SEAT_UNLOCK_LOCK", fmt.Sprintf("Failed to release lock for seat %s after error: %v", seatID, err))
+					}
+					// --- END ---
 					continue
 				}
 
@@ -211,6 +249,13 @@ func subscribeSeatUnlocks(rdb *redis.Client, producer *kafka.Producer, db DB, lo
 				pendingOrders, err := db.GetPendingOrdersBySeat(seatID)
 				if err != nil {
 					logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to get pending orders for seat %s: %v", seatID, err))
+
+					// --- ADDED: Make sure to release lock on error ---
+					if err := rdb.Del(ctx, lockKey).Err(); err != nil {
+						logger.Error("SEAT_UNLOCK_LOCK", fmt.Sprintf("Failed to release lock for seat %s after error: %v", seatID, err))
+					}
+					// --- END ---
+
 				} else if len(pendingOrders) == 0 {
 					logger.Info("SEAT_UNLOCK", fmt.Sprintf("No pending orders found for seat %s", seatID))
 
@@ -219,12 +264,24 @@ func subscribeSeatUnlocks(rdb *redis.Client, producer *kafka.Producer, db DB, lo
 					seatEvent, err := models.NewSeatStatusChangeEventDto(sessionID, []string{seatID}, models.SeatStatusAvailable)
 					if err != nil {
 						logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to create seat status event DTO: %v", err))
+
+						// --- ADDED: Make sure to release lock on error ---
+						if err := rdb.Del(ctx, lockKey).Err(); err != nil {
+							logger.Error("SEAT_UNLOCK_LOCK", fmt.Sprintf("Failed to release lock for seat %s after error: %v", seatID, err))
+						}
+						// --- END ---
 						continue
 					}
 
 					value, err := json.Marshal(seatEvent)
 					if err != nil {
 						logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to marshal seat unlock payload: %v", err))
+
+						// --- ADDED: Make sure to release lock on error ---
+						if err := rdb.Del(ctx, lockKey).Err(); err != nil {
+							logger.Error("SEAT_UNLOCK_LOCK", fmt.Sprintf("Failed to release lock for seat %s after error: %v", seatID, err))
+						}
+						// --- END ---
 						continue
 					}
 
@@ -271,6 +328,14 @@ func subscribeSeatUnlocks(rdb *redis.Client, producer *kafka.Producer, db DB, lo
 					// as the CancelOrder method already does it
 					if ordersCancelled {
 						logger.Debug("SEAT_UNLOCK", "Seat status event handled by CancelOrder method")
+
+						// --- ADDED: Release lock after processing ---
+						if err := rdb.Del(ctx, lockKey).Err(); err != nil {
+							logger.Error("SEAT_UNLOCK_LOCK", fmt.Sprintf("Failed to release lock for seat %s: %v", seatID, err))
+						} else {
+							logger.Info("SEAT_UNLOCK_LOCK", fmt.Sprintf("Released lock for seat: %s", seatID))
+						}
+						// --- END ---
 						continue
 					}
 
@@ -279,12 +344,24 @@ func subscribeSeatUnlocks(rdb *redis.Client, producer *kafka.Producer, db DB, lo
 					seatEvent, err := models.NewSeatStatusChangeEventDto(sessionID, []string{seatID}, models.SeatStatusAvailable)
 					if err != nil {
 						logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to create seat status event DTO: %v", err))
+
+						// --- ADDED: Make sure to release lock on error ---
+						if err := rdb.Del(ctx, lockKey).Err(); err != nil {
+							logger.Error("SEAT_UNLOCK_LOCK", fmt.Sprintf("Failed to release lock for seat %s after error: %v", seatID, err))
+						}
+						// --- END ---
 						continue
 					}
 
 					value, err := json.Marshal(seatEvent)
 					if err != nil {
 						logger.Error("SEAT_UNLOCK", fmt.Sprintf("Failed to marshal seat unlock payload: %v", err))
+
+						// --- ADDED: Make sure to release lock on error ---
+						if err := rdb.Del(ctx, lockKey).Err(); err != nil {
+							logger.Error("SEAT_UNLOCK_LOCK", fmt.Sprintf("Failed to release lock for seat %s after error: %v", seatID, err))
+						}
+						// --- END ---
 						continue
 					}
 
@@ -306,6 +383,17 @@ func subscribeSeatUnlocks(rdb *redis.Client, producer *kafka.Producer, db DB, lo
 						logger.Info("KAFKA", fmt.Sprintf("Published seat unlock event for seat: %s", seatID))
 					}
 				}
+
+				// ^^^^ THIS IS YOUR EXISTING LOGIC (NO CHANGES) ^^^^
+
+				// --- ADDED: DISTRIBUTED LOCK RELEASE ---
+				// 6. Manually release the lock now that processing is complete.
+				if err := rdb.Del(ctx, lockKey).Err(); err != nil {
+					logger.Error("SEAT_UNLOCK_LOCK", fmt.Sprintf("Failed to release lock for seat %s: %v", seatID, err))
+				} else {
+					logger.Info("SEAT_UNLOCK_LOCK", fmt.Sprintf("Released lock for seat: %s", seatID))
+				}
+				// --- END: DISTRIBUTED LOCK RELEASE ---
 			}
 		}
 	}()
