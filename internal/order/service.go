@@ -38,6 +38,7 @@ type DBLayer interface {
 }
 
 type RedisLock interface {
+	CheckSeatsAvailability(seatIDs []string) (bool, []string, error)
 	LockSeats(seatIDs []string, orderID string) (bool, error)
 	UnlockSeats(seatIDs []string, orderID string) error
 }
@@ -233,7 +234,20 @@ func (s *OrderService) Checkout(id string) error {
 func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq models.OrderRequest) (*models.OrderResponse, error) {
 	s.logger.Info("ORDER", "Starting seat validation and order placement process")
 
-	// Step 1: Extract JWT from the request
+	// Step 1: Check Redis seat availability FIRST before any other operations
+	s.logger.Debug("REDIS", "Checking seat availability in Redis before proceeding")
+	available, unavailableSeats, err := s.Redis.CheckSeatsAvailability(orderReq.SeatIDs)
+	if err != nil {
+		s.logger.Error("REDIS", fmt.Sprintf("Failed to check seat availability: %v", err))
+		return nil, fmt.Errorf("failed to check seat availability: %w", err)
+	}
+	if !available {
+		s.logger.Warn("REDIS", fmt.Sprintf("One or more seats are already locked: %v", unavailableSeats))
+		return nil, fmt.Errorf("one or more seats are already locked: %v", unavailableSeats)
+	}
+	s.logger.Info("REDIS", "All seats are available in Redis, proceeding with validation")
+
+	// Step 2: Extract JWT from the request
 	user_token, err := auth.ExtractTokenFromRequest(r)
 	if err != nil {
 		s.logger.Error("AUTH", fmt.Sprintf("Failed to extract token from request: %v", err))
@@ -271,11 +285,11 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 		return nil, fmt.Errorf("failed to get M2M token: %w", err)
 	}
 
-	// Step 2: Generate unique OrderID
+	// Step 3: Generate unique OrderID
 	orderID := uuid.NewString()
 	s.logger.Debug("ORDER", fmt.Sprintf("Generated order ID: %s", orderID))
 
-	// Step 3: Call Pre-validation Service (first HTTP request)
+	// Step 4: Call Pre-validation Service (first HTTP request)
 	s.logger.Debug("PRE_VALIDATION", "Making first HTTP request to validate pre-order")
 	eventQueryServiceURL := os.Getenv("EVENT_QUERY_SERVICE_URL") // e.g., http://localhost:8082/api/event-query
 	if eventQueryServiceURL != "" && eventQueryServiceURL[len(eventQueryServiceURL)-1] == '/' {
@@ -329,7 +343,7 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 
 	s.logger.Info("PRE_VALIDATION", "Pre-validation successful, OrderDetailsDTO received")
 
-	// Step 4: Lock seats in Redis
+	// Step 5: Lock seats in Redis
 	s.logger.Debug("REDIS", "Attempting to lock seats in Redis")
 	ok, err := s.Redis.LockSeats(orderReq.SeatIDs, orderID)
 	if err != nil {
@@ -348,7 +362,7 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 		_ = s.Redis.UnlockSeats(orderReq.SeatIDs, orderID)
 	}
 
-	// Step 5: Make second HTTP request to validate seats after locking
+	// Step 6: Make second HTTP request to validate seats after locking
 	s.logger.Debug("SEAT_VALIDATION", "Making second HTTP request to validate seats after locking")
 	seatServiceBase := os.Getenv("EVENT_SEATING_SERVICE_URL") // e.g., http://localhost:8081/api/event-seating
 	if seatServiceBase != "" && seatServiceBase[len(seatServiceBase)-1] == '/' {
@@ -387,7 +401,7 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 
 	s.logger.Info("SEAT_VALIDATION", "Final seat validation successful")
 
-	// Step 6: Calculate prices and apply discount if available
+	// Step 7: Calculate prices and apply discount if available
 	var subtotal float64 = 0
 	for _, seat := range orderDetailsDTO.Seats {
 		subtotal += seat.Tier.Price
@@ -464,14 +478,14 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 		s.logger.Error("KAFKA", fmt.Sprintf("Kafka publish error (seats locked): %v", err))
 	}
 
-	// Step 7: Save order to DB - skip locking since we already locked the seats
+	// Step 8: Save order to DB - skip locking since we already locked the seats
 	if err := s.SaveOrder(order, orderReq.SeatIDs); err != nil {
 		s.logger.Error("ORDER", fmt.Sprintf("Failed to place order: %v. Unlocking seats.", err))
 		rollback()
 		return nil, fmt.Errorf("failed to place order: %w", err)
 	}
 
-	// Step 8: Create tickets for each seat
+	// Step 9: Create tickets for each seat
 	s.logger.Info("TICKET", "Creating tickets for each seat")
 	var createdTickets []models.TicketForStreaming
 	for _, seat := range orderDetailsDTO.Seats {
@@ -506,7 +520,7 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 		}
 	}
 
-	// Step 9: Now that we have the order and all tickets created, publish the event with full ticket details
+	// Step 10: Now that we have the order and all tickets created, publish the event with full ticket details
 	if len(createdTickets) > 0 {
 		orderWithTickets := models.OrderWithTickets{
 			Order:   order,
@@ -526,7 +540,7 @@ func (s *OrderService) SeatValidationAndPlaceOrder(r *http.Request, orderReq mod
 		}
 	}
 
-	// Step 10: Build response
+	// Step 11: Build response
 	s.logger.Info("ORDER", fmt.Sprintf("Order %s completed successfully for user %s", orderID, userID))
 	return &models.OrderResponse{
 		OrderID:        orderID,

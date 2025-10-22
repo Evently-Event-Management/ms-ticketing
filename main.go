@@ -163,6 +163,11 @@ func NewOrderServiceForSeatUnlock(db DB, producer *kafka.Producer, logger *logge
 // MinimalRedisLock implements the RedisLock interface with minimal functionality
 type MinimalRedisLock struct{}
 
+func (r *MinimalRedisLock) CheckSeatsAvailability(seatIDs []string) (bool, []string, error) {
+	// Not needed for seat unlock flow
+	return true, nil, nil
+}
+
 func (r *MinimalRedisLock) LockSeats(seatIDs []string, orderID string) (bool, error) {
 	// Not needed for seat unlock flow
 	return true, nil

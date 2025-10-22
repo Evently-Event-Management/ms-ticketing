@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	kafka "ms-ticketing/internal/kafka"
 	"log"
+	kafka "ms-ticketing/internal/kafka"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -42,13 +42,47 @@ func (r *Redis) getSeatLockDuration() time.Duration {
 	// Parse the string to an integer
 	lockTTLMin, err := strconv.Atoi(lockTTLStr)
 	if err != nil {
-		r.Logger.Println("REDIS: Invalid SEAT_LOCK_TTL_MINUTES value '"+lockTTLStr+"', using default 5 minutes")
+		r.Logger.Println("REDIS: Invalid SEAT_LOCK_TTL_MINUTES value '" + lockTTLStr + "', using default 5 minutes")
 		return defaultDuration
 	}
 
 	// Log the duration we're using
 	r.Logger.Println(fmt.Sprintf("REDIS: Using seat lock duration of %d minutes from environment", lockTTLMin))
 	return time.Duration(lockTTLMin) * time.Minute
+}
+
+// CheckSeatAvailability checks if a seat is available (not locked) without locking it
+func (r *Redis) CheckSeatAvailability(seatID string) (bool, error) {
+	key := "seat_lock:" + seatID
+	_, err := r.Client.Get(context.Background(), key).Result()
+	if err == redis.Nil {
+		// Key doesn't exist, seat is available
+		return true, nil
+	}
+	if err != nil {
+		// Error checking the key
+		return false, err
+	}
+	// Key exists, seat is locked
+	return false, nil
+}
+
+// CheckSeatsAvailability checks if multiple seats are available without locking them
+func (r *Redis) CheckSeatsAvailability(seatIDs []string) (bool, []string, error) {
+	unavailableSeats := []string{}
+	for _, seatID := range seatIDs {
+		available, err := r.CheckSeatAvailability(seatID)
+		if err != nil {
+			return false, nil, err
+		}
+		if !available {
+			unavailableSeats = append(unavailableSeats, seatID)
+		}
+	}
+	if len(unavailableSeats) > 0 {
+		return false, unavailableSeats, nil
+	}
+	return true, nil, nil
 }
 
 // Lock a single seat
