@@ -253,3 +253,39 @@ func (h *Handler) ListTicketsByUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(tickets)
 }
+
+// GetCheckedInCountBySession returns the count of checked-in tickets for a given session
+// Expected POST request body: {"session_id": "uuid-string"}
+func (h *Handler) GetCheckedInCountBySession(w http.ResponseWriter, r *http.Request) {
+	// Parse request body
+	var req struct {
+		SessionID string `json:"session_id"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Validate session_id is provided
+	if req.SessionID == "" {
+		http.Error(w, "session_id is required", http.StatusBadRequest)
+		return
+	}
+
+	// Get checked-in count from service
+	count, err := h.TicketService.GetCheckedInCountBySession(req.SessionID)
+	if err != nil {
+		http.Error(w, "Failed to get checked-in count: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Return response
+	response := map[string]interface{}{
+		"session_id":        req.SessionID,
+		"checked_in_count": count,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
