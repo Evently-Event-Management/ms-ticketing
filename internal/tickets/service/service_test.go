@@ -61,16 +61,6 @@ func (m *MockTicketDBLayer) GetTotalTicketsCount() (int, error) {
 	return args.Int(0), args.Error(1)
 }
 
-func (m *MockTicketDBLayer) CheckinTicket(ticketID string, checkedIn bool, checkedInTime time.Time) error {
-	args := m.Called(ticketID, checkedIn, checkedInTime)
-	return args.Error(0)
-}
-
-func (m *MockTicketDBLayer) GetCheckedInCountBySession(sessionID string) (int, error) {
-	args := m.Called(sessionID)
-	return args.Int(0), args.Error(1)
-}
-
 // Tests start here
 func TestCreateTicket(t *testing.T) {
 	// Set up mock
@@ -172,7 +162,7 @@ func TestUpdateTicket(t *testing.T) {
 	// Set up expectations
 	// First the service will look up the ticket
 	mockDB.On("GetTicketByID", ticketID).Return(&ticket, nil)
-
+	
 	// Then it will update it
 	mockDB.On("UpdateTicket", mock.MatchedBy(func(t models.Ticket) bool {
 		return t.TicketID == ticket.TicketID && t.CheckedIn == true
@@ -195,14 +185,14 @@ func TestCancelTicket(t *testing.T) {
 
 	// Test case: Successfully cancel a ticket
 	ticketID := uuid.New().String()
-
+	
 	// Set up expectations - first the service will try to get the ticket
 	testTicket := &models.Ticket{
 		TicketID: ticketID,
 		OrderID:  "order123",
 	}
 	mockDB.On("GetTicketByID", ticketID).Return(testTicket, nil)
-
+	
 	// Then it will call cancel
 	mockDB.On("CancelTicket", ticketID).Return(nil)
 
