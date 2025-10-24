@@ -18,7 +18,6 @@ type TicketDBLayer interface {
 	GetTicketsByUser(userID string) ([]models.Ticket, error)
 	GetTotalTicketsCount() (int, error)
 	CheckinTicket(ticketID string, checkedIn bool, checkedInTime time.Time) error
-	GetCheckedInCountBySession(sessionID string) (int, error)
 }
 
 type TicketService struct {
@@ -157,13 +156,4 @@ func (s *TicketService) GetTicketsByUser(userID string) ([]models.Ticket, error)
 	}
 
 	return tickets, nil
-}
-
-// GetCheckedInCountBySession returns the count of checked-in tickets for a given session
-func (s *TicketService) GetCheckedInCountBySession(sessionID string) (int, error) {
-	count, err := s.DB.GetCheckedInCountBySession(sessionID)
-	if err != nil {
-		return 0, fmt.Errorf("failed to get checked-in count for session %s: %w", sessionID, err)
-	}
-	return count, nil
 }
