@@ -99,6 +99,14 @@ type MockRedisLock struct {
 	mock.Mock
 }
 
+func (m *MockRedisLock) CheckSeatsAvailability(seatIDs []string) (bool, []string, error) {
+	args := m.Called(seatIDs)
+	if args.Get(1) == nil {
+		return args.Bool(0), nil, args.Error(2)
+	}
+	return args.Bool(0), args.Get(1).([]string), args.Error(2)
+}
+
 func (m *MockRedisLock) LockSeats(seatIDs []string, orderID string) (bool, error) {
 	args := m.Called(seatIDs, orderID)
 	return args.Bool(0), args.Error(1)
@@ -179,6 +187,16 @@ func (m *MockTicketDBLayer) GetTicketsByUser(userID string) ([]models.Ticket, er
 
 func (m *MockTicketDBLayer) GetTotalTicketsCount() (int, error) {
 	args := m.Called()
+	return args.Int(0), args.Error(1)
+}
+
+func (m *MockTicketDBLayer) CheckinTicket(ticketID string, checkedIn bool, checkedInTime time.Time) error {
+	args := m.Called(ticketID, checkedIn, checkedInTime)
+	return args.Error(0)
+}
+
+func (m *MockTicketDBLayer) GetCheckedInCountBySession(sessionID string) (int, error) {
+	args := m.Called(sessionID)
 	return args.Int(0), args.Error(1)
 }
 
