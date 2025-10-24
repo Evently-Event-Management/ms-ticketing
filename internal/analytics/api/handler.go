@@ -133,6 +133,70 @@ func (h *Handler) verifyEventOwnership(eventID string, userID string) (bool, err
 	return isOwner, nil
 }
 
+// verifySessionOwnership checks if the user is the owner of the session
+func (h *Handler) verifySessionOwnership(sessionID string, userID string) (bool, error) {
+	h.Logger.Debug("ANALYTICS", fmt.Sprintf("Verifying ownership for session %s by user %s", sessionID, userID))
+
+	// Get the M2M token
+	config := models.Config{
+		KeycloakURL:   os.Getenv("KEYCLOAK_URL"),
+		KeycloakRealm: os.Getenv("KEYCLOAK_REALM"),
+		ClientID:      os.Getenv("TICKET_CLIENT_ID"),
+		ClientSecret:  os.Getenv("TICKET_CLIENT_SECRET"),
+	}
+
+	// Use the Redis client if available
+	token, err := auth.GetM2MToken(config, h.Client, h.RedisClient, h.Logger)
+	if err != nil {
+		h.Logger.Error("AUTH", fmt.Sprintf("Failed to get M2M token: %v", err))
+		return false, err
+	}
+
+	// Create and execute HTTP request to verify ownership
+	seatingServiceURL := os.Getenv("EVENT_SEATING_SERVICE_URL")
+	if seatingServiceURL == "" {
+		h.Logger.Error("CONFIG", "EVENT_SEATING_SERVICE_URL environment variable not set")
+		return false, fmt.Errorf("EVENT_SEATING_SERVICE_URL not set")
+	}
+
+	requestURL := fmt.Sprintf("%s/internal/v1/sessions/verify-ownership?sessionId=%s&userId=%s",
+		seatingServiceURL, sessionID, userID)
+
+	req, err := http.NewRequest("GET", requestURL, nil)
+	if err != nil {
+		h.Logger.Error("HTTP", fmt.Sprintf("Failed to create session ownership verification request: %v", err))
+		return false, err
+	}
+
+	// Add token to the request
+	req.Header.Add("Authorization", "Bearer "+token)
+
+	// Execute the request
+	resp, err := h.Client.Do(req)
+	if err != nil {
+		h.Logger.Error("HTTP", fmt.Sprintf("Failed to execute session ownership verification request: %v", err))
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	// Check response status
+	if resp.StatusCode != http.StatusOK {
+		h.Logger.Error("HTTP", fmt.Sprintf("Session ownership verification failed with status: %s", resp.Status))
+		return false, fmt.Errorf("session ownership verification failed with status: %s", resp.Status)
+	}
+
+	// Parse the response body
+	var isOwner bool
+	err = json.NewDecoder(resp.Body).Decode(&isOwner)
+	if err != nil {
+		h.Logger.Error("HTTP", fmt.Sprintf("Failed to parse session ownership verification response: %v", err))
+		return false, err
+	}
+
+	h.Logger.Debug("ANALYTICS", fmt.Sprintf("User %s ownership of session %s: %v", userID, sessionID, isOwner))
+	return isOwner, nil
+}
+
 // verifyBatchEventOwnership checks if the user owns the specified events
 // Returns a list of event IDs that the user owns
 func (h *Handler) verifyBatchEventOwnership(eventIDs []string, userID string) ([]string, error) {
@@ -353,17 +417,32 @@ func (h *Handler) GetSessionAnalytics(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify ownership before proceeding
-	isOwner, err := h.verifyEventOwnership(eventID, userID)
+	// Verify event ownership first
+	isEventOwner, err := h.verifyEventOwnership(eventID, userID)
 	if err != nil {
 		h.Logger.Error("ANALYTICS", "Error verifying event ownership: "+err.Error())
 		sendJSONResponse(w, http.StatusInternalServerError, map[string]string{"error": "Failed to verify event ownership"})
 		return
 	}
 
-	if !isOwner {
-		h.Logger.Warn("ANALYTICS", fmt.Sprintf("User %s attempted to access analytics for session %s of event %s without ownership",
+	if !isEventOwner {
+		h.Logger.Warn("ANALYTICS", fmt.Sprintf("User %s attempted to access analytics for session %s of event %s without event ownership",
 			userID, sessionID, eventID))
+		sendJSONResponse(w, http.StatusForbidden, map[string]string{"error": "You do not have permission to access these analytics"})
+		return
+	}
+
+	// Verify session ownership as well
+	isSessionOwner, err := h.verifySessionOwnership(sessionID, userID)
+	if err != nil {
+		h.Logger.Error("ANALYTICS", "Error verifying session ownership: "+err.Error())
+		sendJSONResponse(w, http.StatusInternalServerError, map[string]string{"error": "Failed to verify session ownership"})
+		return
+	}
+
+	if !isSessionOwner {
+		h.Logger.Warn("ANALYTICS", fmt.Sprintf("User %s attempted to access analytics for session %s without session ownership",
+			userID, sessionID))
 		sendJSONResponse(w, http.StatusForbidden, map[string]string{"error": "You do not have permission to access these analytics"})
 		return
 	}
