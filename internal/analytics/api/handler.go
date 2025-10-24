@@ -51,6 +51,7 @@ func (h *Handler) RegisterRoutes(r chi.Router) {
 		r.Get("/events/{eventId}/sessions", h.GetEventSessionsAnalytics)
 		r.Get("/events/{eventId}/sessions/{sessionId}", h.GetSessionAnalytics)
 		r.Get("/events/{eventId}/orders", h.GetEventOrders)
+		r.Get("/sessions/{sessionId}/tickets", h.GetSessionTickets)
 		r.Post("/events/batch", h.GetBatchEventAnalytics)
 		r.Post("/events/batch/individual", h.GetBatchEventAnalyticsIndividual)
 		r.Get("/organizations/{organizationId}", h.GetOrganizationAnalytics)
@@ -633,4 +634,46 @@ func (h *Handler) GetEventOrders(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sendJSONResponse(w, http.StatusOK, orders)
+}
+
+// GetSessionTickets handles request to get all tickets for a session
+func (h *Handler) GetSessionTickets(w http.ResponseWriter, r *http.Request) {
+	sessionID := chi.URLParam(r, "sessionId")
+	if sessionID == "" {
+		h.Logger.Error("ANALYTICS", "session_id is required")
+		sendJSONResponse(w, http.StatusBadRequest, map[string]string{"error": "session_id is required"})
+		return
+	}
+
+	// Extract user ID from context (injected by auth middleware)
+	userID := auth.UserID(r.Context())
+	if userID == "" {
+		h.Logger.Error("ANALYTICS", "User ID not found in context")
+		sendJSONResponse(w, http.StatusUnauthorized, map[string]string{"error": "Unauthorized access"})
+		return
+	}
+
+	// Verify session ownership
+	isOwner, err := h.verifySessionOwnership(sessionID, userID)
+	if err != nil {
+		h.Logger.Error("ANALYTICS", "Error verifying session ownership: "+err.Error())
+		sendJSONResponse(w, http.StatusInternalServerError, map[string]string{"error": "Failed to verify session ownership"})
+		return
+	}
+
+	if !isOwner {
+		h.Logger.Warn("ANALYTICS", fmt.Sprintf("User %s attempted to access tickets for session %s without ownership", userID, sessionID))
+		sendJSONResponse(w, http.StatusForbidden, map[string]string{"error": "You do not have permission to access these tickets"})
+		return
+	}
+
+	// Get tickets for the session
+	tickets, err := h.Service.GetSessionTickets(r.Context(), sessionID)
+	if err != nil {
+		h.Logger.Error("ANALYTICS", "Error getting session tickets: "+err.Error())
+		sendJSONResponse(w, http.StatusInternalServerError, map[string]string{"error": "Failed to get tickets"})
+		return
+	}
+
+	sendJSONResponse(w, http.StatusOK, tickets)
 }

@@ -559,3 +559,25 @@ func (s *Service) GetSessionAnalytics(ctx context.Context, eventID, sessionID st
 
 	return result, nil
 }
+
+// GetSessionTickets retrieves all tickets for a specific session
+func (s *Service) GetSessionTickets(ctx context.Context, sessionID string) ([]models.TicketForStreaming, error) {
+var tickets []models.TicketForStreaming
+
+// Query tickets by joining orders and tickets tables
+// Only include tickets from completed orders
+err := s.db.NewSelect().
+TableExpr("tickets t").
+ColumnExpr("t.ticket_id, t.order_id, t.seat_id, t.seat_label, t.colour, t.tier_id, t.tier_name, t.price_at_purchase, t.issued_at, t.checked_in, t.checked_in_time").
+Join("INNER JOIN orders o ON o.order_id = t.order_id").
+Where("o.session_id = ?", sessionID).
+Where("o.status = ?", "completed").
+Order("t.issued_at DESC").
+Scan(ctx, &tickets)
+
+if err != nil {
+return nil, err
+}
+
+return tickets, nil
+}
